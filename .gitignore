@@ -5,3 +5,6 @@ __pycache__/
 
 # Segredos — nunca commitar
 .env
+
+# Dados
+/saida
