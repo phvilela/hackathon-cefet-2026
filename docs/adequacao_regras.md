@@ -1,7 +1,8 @@
 # Regras de Adequação (Camada 1) — Patos de Minas, safra 2026/27
 
-> Gerado a partir do ZARC oficial (tábua de risco, CKAN MAPA) em 22/10/2026.
-> Regenerar: `python3 engine/adequacao.py` → saída rastreável em `engine/janelas_zarc.json`.
+> Gerado a partir do ZARC oficial (tábua de risco, CKAN MAPA) em 22–23/10/2026.
+> Regenerar: `python3 engine/adequacao.py` → saída rastreável em `engine/janelas_zarc.json`
+> (use `--municipio <geocódigo>` para outro município de MG; `--csv`/`--saida` para alternativos).
 > Fontes: CSV municipal `data/raw/zarc/tabua-risco-2026-2027-patos-de-minas-3148004.csv`,
 > dicionário de dados e portarias em `data/raw/zarc/`.
 
@@ -12,7 +13,7 @@
 | R1 | **Viável** = decêndio com risco ZARC > 0. A tábua só publica janelas de 20/30/40% — célula `0` = fora do zoneamento. Logo "risco > 0" ≡ "risco ≤ 40%" (nosso corte) | Tábua de risco 2026/27 |
 | R2 | **Solo:** sorgo usa grupo 1/2/3 nativo do ZARC (arenoso/média/argiloso). Soja, milho e feijão usam classes de **água disponível AD1–AD6** (códigos 11–16); mapeamos o grupo do talhão: **1→AD1(11), 2→AD3(13), 3→AD5(15)** — premissa conservadora; Latossolos da região tipicamente AD4–AD6; o grupo real de cada talhão virá do formulário (tela 1) | Dicionário de dados + IN SPA/MAPA nº 1/2022 |
 | R3 | **Ciclo:** a máscara da cultura usa o **menor risco** entre os grupos de ciclo I/II/III (Cod_Ciclo 20/21/22) — "melhor ciclo disponível" | Tábua de risco |
-| R4 | **Sequência:** a 2ª cultura só é plantada ≥ ciclo da 1ª depois do plantio dela — **soja Grupo I ≈ 10 decêndios (~100 dias)**, feijão ≈ 9 (~90 dias). O tempo é linearizado na safra (set/26 → ago/27): sem isso, o milho "voltaria no tempo" para antes da colheita da soja | Port. 200 (ciclos soja); premissa documentada |
+| R4 | **Sequência (janelas PAREADAS):** a rotação usa o **ciclo precoce (Grupo I)** da 1ª cultura — soja ≈ 10 decêndios (~100 dias), feijão ≈ 9 (~90) — e as janelas dos dois lados ficam consistentes: a 2ª só entra se cabe após o plantio da 1ª; a 1ª só entra se a sua colheita deixa a 2ª caber. O tempo é linearizado na safra (set/26 → ago/27) — sem isso, o milho "voltaria no tempo" para antes da colheita da soja | Port. 200 (ciclos soja); premissa documentada |
 
 **Convenção de decêndios:** `dec1` = 1–10 jan … `dec36` = 21–31 dez; na safra 2026/27, dec25–36 = set–dez/**2026** e dec1–24 = jan–ago/**2027** (dec28 = out-1, dec2 = jan-2 etc.).
 
@@ -30,21 +31,25 @@
 
 *Feijão irrigado (20% de risco o ano inteiro) fica fora do v0 — só entra se a fazenda tiver irrigação (campo do formulário).*
 
-## 3. Rotações com a regra de sequência (R4 aplicada)
+## 3. Rotações com a regra de sequência (R4 — janelas PAREADAS)
 
-| Rotação | Grupo 1 | Grupo 2 | Grupo 3 |
+A janela da 1ª cultura só contém decêndios que **realmente fecham a rotação**
+(cada decêndio listado deixa a 2ª cultura caber após o ciclo precoce — Grupo I):
+
+| Rotação | Grupo 1 (arenoso) | Grupo 2 (médio) | Grupo 3 (argiloso) |
 |---|---|---|---|
-| **soja → milho safrinha** | ⛔ segunda vazia | jan-2 a jan-3 (dec 2-3) | jan-2 a fev-1 (dec 2-4) |
-| **soja → sorgo 2ª** | jan-2 a fev-1 (dec 2-4) | jan-2 a fev-2 (dec 2-5) | jan-2 a fev-3 (dec 2-6) |
-| **feijão → sorgo 2ª** | fev (dec 2-4) | jan-1 a fev-2 (dec 1-5) | jan-1 a fev-3 (dec 1-6) |
-| **soja solteira** | out-1 a dez-3 + jan-1 | idem | idem |
-| **milho verão (solteiro)** | out-3 a dez-2 | out-2 a dez-3 | out-2 a dez-3 |
+| **soja → milho safrinha** | ⛔ **inviável** (não fecha) | soja out-1–out-2 (dec 28-29) → milho jan-2–jan-3 (dec 2-3) | soja out-1–out-3 (dec 28-30) → milho jan-2–fev-1 (dec 2-4) |
+| **soja → sorgo 2ª** | soja dec 28-30 → sorgo dec 2-4 | soja dec 28-31 → sorgo dec 2-5 | soja dec 28-32 → sorgo dec 2-6 |
+| **feijão → sorgo 2ª** | feijão out-2–nov-1 (dec 29-31) → sorgo dec 2-4 | feijão dec 28-32 → sorgo dec 1-5 | feijão dec 28-33 → sorgo dec 1-6 |
+| **soja solteira** | out-1 a dez-3 + jan-1 (dec 1, 28-36) | idem | idem |
+| **milho verão (solteiro)** | out-3 a dez-2 (dec 31-35) | out-2 a dez-3 (dec 30-36) | idem |
 
 ## 4. Insights que o filtro revelou (usar no pitch/relatório)
 
-1. **"Milho safrinha depois de soja em Patos de Minas é decisão de janeiro, não de dezembro."** O ZARC permite milho 2ª a partir de dez-3, mas a soja plantada em outubro (Grupo I, ~100 dias) só colhe em meados de janeiro — a janela honesta da rotação é **jan-2 em diante**. O wrap-around ingênuo deixaria o milho "antes" da soja; a linearização temporal da safra corrige isso (e virou sanity check automático).
-2. **No solo arenoso (grupo 1), soja→milho safrinha não fecha** (janela da 2ª vazia) — **mas soja→sorgo fecha**. Recomendação diferente por textura de talhão: exatamente o gap do ZARC municipal que a tela 1 (formulário de talhões) explora.
-3. Soja tem a janela mais larga (10 decêndios + tardia), feijão 1ª é intermediária e milho verão tem a mais curta — consistente com a agronomia local, o que valida o parse.
+1. **"Milho safrinha depois de soja em Patos de Minas é decisão de janeiro, não de dezembro."** O ZARC permite milho 2ª a partir de dez-3, mas a soja plantada em outubro (Grupo I, ~100 dias) só colhe em meados de janeiro — a janela honesta da rotação é **jan-2 em diante** (dec 2+). A linearização temporal da safra corrige o wrap-around que deixaria o milho "antes" da soja (virou sanity check automático).
+2. **No solo arenoso, soja→milho safrinha é INVIÁVEL — mas soja→sorgo fecha** (soja dec 28-30 → sorgo jan-fev). A recomendação muda por textura do talhão: exatamente o gap do ZARC municipal que a tela 1 (formulário de talhões) explora.
+3. **Janela da rotação ≠ janela da cultura.** A soja "solteira" pode ser plantada de out-1 até jan-1, mas a soja da rotação soja→milho no solo médio só até out-2 (dec 29) — plantar depois disso não deixa a safrinha caber. As janelas pareadas codificam isso por construção: cada decêndio listado fecha a rotação.
+4. Soja tem a janela mais larga (10 decêndios + tardia), feijão 1ª é intermediária e milho verão a mais curta — consistente com a agronomia local, o que valida o parse.
 
 ## 5. Portarias de origem (rastreabilidade)
 
