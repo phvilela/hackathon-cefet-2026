@@ -34,6 +34,7 @@ Programação por restrições inteira, resolvida com o **CP-SAT do Google OR-To
 - **Variáveis:** área (ha, inteira) por rotação × talhão.
 - **Restrições:** a soma das áreas por talhão é fixa (área do talhão; total 600 ha); só rotações viáveis no grupo de solo recebem área — inviáveis nem geram variável; margem em R$ inteiro (o CP-SAT é inteiro; escala documentada).
 - **Otimização lexicográfica:** a 1ª passada maximiza a margem total; congela-se o ótimo como piso; a 2ª minimiza o risco sob esse piso. Sem pesos λ arbitrários misturando R$ com probabilidade.
+- **Custo de oportunidade no menu:** entre as opções há a rotação `capital/pousio` — o rendimento da Selic sobre o capital de custeio, sem risco. O modelo só recomenda plantar o que rende mais que o melhor uso do dinheiro; o plano Conservador pode ser explicitamente "não plantar".
 
 O problema é pequeno; resolve em segundos, com **prova de otimalidade** — não é heurística.
 

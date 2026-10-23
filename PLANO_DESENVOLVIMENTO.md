@@ -212,7 +212,7 @@ hackatohm/
 **Tarefas:**
 
 1. **(Todos, manhã)** Setup React+Vite+Recharts, deploy na Vercel **no primeiro commit** (deploy contínuo — membros remotos veem sozinhos).
-2. **Tela 1 — Talhões (D1 + M1):** os 3 talhões + "formulário" (textura → grupo de solo ZARC, área, perfil de risco) — modo demonstração com cenários prontos.
+2. **Tela 1 — Talhões (D1 + M1):** os 3 talhões + "formulário" (textura → grupo de solo ZARC, área, perfil de risco, **irrigação sim/não** — habilita o manejo irrigado no modelo) — modo demonstração com cenários prontos.
 3. **Tela 2 — Comparação (M3 + M2):** ranking margem × risco + gráfico da **fronteira Pareto** (scatter + linha), com percentis na linguagem 20/30/40% do ZARC.
 4. **Tela 3 — Rastreabilidade (D2):** "por que soja e não milho?" — painel de hipóteses com **fonte clicável** (SIDRA/Conab/ZARC) + comparação lado a lado com a opção descartada. *Essa tela é o diferencial do pitch — capriche.*
 5. **(Todos, tarde)** Modo apresentação (dark, fonte grande), transições suaves; **gravar a demo completa cena por cena**, mesmo com polish parcial.
