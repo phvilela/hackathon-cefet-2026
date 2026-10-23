@@ -84,10 +84,15 @@ hackatohm/
 │   ├── adequacao_regras.md   → as regras de plantio em linguagem clara, com fontes e insights
 │   └── relatorio/metodo.md   → rascunho da seção "Método" do relatório final
 │
+│  📦 O CONTRATO — contract/ (o motor escreve, o site lê)
+├── contract/
+│   ├── results.schema.json → o formato oficial do arquivo de resultados (JSON Schema 2020-12)
+│   ├── validate.py         → o "porteiro": valida forma + semântica e publica (`--publish`)
+│   └── results.json        → o arquivo oficial — é este que o site de demonstração vai ler
+│
 │  🚧 EM CONSTRUÇÃO (cronograma até 26/10)
-├── pipeline/             → (sexta) importação dos dados econômicos: IBGE, Conab, B3, clima
-└── contract/             → (sábado) o "contrato" de dados entre o motor e o site
-                           (domingo) o site de demonstração será criado na pasta web/ — ainda não existe
+├── pipeline/             → (hoje) importação dos dados econômicos: IBGE, Conab, B3, clima
+└── (domingo) o site de demonstração será criado na pasta web/ — ainda não existe
 │
 │  🛠️ FERRAMENTAS DO TIME
 ├── plaky.py, api-1.yaml  → script que mantém nosso quadro de tarefas (Plaky) atualizado
@@ -105,6 +110,7 @@ hackatohm/
 | entender **por que** escolhemos cada método | `relatorio_pesquisa_metodos.md` |
 | ver o **plano do time** e quem faz o quê | `PLANO_DESENVOLVIMENTO.md` |
 | mudar as premissas da fazenda virtual | `engine/config.yaml` |
+| ver **os dados que o site vai ler** | `contract/results.json` (publicado por `contract/validate.py --publish`) |
 | entender o **código** do motor | `engine/README.md` |
 
 ## 4. Como rodar (sem saber nada de Python)
@@ -120,13 +126,18 @@ python3 engine/adequacao.py
 
 # 3. Rodar o motor de decisão
 python3 engine/main.py --pareto --monte-carlo
+
+# 4. Validar o contrato e publicar o arquivo oficial
+python3 contract/validate.py --publish
 ```
 
 **Se deu certo**, você verá no terminal o resumo das janelas de plantio e do menu de planos — e três arquivos em `engine/out/`:
 
 - `relatorio_engine.txt` — relatório em português, feito para ser lido;
 - `pareto_frontier.png` — o gráfico do menu (mesmo desta página);
-- `results_mock.json` — os resultados em formato de dados (base do futuro site).
+- `results_mock.json` — os resultados em formato de dados.
+
+O passo 4 valida esse JSON (contra `contract/results.schema.json` + checagens de consistência) e **publica a cópia oficial em `contract/results.json`** — é este arquivo, e não o de `engine/out/`, que o site de demonstração vai ler. Assim o motor pode continuar sendo rodado sem surpreender o site: só entra no ar o que passar no porteiro.
 
 > ⚠️ **Aviso honesto:** as **janelas de plantio são REAIS** (tábua de risco oficial do ZARC, safra 2026/27, com as portarias citadas em `data/raw/zarc/`). Os números de **dinheiro ainda são fictícios (mock)** até a simulação com dados históricos de IBGE/Conab/B3 entrar — tudo que é mock está marcado como tal no código e nos relatórios.
 >

@@ -1,0 +1,335 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:hackatohm:contract:results:v2",
+  "title": "results.json — contrato motor (engine/) → site (web/)",
+  "description": "HackatOhm 2026 · desafio Embrapa. Arquivo único de resultados: o motor produz, o site lê. Mudanças de formato só em checkpoint do time (PLANO_DESENVOLVIMENTO.md §2). Unidades: margem em centavos de R$ (o campo *_reais é derivado, para exibição); risco em por-mil (‰) = P(margem<0)×10; janelas em decêndios 1–36 (3 por mês, jan=1–3 … dez=34–36).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cenario",
+    "dados",
+    "talhoes",
+    "rotacoes",
+    "plano_otimo",
+    "fronteira_pareto",
+    "knee",
+    "planos",
+    "robustez"
+  ],
+  "properties": {
+    "cenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["municipio", "cod_ibge", "safra", "area_total_ha", "n_talhoes", "n_rotacoes"],
+      "properties": {
+        "municipio": { "type": "string", "minLength": 1 },
+        "cod_ibge": {
+          "type": "integer",
+          "minimum": 1000000,
+          "maximum": 9999999,
+          "description": "código IBGE do município (7 dígitos); Patos de Minas = 3148004"
+        },
+        "safra": { "type": "string", "minLength": 1, "examples": ["2026/27", "2026/2027"] },
+        "area_total_ha": { "type": "integer", "minimum": 1 },
+        "n_talhoes": { "type": "integer", "minimum": 1 },
+        "n_rotacoes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "dados": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observacao", "gerado_em", "engine"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["MOCK", "PARCIAL", "REAL"],
+          "description": "MOCK: tudo provisório · PARCIAL: ex. janelas reais + margens mock · REAL: congelado p/ entrega (não pode haver fonte_url 'MOCK://…')"
+        },
+        "observacao": { "type": "string" },
+        "gerado_em": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}" },
+        "engine": { "type": "string" }
+      }
+    },
+    "talhoes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["area_ha", "grupo_solo"],
+        "properties": {
+          "area_ha": { "type": "integer", "minimum": 1 },
+          "grupo_solo": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "1 = arenoso · 2 = médio · 3 = argiloso (grupos ZARC)"
+          },
+          "irrigacao": {
+            "type": "boolean",
+            "description": "reservado p/ tela 1 (domingo); v0 do modelo considera só sequeiro"
+          }
+        }
+      }
+    },
+    "rotacoes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "culturas",
+          "margem_centavos_por_ha",
+          "margem_reais_por_ha",
+          "risco_por_mil",
+          "janelas_viveis_decendios",
+          "grupos_viveis",
+          "hipoteses"
+        ],
+        "properties": {
+          "culturas": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "margem_centavos_por_ha": {
+            "type": "integer",
+            "description": "margem esperada (centavos de R$/ha) — coeficiente vindo do MC do M1"
+          },
+          "margem_reais_por_ha": { "type": "number" },
+          "risco_por_mil": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000,
+            "description": "P(margem<0) por ha × 10 (12% → 120)"
+          },
+          "janelas_viveis_decendios": {
+            "type": "object",
+            "propertyNames": { "type": "string", "pattern": "^[123]$" },
+            "additionalProperties": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "integer", "minimum": 1, "maximum": 36 }
+            },
+            "description": "por grupo de solo: decêndios de plantio da 1ª cultura (ZARC); lista vazia = inviável naquele solo"
+          },
+          "grupos_viveis": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "integer", "minimum": 1, "maximum": 3 },
+            "description": "deve coincidir exatamente com os grupos de janela não vazia"
+          },
+          "hipoteses": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/hipotese" }
+          },
+          "percentis": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["p5", "p50", "p95"],
+            "description": "percentis da margem por ha (R$/ha) — saída do MC do M1; opcional até o congelamento",
+            "properties": {
+              "p5": { "type": "number" },
+              "p50": { "type": "number" },
+              "p95": { "type": "number" }
+            }
+          },
+          "p_margem_negativa": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "P(margem < 0) por ha — saída do MC do M1"
+          },
+          "cvar_5": {
+            "type": "number",
+            "description": "CVaR 5% da margem por ha (R$/ha; pode ser negativo) — saída do MC do M1"
+          },
+          "n_iteracoes": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "nº de iterações do MC do M1"
+          }
+        }
+      }
+    },
+    "plano_otimo": {
+      "description": "solução lexicográfica (1º max margem, 2º min risco); exige stage_results",
+      "allOf": [
+        { "$ref": "#/$defs/ponto_plano" },
+        { "required": ["stage_results"] }
+      ]
+    },
+    "fronteira_pareto": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/ponto_plano" }
+    },
+    "knee": {
+      "description": "knee point — melhor trade-off margem × risco (perfil Equilibrado)",
+      "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/ponto_plano" }]
+    },
+    "planos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["arrojado", "equilibrado", "conservador"],
+      "description": "o menu de 3 perfis que o site exibe",
+      "properties": {
+        "arrojado": { "$ref": "#/$defs/ponto_plano" },
+        "equilibrado": { "$ref": "#/$defs/ponto_plano" },
+        "conservador": { "$ref": "#/$defs/ponto_plano" }
+      }
+    },
+    "robustez": {
+      "description": "Monte Carlo de robustez (±jitter nas margens, re-solve); null se não rodou",
+      "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/robustez" }]
+    }
+  },
+  "$defs": {
+    "hipotese": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chave", "valor", "fonte_url", "metodo"],
+      "description": "rastreabilidade: cada número que aparece na tela carrega fonte e método",
+      "properties": {
+        "chave": { "type": "string", "minLength": 1 },
+        "valor": { "type": "string", "minLength": 1 },
+        "fonte_url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "URL oficial (SIDRA/Conab/ZARC/B3) ou 'MOCK://…' enquanto provisório"
+        },
+        "metodo": { "type": "string", "minLength": 1 }
+      }
+    },
+    "estagio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["estagio", "direcao", "valor", "status"],
+      "properties": {
+        "estagio": { "type": "string", "examples": ["margem", "risco"] },
+        "direcao": { "type": "string", "enum": ["max", "min"] },
+        "valor": { "type": "integer" },
+        "status": { "type": "string", "examples": ["OPTIMAL", "FEASIBLE"] }
+      }
+    },
+    "ponto_plano": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "margem_centavos",
+        "margem_reais",
+        "risco_por_mil_ha",
+        "ha_sob_risco",
+        "status",
+        "plano_por_talhao",
+        "area_por_rotacao"
+      ],
+      "properties": {
+        "perfil": { "type": ["string", "null"], "examples": ["Arrojado", "Equilibrado (knee)", "Conservador"] },
+        "descricao": { "type": ["string", "null"] },
+        "margem_floor_centavos": {
+          "type": ["integer", "null"],
+          "description": "piso de margem do ε-constraint (null no mínimo risco absoluto)"
+        },
+        "margem_centavos": { "type": "integer", "description": "margem total da fazenda (centavos de R$)" },
+        "margem_reais": { "type": "number" },
+        "risco_por_mil_ha": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Σ risco‰ × ha — risco total da fazenda"
+        },
+        "ha_sob_risco": {
+          "type": "number",
+          "minimum": 0,
+          "description": "risco_por_mil_ha ÷ 1000 ≈ hectares com margem negativa esperada"
+        },
+        "status": { "type": "string", "examples": ["OPTIMAL", "FEASIBLE"] },
+        "plano_por_talhao": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": { "type": "integer", "minimum": 0 }
+          },
+          "description": "talhão → {rotação: hectares}"
+        },
+        "area_por_rotacao": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "stage_results": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/estagio" },
+          "description": "preenchido apenas no plano_otimo (estágios do solve lexicográfico)"
+        }
+      }
+    },
+    "robustez": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runs",
+        "jitter_percent",
+        "seed",
+        "successful_runs",
+        "failed_runs",
+        "stability_mean",
+        "stability_min",
+        "stability_max",
+        "max_talhoes_mudados",
+        "pct_runs_sem_mudanca",
+        "distribuicao_mudancas_talhoes",
+        "frase_estabilidade",
+        "retention_por_rotacao",
+        "margem_total_centavos",
+        "observacao"
+      ],
+      "properties": {
+        "runs": { "type": "integer", "minimum": 1 },
+        "jitter_percent": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "seed": { "type": "integer", "minimum": 0 },
+        "successful_runs": { "type": "integer", "minimum": 0 },
+        "failed_runs": { "type": "integer", "minimum": 0 },
+        "stability_mean": { "type": "number", "minimum": 0, "maximum": 1 },
+        "stability_min": { "type": "number", "minimum": 0, "maximum": 1 },
+        "stability_max": { "type": "number", "minimum": 0, "maximum": 1 },
+        "max_talhoes_mudados": { "type": "integer", "minimum": 0 },
+        "pct_runs_sem_mudanca": { "type": "number", "minimum": 0, "maximum": 100 },
+        "distribuicao_mudancas_talhoes": {
+          "type": "object",
+          "propertyNames": { "type": "string", "pattern": "^[0-9]+$" },
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "frase_estabilidade": { "type": "string", "minLength": 1 },
+        "retention_por_rotacao": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["presente_no_baseline", "runs_presente", "fracao_runs", "area_media_ha"],
+            "properties": {
+              "presente_no_baseline": { "type": "boolean" },
+              "runs_presente": { "type": "integer", "minimum": 0 },
+              "fracao_runs": { "type": "number", "minimum": 0, "maximum": 1 },
+              "area_media_ha": { "type": "number", "minimum": 0 }
+            }
+          }
+        },
+        "margem_total_centavos": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["media", "minimo", "maximo", "desvio_padrao"],
+          "properties": {
+            "media": { "type": "integer" },
+            "minimo": { "type": "integer" },
+            "maximo": { "type": "integer" },
+            "desvio_padrao": { "type": "number", "minimum": 0 }
+          }
+        },
+        "observacao": { "type": "string" }
+      }
+    }
+  }
+}

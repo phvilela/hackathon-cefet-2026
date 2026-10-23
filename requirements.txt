@@ -4,6 +4,9 @@
 pandas>=2.0
 numpy>=1.26
 
+# Contrato motor → site (M3)
+jsonschema>=4.20
+
 # Engine de decisão (M1/M2)
 ortools>=9.10
 PyYAML>=6.0
