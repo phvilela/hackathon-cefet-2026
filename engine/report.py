@@ -14,7 +14,7 @@ LARGURA = 96
 PERFIL_DESCRICOES = {
     'arrojado': 'máxima margem (topo da fronteira)',
     'equilibrado': 'knee point — melhor trade-off margem × risco',
-    'conservador': 'mínimo risco dentro da faixa de Pareto',
+    'conservador': 'mínimo risco absoluto — inclui a opção capital/pousio (custo de oportunidade)',
 }
 
 
@@ -272,8 +272,10 @@ def _secao_fronteira(frontier: List[Dict[str, Any]],
             perfil = 'Arrojado'
         elif indice == len(frontier):
             perfil = 'Conservador'
+        piso_txt = (_reais(ponto["margem_floor"])
+                    if ponto["margem_floor"] is not None else '— (sem piso)')
         linhas.append(
-            f'{indice:>2}.  {_reais(ponto["margem_floor"]):>20}  {_reais(margem):>18}  '
+            f'{indice:>2}.  {piso_txt:>20}  {_reais(margem):>18}  '
             f'{_fmt_br(risco):>14}  {_ha_sob_risco(risco):>12}  {perfil}'.rstrip()
         )
     if knee is not None:

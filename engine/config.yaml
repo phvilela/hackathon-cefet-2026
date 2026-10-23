@@ -28,9 +28,10 @@ settings:
   margem_em_centavos: true  # CP-SAT é inteiro — nunca float no objetivo
 
 talhoes:                    # no MVP real: gerado a partir do formulário (tela 1)
-  T1: { area_ha: 300, grupo_solo: 2 }   # textura média
-  T2: { area_ha: 200, grupo_solo: 1 }   # arenoso
-  T3: { area_ha: 100, grupo_solo: 3 }   # argiloso
+  # irrigacao: true habilita o manejo irrigado no modelo (v0 considera só sequeiro)
+  T1: { area_ha: 300, grupo_solo: 2, irrigacao: false }   # textura média
+  T2: { area_ha: 200, grupo_solo: 1, irrigacao: false }   # arenoso
+  T3: { area_ha: 100, grupo_solo: 3, irrigacao: false }   # argiloso
 
 rotacoes:                   # coeficientes vindos do MC do M1 (MOCK até sexta)
   soja_milho:
@@ -104,6 +105,18 @@ rotacoes:                   # coeficientes vindos do MC do M1 (MOCK até sexta)
       - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
       - { chave: "custo_total", valor: "R$ 3.550/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
       - { chave: "observacao", valor: "sem 2ª safra — sem prazo da safrinha, plantio pode ir até dezembro (MOCK)", fonte_url: "MOCK://hackatohm/zarc-soja", metodo: "ZARC soja (MOCK)" }
+
+  capital_pousio:            # custo de oportunidade explícito: a opção "não plantar"
+    culturas: ["capital no CDI (não plantar)"]
+    margem_esperada: 20000   # centavos de R$/ha (MOCK ≈ R$ 200/ha — Selic sobre o custeio)
+    risco: 0                 # rendimento nominal: sem risco de margem negativa
+    janelas_viveis:          # "planta" o capital em qualquer decêndio e qualquer solo
+      1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+      2: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+      3: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+    hipoteses:
+      - { chave: "custo_oportunidade", valor: "Selic ~13% a.a. sobre capital de custeio (~R$ 3.500/ha) por ~5 meses ≈ R$ 200/ha", fonte_url: "MOCK://hackatohm/selic-b3", metodo: "referência de 'não plantar' (MOCK — M1 calibra com a Selic vigente)" }
+      - { chave: "observacao", valor: "piso de comparação: o modelo só recomenda plantar o que rende mais que o capital aplicado", fonte_url: "MOCK://hackatohm/custo-oportunidade", metodo: "custo de oportunidade explícito (MOCK)" }
 
 optimization:
   mode: pareto
