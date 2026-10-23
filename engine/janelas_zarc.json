@@ -49,27 +49,39 @@
     },
     {
       "chave": "agregacao_ciclo",
-      "valor": "menor risco entre os grupos de ciclo I/II/III (usa o melhor ciclo)",
-      "metodo": "regra R3",
+      "valor": "menor risco entre os grupos de ciclo I/II/III (usa o melhor ciclo) — para plantio SOLTEIRO; nas ROTAÇÕES usa-se o ciclo precoce (Grupo I)",
+      "metodo": "regras R3+R4",
       "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico"
     },
     {
       "chave": "ciclo_soja_decendios",
       "valor": 10,
-      "metodo": "Grupo I (precoce, ~100 dias) — viabiliza safrinha; Grupo II/III postergam a 2ª cultura",
+      "metodo": "Grupo I (precoce, ~100 dias) — só ele viabiliza a safrinha; Grupo II/III colhem além da janela da 2ª cultura",
       "fonte_url": "data/raw/zarc/portarias/PORTN200_*_MG_2026-2027.pdf"
     },
     {
       "chave": "ciclo_feijao_decendios",
       "valor": 9,
-      "metodo": "~90 dias (ciclo precoce) — sequência feijão→sorgo",
+      "metodo": "Grupo I (~90 dias) — sequência feijão→sorgo",
       "fonte_url": "data/raw/zarc/portarias/PORTN13_*_MG_2026-2027.pdf"
+    },
+    {
+      "chave": "janelas_pareadas",
+      "valor": "nas rotações, a janela da 1ª cultura só contém decêndios que fecham a 2ª (cada decêndio listado permite ao menos um decêndio viável da 2ª após o ciclo)",
+      "metodo": "regra R4 — evita recomendar plantio de soja que não deixa a safrinha caber",
+      "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico"
     },
     {
       "chave": "convencao_decendio",
       "valor": "dec1 = 1-10 jan ... dec36 = 21-31 dez; ano circular: na safra 2026/27, dec28-36 = out-dez/2026 e dec1-3 = jan-mar/2027",
       "metodo": "item 3.3 da Port. 200/2026",
       "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico"
+    },
+    {
+      "chave": "feijao_irrigado",
+      "valor": "fora do v0: só entra quando o talhão tem irrigação (campo 'irrigacao' do config)",
+      "metodo": "ZARC lista manejo irrigado à parte (risco 20% o ano todo)",
+      "fonte_url": "data/raw/zarc/portarias/PORTN32_*_MG_2026-2027.pdf"
     }
   ],
   "culturas": {
@@ -551,7 +563,7 @@
       "1": {
         "decendios": [],
         "solo_usado": "AD1",
-        "aviso": "sem linha no ZARC para esse solo/cultura"
+        "aviso": "sem linha no ZARC para esse solo/cultura/ciclo"
       },
       "2": {
         "decendios": [
@@ -598,94 +610,59 @@
   "rotacoes": {
     "soja_milho": {
       "1": {
-        "primeira": [
-          1,
-          28,
-          29,
-          30,
-          31,
-          32,
-          33,
-          34,
-          35,
-          36
-        ],
+        "primeira": [],
         "segunda": [],
+        "primeira_ciclo": "Grupo I (precoce)",
         "premissa_ciclo_primeira_decendios": 10
       },
       "2": {
         "primeira": [
-          1,
           28,
-          29,
-          30,
-          31,
-          32,
-          33,
-          34,
-          35,
-          36
+          29
         ],
         "segunda": [
           2,
           3
         ],
+        "primeira_ciclo": "Grupo I (precoce)",
         "premissa_ciclo_primeira_decendios": 10
       },
       "3": {
         "primeira": [
-          1,
           28,
           29,
-          30,
-          31,
-          32,
-          33,
-          34,
-          35,
-          36
+          30
         ],
         "segunda": [
           2,
           3,
           4
         ],
+        "primeira_ciclo": "Grupo I (precoce)",
         "premissa_ciclo_primeira_decendios": 10
       }
     },
     "soja_sorgo": {
       "1": {
         "primeira": [
-          1,
           28,
           29,
-          30,
-          31,
-          32,
-          33,
-          34,
-          35,
-          36
+          30
         ],
         "segunda": [
           2,
           3,
           4
         ],
+        "primeira_ciclo": "Grupo I (precoce)",
         "premissa_ciclo_primeira_decendios": 10
       },
       "2": {
         "primeira": [
-          1,
           28,
           29,
           30,
-          31,
-          32,
-          33,
-          34,
-          35,
-          36
+          31
         ],
         "segunda": [
           2,
@@ -693,34 +670,12 @@
           4,
           5
         ],
+        "primeira_ciclo": "Grupo I (precoce)",
         "premissa_ciclo_primeira_decendios": 10
       },
       "3": {
         "primeira": [
-          1,
           28,
-          29,
-          30,
-          31,
-          32,
-          33,
-          34,
-          35,
-          36
-        ],
-        "segunda": [
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
-        "premissa_ciclo_primeira_decendios": 10
-      }
-    },
-    "feijao_sorgo": {
-      "1": {
-        "primeira": [
           29,
           30,
           31,
@@ -729,8 +684,27 @@
         "segunda": [
           2,
           3,
+          4,
+          5,
+          6
+        ],
+        "primeira_ciclo": "Grupo I (precoce)",
+        "premissa_ciclo_primeira_decendios": 10
+      }
+    },
+    "feijao_sorgo": {
+      "1": {
+        "primeira": [
+          29,
+          30,
+          31
+        ],
+        "segunda": [
+          2,
+          3,
           4
         ],
+        "primeira_ciclo": "Grupo I (precoce)",
         "premissa_ciclo_primeira_decendios": 9
       },
       "2": {
@@ -739,11 +713,7 @@
           29,
           30,
           31,
-          32,
-          33,
-          34,
-          35,
-          36
+          32
         ],
         "segunda": [
           1,
@@ -752,6 +722,7 @@
           4,
           5
         ],
+        "primeira_ciclo": "Grupo I (precoce)",
         "premissa_ciclo_primeira_decendios": 9
       },
       "3": {
@@ -761,10 +732,7 @@
           30,
           31,
           32,
-          33,
-          34,
-          35,
-          36
+          33
         ],
         "segunda": [
           1,
@@ -774,6 +742,7 @@
           5,
           6
         ],
+        "primeira_ciclo": "Grupo I (precoce)",
         "premissa_ciclo_primeira_decendios": 9
       }
     },
@@ -857,9 +826,11 @@
   },
   "sanity": {
     "soja_grupo2_tem_janela_out_nov": true,
+    "soja_grupoI_tem_janela_out_nov": true,
     "milho_verao_grupo2_tem_janela_out_nov": true,
     "soja_milho_grupo2_segunda_nao_vazia": true,
     "soja_milho_grupo2_segunda_restrita_a_jan_abr": true,
-    "todas_rotacoes_tem_primeira_nao_vazia_todos_grupos": true
+    "janelas_da_rotacao_pareadas": true,
+    "toda_rotacao_viavel_em_algum_grupo": true
   }
 }

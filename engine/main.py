@@ -21,7 +21,12 @@ if str(REPO_ROOT) not in sys.path:
 
 import yaml
 
-from engine.pareto import find_knee_point, generate_pareto_frontier
+from engine.pareto import (
+    _filter_nondominated,
+    find_knee_point,
+    generate_pareto_frontier,
+    solve_pareto_point,
+)
 from engine.report import build_results, generate_report
 from engine.robustness import run_monte_carlo_robustness
 from engine.solver import solve_lexicographic
@@ -135,6 +140,22 @@ def main() -> None:
         if frontier:
             logger.info('Fronteira: %d pontos não-dominados | knee %s', len(frontier),
                         'identificado' if knee else 'não identificado')
+
+        # Ponto de MÍNIMO RISCO ABSOLUTO (sem piso de margem): com a rotação
+        # capital_pousio no config, é o "não plantar" — o custo de oportunidade
+        # explícito. Ele é o âncora conservadora da fronteira; o knee continua
+        # calculado apenas entre os planos que plantam.
+        ponto_min_risco = solve_pareto_point(config)
+        if ponto_min_risco is not None:
+            ja_existe = any(p['margem'] == ponto_min_risco['margem']
+                            and p['risco'] == ponto_min_risco['risco']
+                            for p in frontier)
+            if not ja_existe:
+                ponto_min_risco['referencia'] = 'custo_oportunidade'
+                frontier = _filter_nondominated(frontier + [ponto_min_risco])
+                logger.info('Ponto de mínimo risco absoluto (custo de oportunidade) '
+                            'adicionado à fronteira: margem R$ %.2f',
+                            ponto_min_risco['margem'] / 100)
 
     mc = None
     if args.monte_carlo:
