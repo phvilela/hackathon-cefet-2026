@@ -1,0 +1,119 @@
+# ============================================================================
+# HackatOhm 2026 — desafio Embrapa | Motor de decisão "o que plantar"
+# Fazenda: 600 ha em 3 talhões — Patos de Minas (MG)
+#
+# ⚠ TUDO AQUI É MOCK: margens, riscos e janelas são PROVISÓRIOS.
+#   - margem_esperada / risco → vêm do Monte Carlo do M1 (sexta)
+#   - janelas_viveis          → vêm do ZARC (CSV) via engine/adequacao.py
+#   Basta substituir os números abaixo e rodar de novo — o motor não muda.
+#
+# Unidades (CP-SAT só tem inteiros — nunca float no objetivo):
+#   margem_esperada: centavos de R$ por hectare (R$ 4.180/ha → 418000)
+#   risco: por-mil (‰) = P(margem < 0) × 10 (12% → 120)
+#   janelas_viveis: decêndios 1–36 (1–3 = jan … 28–30 = out, 31–33 = nov)
+#     · a janela da ROTAÇÃO = decêndios de plantio da 1ª cultura
+#     · a janela da 2ª cultura (ex.: milho safrinha ≈ decêndios 10–15, MOCK)
+#       fica hoje implícita — documentada nas hipóteses de cada rotação
+# ============================================================================
+
+cenario:
+  municipio: "Patos de Minas"
+  cod_ibge: 3148004
+  safra: "2026/27"
+  area_total_ha: 600
+
+settings:
+  decendios: 36             # 3 por mês × 12 (janeiro–dezembro)
+  risco_maximo_percent: 40  # regra de corte: decêndio viável se risco ZARC ≤ 40%
+  margem_em_centavos: true  # CP-SAT é inteiro — nunca float no objetivo
+
+talhoes:                    # no MVP real: gerado a partir do formulário (tela 1)
+  T1: { area_ha: 300, grupo_solo: 2 }   # textura média
+  T2: { area_ha: 200, grupo_solo: 1 }   # arenoso
+  T3: { area_ha: 100, grupo_solo: 3 }   # argiloso
+
+rotacoes:                   # coeficientes vindos do MC do M1 (MOCK até sexta)
+  soja_milho:
+    culturas: ["soja", "milho safrinha"]
+    margem_esperada: 418000        # centavos de R$/ha (MOCK: ≈ R$ 4.180/ha)
+    risco: 120                     # P(margem < 0) em por-mil (MOCK: 12%)
+    janelas_viveis:                # por grupo de solo — MÁSCARA de 36 decêndios
+      1: [28, 29, 30]              # arenoso: só outubro (safrinha precisa caber)
+      2: [26, 27, 28, 29, 30]      # médio: set–out
+      3: [25, 26, 27, 28, 29, 30] # argiloso: começa mais cedo
+    hipoteses:
+      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
+      - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
+      - { chave: "produtividade_milho_safrinha", valor: "80 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
+      - { chave: "custo_total", valor: "R$ 7.610/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "janela_milho_safrinha", valor: "decêndios 10-15 (MOCK)", fonte_url: "MOCK://hackatohm/zarc-milho-safrinha", metodo: "ZARC/portaria milho safrinha (MOCK)" }
+
+  soja_sorgo:
+    culturas: ["soja", "sorgo safrinha"]
+    margem_esperada: 390000        # centavos de R$/ha (MOCK: ≈ R$ 3.900/ha)
+    risco: 110                     # P(margem < 0) em por-mil (MOCK: 11%)
+    janelas_viveis:
+      1: [29, 30, 31, 32, 33]                     # arenoso: out–nov
+      2: [28, 29, 30, 31, 32, 33]                 # médio: out–nov
+      3: [27, 28, 29, 30, 31, 32, 33, 34]         # argiloso: set–dez (sorgo tolera 2ª safra tardia)
+    hipoteses:
+      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
+      - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
+      - { chave: "preco_sorgo", valor: "R$ 0,55/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
+      - { chave: "custo_total", valor: "R$ 5.450/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+
+  feijao_sorgo:
+    culturas: ["feijão das águas", "sorgo safrinha"]
+    margem_esperada: 450000        # centavos de R$/ha (MOCK: ≈ R$ 4.500/ha)
+    risco: 250                     # P(margem < 0) em por-mil (MOCK: 25%)
+    janelas_viveis:
+      1: []                        # MOCK: inviável em arenoso (feijão é sensível a déficit hídrico)
+      2: [24, 25, 26, 27, 28]      # médio: ago–out
+      3: [23, 24, 25, 26, 27, 28, 29] # argiloso: ago–out
+    hipoteses:
+      - { chave: "produtividade_feijao", valor: "1.200 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
+      - { chave: "preco_feijao", valor: "R$ 9,00/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
+      - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
+      - { chave: "custo_total", valor: "R$ 8.500/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "observacao", valor: "margem alta, risco alto (MOCK)", fonte_url: "MOCK://hackatohm/m1-monte-carlo", metodo: "MC do M1 (MOCK)" }
+
+  milho_verao:
+    culturas: ["milho 1ª safra"]
+    margem_esperada: 260000        # centavos de R$/ha (MOCK: ≈ R$ 2.600/ha)
+    risco: 90                      # P(margem < 0) em por-mil (MOCK: 9%)
+    janelas_viveis:
+      1: [29, 30, 31]              # arenoso: out
+      2: [28, 29, 30, 31, 32]      # médio: out–nov
+      3: [27, 28, 29, 30, 31, 32, 33] # argiloso: out–nov
+    hipoteses:
+      - { chave: "produtividade_milho", valor: "110 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
+      - { chave: "preco_milho", valor: "R$ 58/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
+      - { chave: "custo_total", valor: "R$ 3.780/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "observacao", valor: "milho 1ª safra e milho safrinha têm ZARC/portaria próprios — insumos distintos (MOCK)", fonte_url: "MOCK://hackatohm/zarc-milho-verao", metodo: "ZARC milho 1ª safra (MOCK)" }
+
+  soja_solteira:
+    culturas: ["soja"]
+    margem_esperada: 360000        # centavos de R$/ha (MOCK: ≈ R$ 3.600/ha)
+    risco: 130                     # P(margem < 0) em por-mil (MOCK: 13%)
+    janelas_viveis:
+      1: [28, 29, 30, 31, 32, 33]                     # arenoso: out–nov
+      2: [27, 28, 29, 30, 31, 32, 33, 34]             # médio: set–dez
+      3: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35]     # argiloso: set–dez (sem 2ª safra, plantio tardio OK)
+    hipoteses:
+      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
+      - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
+      - { chave: "custo_total", valor: "R$ 3.550/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "observacao", valor: "sem 2ª safra — sem prazo da safrinha, plantio pode ir até dezembro (MOCK)", fonte_url: "MOCK://hackatohm/zarc-soja", metodo: "ZARC soja (MOCK)" }
+
+optimization:
+  mode: pareto
+  stages: [margem, risco]      # lexicographic: 1º max margem, 2º min risco
+
+pareto:
+  points: 6
+  min_margem_ratio: 0.85      # piso de margem = 85% do ótimo
+
+monte_carlo:
+  runs: 30
+  margem_jitter_percent: 10   # ±10% em margens/custos (sensibilidade do M1)
+  seed: 42
