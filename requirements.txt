@@ -1,0 +1,11 @@
+# HackatOhm 2026 — "O que plantar?" (Patos de Minas, 600 ha)
+
+# Pipeline de dados (D1/D2/M3)
+pandas>=2.0
+numpy>=1.26
+
+# Engine de decisão (M1/M2)
+ortools>=9.10
+PyYAML>=6.0
+matplotlib>=3.8
+tqdm>=4.60
