@@ -8,9 +8,13 @@
     "n_rotacoes": 6
   },
   "dados": {
-    "status": "MOCK",
-    "observacao": "Margens, riscos e janelas são MOCK — substituir pelos outputs do MC do M1 (margem/risco) e do ZARC via adequacao.py (janelas).",
-    "gerado_em": "2026-10-23T09:36:04",
+    "status": {
+      "status": "parcial",
+      "janelas": "REAIS (ZARC 2026/27, engine/adequacao.py)",
+      "margens": "MOCK — aguardando engine/margens_mc.json (MC do M1)"
+    },
+    "observacao": "Janelas de plantio REAIS quando o config vem do engine/atualiza_config.py; margens e riscos ficam MOCK até o MC do M1 entregar engine/margens_mc.json (re-rodar engine/atualiza_config.py depois).",
+    "gerado_em": "2026-10-23T16:36:58",
     "engine": "engine/ — CP-SAT inteiro: lexicográfico margem→risco, fronteira ε-constraint com knee (Equilibrado) e Monte Carlo de robustez"
   },
   "talhoes": {
@@ -37,29 +41,18 @@
       "margem_reais_por_ha": 4180.0,
       "risco_por_mil": 120,
       "janelas_viveis_decendios": {
-        "1": [
-          28,
-          29,
-          30
-        ],
+        "1": [],
         "2": [
-          26,
-          27,
           28,
-          29,
-          30
+          29
         ],
         "3": [
-          25,
-          26,
-          27,
           28,
           29,
           30
         ]
       },
       "grupos_viveis": [
-        1,
         2,
         3
       ],
@@ -89,10 +82,22 @@
           "metodo": "planilha de custos regional (MOCK)"
         },
         {
-          "chave": "janela_milho_safrinha",
-          "valor": "decêndios 10-15 (MOCK)",
-          "fonte_url": "MOCK://hackatohm/zarc-milho-safrinha",
-          "metodo": "ZARC/portaria milho safrinha (MOCK)"
+          "chave": "observacao",
+          "valor": "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1",
+          "fonte_url": "MOCK://hackatohm/m1-monte-carlo-pendente",
+          "metodo": "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1"
+        },
+        {
+          "chave": "janelas_zarc",
+          "valor": "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)",
+          "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
+          "metodo": "engine/adequacao.py + portaria MAPA"
+        },
+        {
+          "chave": "janela_segunda_cultura",
+          "valor": "plantio da 2ª cultura — g1: sem janela (inviável) · g2: [2-3] · g3: [2-4]",
+          "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
+          "metodo": "janelas pareadas do ZARC — engine/adequacao.py"
         }
       ]
     },
@@ -106,29 +111,22 @@
       "risco_por_mil": 110,
       "janelas_viveis_decendios": {
         "1": [
+          28,
           29,
-          30,
-          31,
-          32,
-          33
+          30
         ],
         "2": [
           28,
           29,
           30,
-          31,
-          32,
-          33
+          31
         ],
         "3": [
-          27,
           28,
           29,
           30,
           31,
-          32,
-          33,
-          34
+          32
         ]
       },
       "grupos_viveis": [
@@ -160,6 +158,24 @@
           "valor": "R$ 5.450/ha",
           "fonte_url": "MOCK://hackatohm/custos-regionais",
           "metodo": "planilha de custos regional (MOCK)"
+        },
+        {
+          "chave": "observacao",
+          "valor": "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1",
+          "fonte_url": "MOCK://hackatohm/m1-monte-carlo-pendente",
+          "metodo": "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1"
+        },
+        {
+          "chave": "janelas_zarc",
+          "valor": "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)",
+          "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
+          "metodo": "engine/adequacao.py + portaria MAPA"
+        },
+        {
+          "chave": "janela_segunda_cultura",
+          "valor": "plantio da 2ª cultura — g1: [2-4] · g2: [2-5] · g3: [2-6]",
+          "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
+          "metodo": "janelas pareadas do ZARC — engine/adequacao.py"
         }
       ]
     },
@@ -172,25 +188,29 @@
       "margem_reais_por_ha": 4500.0,
       "risco_por_mil": 250,
       "janelas_viveis_decendios": {
-        "1": [],
+        "1": [
+          29,
+          30,
+          31
+        ],
         "2": [
-          24,
-          25,
-          26,
-          27,
-          28
+          28,
+          29,
+          30,
+          31,
+          32
         ],
         "3": [
-          23,
-          24,
-          25,
-          26,
-          27,
           28,
-          29
+          29,
+          30,
+          31,
+          32,
+          33
         ]
       },
       "grupos_viveis": [
+        1,
         2,
         3
       ],
@@ -221,9 +241,21 @@
         },
         {
           "chave": "observacao",
-          "valor": "margem alta, risco alto (MOCK)",
-          "fonte_url": "MOCK://hackatohm/m1-monte-carlo",
-          "metodo": "MC do M1 (MOCK)"
+          "valor": "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1",
+          "fonte_url": "MOCK://hackatohm/m1-monte-carlo-pendente",
+          "metodo": "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1"
+        },
+        {
+          "chave": "janelas_zarc",
+          "valor": "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)",
+          "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
+          "metodo": "engine/adequacao.py + portaria MAPA"
+        },
+        {
+          "chave": "janela_segunda_cultura",
+          "valor": "plantio da 2ª cultura — g1: [2-4] · g2: [1-5] · g3: [1-6]",
+          "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
+          "metodo": "janelas pareadas do ZARC — engine/adequacao.py"
         }
       ]
     },
@@ -236,25 +268,29 @@
       "risco_por_mil": 90,
       "janelas_viveis_decendios": {
         "1": [
-          29,
-          30,
-          31
+          31,
+          32,
+          33,
+          34,
+          35
         ],
         "2": [
-          28,
-          29,
-          30,
-          31,
-          32
-        ],
-        "3": [
-          27,
-          28,
-          29,
           30,
           31,
           32,
-          33
+          33,
+          34,
+          35,
+          36
+        ],
+        "3": [
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
         ]
       },
       "grupos_viveis": [
@@ -283,9 +319,15 @@
         },
         {
           "chave": "observacao",
-          "valor": "milho 1ª safra e milho safrinha têm ZARC/portaria próprios — insumos distintos (MOCK)",
-          "fonte_url": "MOCK://hackatohm/zarc-milho-verao",
-          "metodo": "ZARC milho 1ª safra (MOCK)"
+          "valor": "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1",
+          "fonte_url": "MOCK://hackatohm/m1-monte-carlo-pendente",
+          "metodo": "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1"
+        },
+        {
+          "chave": "janelas_zarc",
+          "valor": "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)",
+          "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
+          "metodo": "engine/adequacao.py + portaria MAPA"
         }
       ]
     },
@@ -298,26 +340,7 @@
       "risco_por_mil": 130,
       "janelas_viveis_decendios": {
         "1": [
-          28,
-          29,
-          30,
-          31,
-          32,
-          33
-        ],
-        "2": [
-          27,
-          28,
-          29,
-          30,
-          31,
-          32,
-          33,
-          34
-        ],
-        "3": [
-          26,
-          27,
+          1,
           28,
           29,
           30,
@@ -325,7 +348,32 @@
           32,
           33,
           34,
-          35
+          35,
+          36
+        ],
+        "2": [
+          1,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ],
+        "3": [
+          1,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
         ]
       },
       "grupos_viveis": [
@@ -354,9 +402,15 @@
         },
         {
           "chave": "observacao",
-          "valor": "sem 2ª safra — sem prazo da safrinha, plantio pode ir até dezembro (MOCK)",
-          "fonte_url": "MOCK://hackatohm/zarc-soja",
-          "metodo": "ZARC soja (MOCK)"
+          "valor": "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1",
+          "fonte_url": "MOCK://hackatohm/m1-monte-carlo-pendente",
+          "metodo": "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1"
+        },
+        {
+          "chave": "janelas_zarc",
+          "valor": "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)",
+          "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
+          "metodo": "engine/adequacao.py + portaria MAPA"
         }
       ]
     },
@@ -508,37 +562,36 @@
     "perfil": "Ótimo lexicográfico",
     "descricao": "lexicográfico: 1º maximiza margem, 2º minimiza risco",
     "margem_floor_centavos": null,
-    "margem_centavos": 263600000,
-    "margem_reais": 2636000.0,
-    "risco_por_mil_ha": 124000,
-    "ha_sob_risco": 124.0,
+    "margem_centavos": 270000000,
+    "margem_reais": 2700000.0,
+    "risco_por_mil_ha": 150000,
+    "ha_sob_risco": 150.0,
     "status": "OPTIMAL",
     "plano_por_talhao": {
       "T1": {
         "feijao_sorgo": 300
       },
       "T2": {
-        "soja_milho": 200
+        "feijao_sorgo": 200
       },
       "T3": {
         "feijao_sorgo": 100
       }
     },
     "area_por_rotacao": {
-      "soja_milho": 200,
-      "feijao_sorgo": 400
+      "feijao_sorgo": 600
     },
     "stage_results": [
       {
         "estagio": "margem",
         "direcao": "max",
-        "valor": 263600000,
+        "valor": 270000000,
         "status": "OPTIMAL"
       },
       {
         "estagio": "risco",
         "direcao": "min",
-        "valor": 124000,
+        "valor": 150000,
         "status": "OPTIMAL"
       }
     ]
@@ -547,161 +600,160 @@
     {
       "perfil": "Arrojado",
       "descricao": null,
-      "margem_floor_centavos": 263600000,
-      "margem_centavos": 263600000,
-      "margem_reais": 2636000.0,
-      "risco_por_mil_ha": 124000,
-      "ha_sob_risco": 124.0,
+      "margem_floor_centavos": 270000000,
+      "margem_centavos": 270000000,
+      "margem_reais": 2700000.0,
+      "risco_por_mil_ha": 150000,
+      "ha_sob_risco": 150.0,
       "status": "OPTIMAL",
       "plano_por_talhao": {
         "T1": {
           "feijao_sorgo": 300
         },
         "T2": {
-          "soja_milho": 200
+          "feijao_sorgo": 200
         },
         "T3": {
           "feijao_sorgo": 100
         }
       },
       "area_por_rotacao": {
-        "soja_milho": 200,
-        "feijao_sorgo": 400
+        "feijao_sorgo": 600
       }
     },
     {
       "perfil": null,
       "descricao": null,
-      "margem_floor_centavos": 255692000,
-      "margem_centavos": 255696000,
-      "margem_reais": 2556960.0,
-      "risco_por_mil_ha": 91890,
-      "ha_sob_risco": 91.9,
+      "margem_floor_centavos": 261900000,
+      "margem_centavos": 261904000,
+      "margem_reais": 2619040.0,
+      "risco_por_mil_ha": 117110,
+      "ha_sob_risco": 117.1,
       "status": "OPTIMAL",
       "plano_por_talhao": {
         "T1": {
-          "soja_milho": 147,
-          "feijao_sorgo": 153
+          "soja_milho": 252,
+          "feijao_sorgo": 48
         },
         "T2": {
-          "soja_milho": 200
+          "feijao_sorgo": 200
+        },
+        "T3": {
+          "soja_milho": 1,
+          "feijao_sorgo": 99
+        }
+      },
+      "area_por_rotacao": {
+        "soja_milho": 253,
+        "feijao_sorgo": 347
+      }
+    },
+    {
+      "perfil": null,
+      "descricao": null,
+      "margem_floor_centavos": 253800000,
+      "margem_centavos": 253812000,
+      "margem_reais": 2538120.0,
+      "risco_por_mil_ha": 90150,
+      "ha_sob_risco": 90.2,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "soja_milho": 299,
+          "feijao_sorgo": 1
+        },
+        "T2": {
+          "soja_sorgo": 57,
+          "feijao_sorgo": 143
         },
         "T3": {
           "soja_milho": 100
         }
       },
       "area_por_rotacao": {
-        "soja_milho": 447,
-        "feijao_sorgo": 153
+        "soja_milho": 399,
+        "soja_sorgo": 57,
+        "feijao_sorgo": 144
       }
     },
     {
       "perfil": "Equilibrado (knee)",
       "descricao": null,
-      "margem_floor_centavos": 247784000,
-      "margem_centavos": 247804000,
-      "margem_reais": 2478040.0,
-      "risco_por_mil_ha": 70930,
-      "ha_sob_risco": 70.9,
+      "margem_floor_centavos": 245700000,
+      "margem_centavos": 245712000,
+      "margem_reais": 2457120.0,
+      "risco_por_mil_ha": 71250,
+      "ha_sob_risco": 71.2,
       "status": "OPTIMAL",
       "plano_por_talhao": {
         "T1": {
-          "soja_milho": 193,
-          "soja_sorgo": 107
+          "soja_milho": 299,
+          "soja_sorgo": 1
         },
         "T2": {
-          "soja_milho": 200
+          "soja_sorgo": 191,
+          "feijao_sorgo": 9
         },
         "T3": {
           "soja_milho": 100
         }
       },
       "area_por_rotacao": {
-        "soja_milho": 493,
-        "soja_sorgo": 107
+        "soja_milho": 399,
+        "soja_sorgo": 192,
+        "feijao_sorgo": 9
       }
     },
     {
       "perfil": null,
       "descricao": null,
-      "margem_floor_centavos": 239876000,
-      "margem_centavos": 239880000,
-      "margem_reais": 2398800.0,
-      "risco_por_mil_ha": 68100,
-      "ha_sob_risco": 68.1,
+      "margem_floor_centavos": 237600000,
+      "margem_centavos": 237612000,
+      "margem_reais": 2376120.0,
+      "risco_por_mil_ha": 67290,
+      "ha_sob_risco": 67.3,
       "status": "OPTIMAL",
       "plano_por_talhao": {
         "T1": {
-          "soja_milho": 98,
-          "soja_sorgo": 202
-        },
-        "T2": {
-          "soja_milho": 112,
-          "soja_sorgo": 88
-        },
-        "T3": {
-          "soja_sorgo": 100
-        }
-      },
-      "area_por_rotacao": {
-        "soja_milho": 210,
-        "soja_sorgo": 390
-      }
-    },
-    {
-      "perfil": null,
-      "descricao": null,
-      "margem_floor_centavos": 231968000,
-      "margem_centavos": 231976000,
-      "margem_reais": 2319760.0,
-      "risco_por_mil_ha": 65410,
-      "ha_sob_risco": 65.4,
-      "status": "OPTIMAL",
-      "plano_por_talhao": {
-        "T1": {
-          "soja_sorgo": 300
-        },
-        "T2": {
-          "soja_milho": 7,
-          "soja_sorgo": 187,
-          "capital_pousio": 6
-        },
-        "T3": {
-          "soja_sorgo": 100
-        }
-      },
-      "area_por_rotacao": {
-        "soja_milho": 7,
-        "soja_sorgo": 587,
-        "capital_pousio": 6
-      }
-    },
-    {
-      "perfil": null,
-      "descricao": null,
-      "margem_floor_centavos": 224060000,
-      "margem_centavos": 224066000,
-      "margem_reais": 2240660.0,
-      "risco_por_mil_ha": 63050,
-      "ha_sob_risco": 63.0,
-      "status": "OPTIMAL",
-      "plano_por_talhao": {
-        "T1": {
-          "soja_sorgo": 273,
-          "capital_pousio": 27
+          "soja_milho": 29,
+          "soja_sorgo": 271
         },
         "T2": {
           "soja_sorgo": 200
         },
         "T3": {
-          "soja_milho": 2,
-          "soja_sorgo": 98
+          "soja_milho": 100
         }
       },
       "area_por_rotacao": {
-        "soja_milho": 2,
-        "soja_sorgo": 571,
-        "capital_pousio": 27
+        "soja_milho": 129,
+        "soja_sorgo": 471
+      }
+    },
+    {
+      "perfil": null,
+      "descricao": null,
+      "margem_floor_centavos": 229500000,
+      "margem_centavos": 229560000,
+      "margem_reais": 2295600.0,
+      "risco_por_mil_ha": 64680,
+      "ha_sob_risco": 64.7,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "soja_sorgo": 288,
+          "capital_pousio": 12
+        },
+        "T2": {
+          "soja_sorgo": 200
+        },
+        "T3": {
+          "soja_sorgo": 100
+        }
+      },
+      "area_por_rotacao": {
+        "soja_sorgo": 588,
+        "capital_pousio": 12
       }
     },
     {
@@ -732,79 +784,82 @@
   "knee": {
     "perfil": "Equilibrado (knee)",
     "descricao": "knee point — melhor trade-off margem × risco",
-    "margem_floor_centavos": 247784000,
-    "margem_centavos": 247804000,
-    "margem_reais": 2478040.0,
-    "risco_por_mil_ha": 70930,
-    "ha_sob_risco": 70.9,
+    "margem_floor_centavos": 245700000,
+    "margem_centavos": 245712000,
+    "margem_reais": 2457120.0,
+    "risco_por_mil_ha": 71250,
+    "ha_sob_risco": 71.2,
     "status": "OPTIMAL",
     "plano_por_talhao": {
       "T1": {
-        "soja_milho": 193,
-        "soja_sorgo": 107
+        "soja_milho": 299,
+        "soja_sorgo": 1
       },
       "T2": {
-        "soja_milho": 200
+        "soja_sorgo": 191,
+        "feijao_sorgo": 9
       },
       "T3": {
         "soja_milho": 100
       }
     },
     "area_por_rotacao": {
-      "soja_milho": 493,
-      "soja_sorgo": 107
+      "soja_milho": 399,
+      "soja_sorgo": 192,
+      "feijao_sorgo": 9
     }
   },
   "planos": {
     "arrojado": {
       "perfil": "Arrojado",
       "descricao": "máxima margem (topo da fronteira)",
-      "margem_floor_centavos": 263600000,
-      "margem_centavos": 263600000,
-      "margem_reais": 2636000.0,
-      "risco_por_mil_ha": 124000,
-      "ha_sob_risco": 124.0,
+      "margem_floor_centavos": 270000000,
+      "margem_centavos": 270000000,
+      "margem_reais": 2700000.0,
+      "risco_por_mil_ha": 150000,
+      "ha_sob_risco": 150.0,
       "status": "OPTIMAL",
       "plano_por_talhao": {
         "T1": {
           "feijao_sorgo": 300
         },
         "T2": {
-          "soja_milho": 200
+          "feijao_sorgo": 200
         },
         "T3": {
           "feijao_sorgo": 100
         }
       },
       "area_por_rotacao": {
-        "soja_milho": 200,
-        "feijao_sorgo": 400
+        "feijao_sorgo": 600
       }
     },
     "equilibrado": {
       "perfil": "Equilibrado (knee)",
       "descricao": "knee point — melhor trade-off margem × risco",
-      "margem_floor_centavos": 247784000,
-      "margem_centavos": 247804000,
-      "margem_reais": 2478040.0,
-      "risco_por_mil_ha": 70930,
-      "ha_sob_risco": 70.9,
+      "margem_floor_centavos": 245700000,
+      "margem_centavos": 245712000,
+      "margem_reais": 2457120.0,
+      "risco_por_mil_ha": 71250,
+      "ha_sob_risco": 71.2,
       "status": "OPTIMAL",
       "plano_por_talhao": {
         "T1": {
-          "soja_milho": 193,
-          "soja_sorgo": 107
+          "soja_milho": 299,
+          "soja_sorgo": 1
         },
         "T2": {
-          "soja_milho": 200
+          "soja_sorgo": 191,
+          "feijao_sorgo": 9
         },
         "T3": {
           "soja_milho": 100
         }
       },
       "area_por_rotacao": {
-        "soja_milho": 493,
-        "soja_sorgo": 107
+        "soja_milho": 399,
+        "soja_sorgo": 192,
+        "feijao_sorgo": 9
       }
     },
     "conservador": {
@@ -838,35 +893,35 @@
     "seed": 42,
     "successful_runs": 30,
     "failed_runs": 0,
-    "stability_mean": 0.8667,
-    "stability_min": 0.3333,
+    "stability_mean": 0.9222,
+    "stability_min": 0.0,
     "stability_max": 1.0,
-    "max_talhoes_mudados": 2,
-    "pct_runs_sem_mudanca": 70.0,
+    "max_talhoes_mudados": 3,
+    "pct_runs_sem_mudanca": 90.0,
     "distribuicao_mudancas_talhoes": {
-      "0": 21,
-      "1": 6,
-      "2": 3
+      "0": 27,
+      "2": 2,
+      "3": 1
     },
-    "frase_estabilidade": "A alocação muda em no máximo 2 talhões em 100% dos cenários de ±10% em preço/custo.",
+    "frase_estabilidade": "A alocação muda em no máximo 3 talhões em 100% dos cenários de ±10% em preço/custo.",
     "retention_por_rotacao": {
       "soja_milho": {
-        "presente_no_baseline": true,
-        "runs_presente": 24,
-        "fracao_runs": 0.8,
-        "area_media_ha": 250.0
+        "presente_no_baseline": false,
+        "runs_presente": 3,
+        "fracao_runs": 0.1,
+        "area_media_ha": 400.0
       },
       "soja_sorgo": {
         "presente_no_baseline": false,
-        "runs_presente": 6,
-        "fracao_runs": 0.2,
+        "runs_presente": 1,
+        "fracao_runs": 0.03333333333333333,
         "area_media_ha": 200.0
       },
       "feijao_sorgo": {
         "presente_no_baseline": true,
-        "runs_presente": 27,
-        "fracao_runs": 0.9,
-        "area_media_ha": 400.0
+        "runs_presente": 29,
+        "fracao_runs": 0.9666666666666667,
+        "area_media_ha": 572.4137931034483
       },
       "milho_verao": {
         "presente_no_baseline": false,
@@ -888,10 +943,10 @@
       }
     },
     "margem_total_centavos": {
-      "media": 266437686,
-      "minimo": 242721400,
-      "maximo": 283177600,
-      "desvio_padrao": 10141434.1
+      "media": 274211000,
+      "minimo": 243068400,
+      "maximo": 296569800,
+      "desvio_padrao": 13599609.5
     },
     "observacao": "Perturba as margens (custos embutidos) em ±10% e re-resolve; mede a estabilidade da RECOMENDAÇÃO — complementar ao MC do M1, que gera as margens."
   }
