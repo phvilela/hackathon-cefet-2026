@@ -1,20 +1,25 @@
-# ============================================================================
+# ==============================================================================
 # HackatOhm 2026 — desafio Embrapa | Motor de decisão "o que plantar"
-# Fazenda: 600 ha em 3 talhões — Patos de Minas (MG)
+# Fazenda: 600 ha em 3 talhões — Patos de Minas (safra 2026/27)
 #
-# ⚠ TUDO AQUI É MOCK: margens, riscos e janelas são PROVISÓRIOS.
-#   - margem_esperada / risco → vêm do Monte Carlo do M1 (sexta)
-#   - janelas_viveis          → vêm do ZARC (CSV) via engine/adequacao.py
-#   Basta substituir os números abaixo e rodar de novo — o motor não muda.
+# Regenerado por engine/atualiza_config.py em 23/10/2026 — fontes:
+#   · janelas_viveis → REAIS: engine/janelas_zarc.json (ZARC via adequacao.py)
+#   · margem/risco   → MOCK: engine/margens_mc.json AUSENTE — margens/riscos atuais mantidos (aguardando MC do M1)
+#
+# ⚠ AVISO MOCK vs REAL:
+#   - janelas_viveis JÁ são reais (ZARC, safra 2026/27). Lista VAZIA = rotação
+#     INVIÁVEL naquele grupo de solo (ex.: soja_milho no arenoso — a safrinha
+#     não fecha) — a validação do motor aceita (só exige ≥1 grupo viável).
+#   - margem_esperada/risco ver o status acima; hipóteses de cada rotação
+#     registram a fonte e o método (rastreabilidade).
 #
 # Unidades (CP-SAT só tem inteiros — nunca float no objetivo):
 #   margem_esperada: centavos de R$ por hectare (R$ 4.180/ha → 418000)
 #   risco: por-mil (‰) = P(margem < 0) × 10 (12% → 120)
-#   janelas_viveis: decêndios 1–36 (1–3 = jan … 28–30 = out, 31–33 = nov)
-#     · a janela da ROTAÇÃO = decêndios de plantio da 1ª cultura
-#     · a janela da 2ª cultura (ex.: milho safrinha ≈ decêndios 10–15, MOCK)
-#       fica hoje implícita — documentada nas hipóteses de cada rotação
-# ============================================================================
+#   janelas_viveis: decêndios 1–36 (dec25–27 = set … dec36 = 21–31 dez);
+#     a janela da ROTAÇÃO = decêndios de plantio da 1ª cultura, PAREADA com
+#     a 2ª (só entram decêndios que deixam a safrinha caber — ciclo Grupo I).
+# ==============================================================================
 
 cenario:
   municipio: "Patos de Minas"
@@ -23,94 +28,102 @@ cenario:
   area_total_ha: 600
 
 settings:
-  decendios: 36             # 3 por mês × 12 (janeiro–dezembro)
-  risco_maximo_percent: 40  # regra de corte: decêndio viável se risco ZARC ≤ 40%
-  margem_em_centavos: true  # CP-SAT é inteiro — nunca float no objetivo
+  decendios: 36
+  risco_maximo_percent: 40
+  margem_em_centavos: true
 
-talhoes:                    # no MVP real: gerado a partir do formulário (tela 1)
-  # irrigacao: true habilita o manejo irrigado no modelo (v0 considera só sequeiro)
-  T1: { area_ha: 300, grupo_solo: 2, irrigacao: false }   # textura média
-  T2: { area_ha: 200, grupo_solo: 1, irrigacao: false }   # arenoso
-  T3: { area_ha: 100, grupo_solo: 3, irrigacao: false }   # argiloso
+talhoes:   # gerado do formulário (tela 1); irrigacao: true habilita manejo irrigado (v0 = só sequeiro)
+  T1: { area_ha: 300, grupo_solo: 2, irrigacao: false }
+  T2: { area_ha: 200, grupo_solo: 1, irrigacao: false }
+  T3: { area_ha: 100, grupo_solo: 3, irrigacao: false }
 
-rotacoes:                   # coeficientes vindos do MC do M1 (MOCK até sexta)
+rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada número
   soja_milho:
     culturas: ["soja", "milho safrinha"]
-    margem_esperada: 418000        # centavos de R$/ha (MOCK: ≈ R$ 4.180/ha)
-    risco: 120                     # P(margem < 0) em por-mil (MOCK: 12%)
-    janelas_viveis:                # por grupo de solo — MÁSCARA de 36 decêndios
-      1: [28, 29, 30]              # arenoso: só outubro (safrinha precisa caber)
-      2: [26, 27, 28, 29, 30]      # médio: set–out
-      3: [25, 26, 27, 28, 29, 30] # argiloso: começa mais cedo
+    margem_esperada: 418000   # centavos de R$/ha
+    risco: 120   # P[margem<0] em por-mil (‰)
+    janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
+      1: []
+      2: [28, 29]
+      3: [28, 29, 30]
     hipoteses:
       - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
       - { chave: "produtividade_milho_safrinha", valor: "80 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "custo_total", valor: "R$ 7.610/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "janela_milho_safrinha", valor: "decêndios 10-15 (MOCK)", fonte_url: "MOCK://hackatohm/zarc-milho-safrinha", metodo: "ZARC/portaria milho safrinha (MOCK)" }
+      - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
+      - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
+      - { chave: "janela_segunda_cultura", valor: "plantio da 2ª cultura — g1: sem janela (inviável) · g2: [2-3] · g3: [2-4]", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "janelas pareadas do ZARC — engine/adequacao.py" }
 
   soja_sorgo:
     culturas: ["soja", "sorgo safrinha"]
-    margem_esperada: 390000        # centavos de R$/ha (MOCK: ≈ R$ 3.900/ha)
-    risco: 110                     # P(margem < 0) em por-mil (MOCK: 11%)
-    janelas_viveis:
-      1: [29, 30, 31, 32, 33]                     # arenoso: out–nov
-      2: [28, 29, 30, 31, 32, 33]                 # médio: out–nov
-      3: [27, 28, 29, 30, 31, 32, 33, 34]         # argiloso: set–dez (sorgo tolera 2ª safra tardia)
+    margem_esperada: 390000   # centavos de R$/ha
+    risco: 110   # P[margem<0] em por-mil (‰)
+    janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
+      1: [28, 29, 30]
+      2: [28, 29, 30, 31]
+      3: [28, 29, 30, 31, 32]
     hipoteses:
       - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "preco_sorgo", valor: "R$ 0,55/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
       - { chave: "custo_total", valor: "R$ 5.450/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
+      - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
+      - { chave: "janela_segunda_cultura", valor: "plantio da 2ª cultura — g1: [2-4] · g2: [2-5] · g3: [2-6]", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "janelas pareadas do ZARC — engine/adequacao.py" }
 
   feijao_sorgo:
     culturas: ["feijão das águas", "sorgo safrinha"]
-    margem_esperada: 450000        # centavos de R$/ha (MOCK: ≈ R$ 4.500/ha)
-    risco: 250                     # P(margem < 0) em por-mil (MOCK: 25%)
-    janelas_viveis:
-      1: []                        # MOCK: inviável em arenoso (feijão é sensível a déficit hídrico)
-      2: [24, 25, 26, 27, 28]      # médio: ago–out
-      3: [23, 24, 25, 26, 27, 28, 29] # argiloso: ago–out
+    margem_esperada: 450000   # centavos de R$/ha
+    risco: 250   # P[margem<0] em por-mil (‰)
+    janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
+      1: [29, 30, 31]
+      2: [28, 29, 30, 31, 32]
+      3: [28, 29, 30, 31, 32, 33]
     hipoteses:
       - { chave: "produtividade_feijao", valor: "1.200 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "preco_feijao", valor: "R$ 9,00/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
       - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "custo_total", valor: "R$ 8.500/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "observacao", valor: "margem alta, risco alto (MOCK)", fonte_url: "MOCK://hackatohm/m1-monte-carlo", metodo: "MC do M1 (MOCK)" }
+      - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
+      - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
+      - { chave: "janela_segunda_cultura", valor: "plantio da 2ª cultura — g1: [2-4] · g2: [1-5] · g3: [1-6]", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "janelas pareadas do ZARC — engine/adequacao.py" }
 
   milho_verao:
     culturas: ["milho 1ª safra"]
-    margem_esperada: 260000        # centavos de R$/ha (MOCK: ≈ R$ 2.600/ha)
-    risco: 90                      # P(margem < 0) em por-mil (MOCK: 9%)
-    janelas_viveis:
-      1: [29, 30, 31]              # arenoso: out
-      2: [28, 29, 30, 31, 32]      # médio: out–nov
-      3: [27, 28, 29, 30, 31, 32, 33] # argiloso: out–nov
+    margem_esperada: 260000   # centavos de R$/ha
+    risco: 90   # P[margem<0] em por-mil (‰)
+    janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
+      1: [31, 32, 33, 34, 35]
+      2: [30, 31, 32, 33, 34, 35, 36]
+      3: [30, 31, 32, 33, 34, 35, 36]
     hipoteses:
       - { chave: "produtividade_milho", valor: "110 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "preco_milho", valor: "R$ 58/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
       - { chave: "custo_total", valor: "R$ 3.780/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "observacao", valor: "milho 1ª safra e milho safrinha têm ZARC/portaria próprios — insumos distintos (MOCK)", fonte_url: "MOCK://hackatohm/zarc-milho-verao", metodo: "ZARC milho 1ª safra (MOCK)" }
+      - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
+      - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
 
   soja_solteira:
     culturas: ["soja"]
-    margem_esperada: 360000        # centavos de R$/ha (MOCK: ≈ R$ 3.600/ha)
-    risco: 130                     # P(margem < 0) em por-mil (MOCK: 13%)
-    janelas_viveis:
-      1: [28, 29, 30, 31, 32, 33]                     # arenoso: out–nov
-      2: [27, 28, 29, 30, 31, 32, 33, 34]             # médio: set–dez
-      3: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35]     # argiloso: set–dez (sem 2ª safra, plantio tardio OK)
+    margem_esperada: 360000   # centavos de R$/ha
+    risco: 130   # P[margem<0] em por-mil (‰)
+    janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
+      1: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+      2: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+      3: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
     hipoteses:
       - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
       - { chave: "custo_total", valor: "R$ 3.550/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "observacao", valor: "sem 2ª safra — sem prazo da safrinha, plantio pode ir até dezembro (MOCK)", fonte_url: "MOCK://hackatohm/zarc-soja", metodo: "ZARC soja (MOCK)" }
+      - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
+      - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
 
-  capital_pousio:            # custo de oportunidade explícito: a opção "não plantar"
+  capital_pousio:
     culturas: ["capital no CDI (não plantar)"]
-    margem_esperada: 20000   # centavos de R$/ha (MOCK ≈ R$ 200/ha — Selic sobre o custeio)
-    risco: 0                 # rendimento nominal: sem risco de margem negativa
-    janelas_viveis:          # "planta" o capital em qualquer decêndio e qualquer solo
+    margem_esperada: 20000   # centavos de R$/ha
+    risco: 0   # P[margem<0] em por-mil (‰)
+    janelas_viveis:   # por grupo de solo — decêndios mantidos (rotação fora do janelas_zarc.json)
       1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
       2: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
       3: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
@@ -119,14 +132,14 @@ rotacoes:                   # coeficientes vindos do MC do M1 (MOCK até sexta)
       - { chave: "observacao", valor: "piso de comparação: o modelo só recomenda plantar o que rende mais que o capital aplicado", fonte_url: "MOCK://hackatohm/custo-oportunidade", metodo: "custo de oportunidade explícito (MOCK)" }
 
 optimization:
-  mode: pareto
-  stages: [margem, risco]      # lexicographic: 1º max margem, 2º min risco
+  mode: "pareto"
+  stages: ["margem", "risco"]
 
 pareto:
   points: 6
-  min_margem_ratio: 0.85      # piso de margem = 85% do ótimo
+  min_margem_ratio: 0.85
 
 monte_carlo:
   runs: 30
-  margem_jitter_percent: 10   # ±10% em margens/custos (sensibilidade do M1)
+  margem_jitter_percent: 10
   seed: 42
