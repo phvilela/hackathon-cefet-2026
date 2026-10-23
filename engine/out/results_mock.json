@@ -8,13 +8,9 @@
     "n_rotacoes": 6
   },
   "dados": {
-    "status": {
-      "status": "parcial",
-      "janelas": "REAIS (ZARC 2026/27, engine/adequacao.py)",
-      "margens": "MOCK — aguardando engine/margens_mc.json (MC do M1)"
-    },
-    "observacao": "Janelas de plantio REAIS quando o config vem do engine/atualiza_config.py; margens e riscos ficam MOCK até o MC do M1 entregar engine/margens_mc.json (re-rodar engine/atualiza_config.py depois).",
-    "gerado_em": "2026-10-23T16:36:58",
+    "status": "PARCIAL",
+    "observacao": "Janelas: REAIS (ZARC 2026/27, engine/adequacao.py). Margens: MOCK — aguardando engine/margens_mc.json (MC do M1). Atualize com engine/atualiza_config.py quando o MC do M1 entregar engine/margens_mc.json.",
+    "gerado_em": "2026-10-23T20:24:56",
     "engine": "engine/ — CP-SAT inteiro: lexicográfico margem→risco, fronteira ε-constraint com knee (Equilibrado) e Monte Carlo de robustez"
   },
   "talhoes": {

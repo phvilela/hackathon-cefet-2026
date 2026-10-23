@@ -151,7 +151,7 @@ def _status_dados(rotacoes_cfg: Dict[str, Any]) -> Dict[str, str]:
     janelas_reais = any(str(h.get('chave')) == 'janelas_zarc' for h in hipoteses)
     margens_mock = any(str(h.get('chave')) == 'observacao' and 'MOCK' in str(h.get('valor', ''))
                        for h in hipoteses)
-    status = ('parcial' if janelas_reais else 'mock') if margens_mock else 'real'
+    status = ('PARCIAL' if janelas_reais else 'MOCK') if margens_mock else 'REAL'
     return {
         'status': status,
         'janelas': 'REAIS (ZARC 2026/27, engine/adequacao.py)' if janelas_reais else 'MOCK',
@@ -232,6 +232,7 @@ def build_results(config: Dict[str, Any],
             'hipoteses': info.get('hipoteses', []),
         }
 
+    status_dados = _status_dados(config.get('rotacoes') or {})
     results = {
         'cenario': {
             'municipio': cenario_cfg.get('municipio'),
@@ -242,11 +243,11 @@ def build_results(config: Dict[str, Any],
             'n_rotacoes': len(rotacoes_cfg),
         },
         'dados': {
-            'status': _status_dados(config.get('rotacoes') or {}),
+            'status': status_dados['status'],
             'observacao': (
-                'Janelas de plantio REAIS quando o config vem do engine/atualiza_config.py; '
-                'margens e riscos ficam MOCK até o MC do M1 entregar engine/margens_mc.json '
-                '(re-rodar engine/atualiza_config.py depois).'
+                f"Janelas: {status_dados['janelas']}. Margens: {status_dados['margens']}. "
+                'Atualize com engine/atualiza_config.py quando o MC do M1 entregar '
+                'engine/margens_mc.json.'
             ),
             'gerado_em': datetime.now().isoformat(timespec='seconds'),
             'engine': (
