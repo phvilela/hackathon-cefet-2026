@@ -141,6 +141,25 @@ def _robustez_json(mc: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _status_dados(rotacoes_cfg: Dict[str, Any]) -> Dict[str, str]:
+    """Status honesto por eixo: janelas (ZARC real?) e margens (MC do M1?).
+
+    Detecta pelo próprio config: a entrada gerenciada 'janelas_zarc' marca as
+    janelas reais (engine/atualiza_config.py); o aviso gerenciado 'observacao'
+    com 'MOCK' marca margens ainda provisionais."""
+    hipoteses = [h for info in rotacoes_cfg.values() for h in (info.get('hipoteses') or [])]
+    janelas_reais = any(str(h.get('chave')) == 'janelas_zarc' for h in hipoteses)
+    margens_mock = any(str(h.get('chave')) == 'observacao' and 'MOCK' in str(h.get('valor', ''))
+                       for h in hipoteses)
+    status = ('PARCIAL' if janelas_reais else 'MOCK') if margens_mock else 'REAL'
+    return {
+        'status': status,
+        'janelas': 'REAIS (ZARC 2026/27, engine/adequacao.py)' if janelas_reais else 'MOCK',
+        'margens': ('MOCK — aguardando engine/margens_mc.json (MC do M1)' if margens_mock
+                    else 'REAIS (MC do M1)'),
+    }
+
+
 def build_results(config: Dict[str, Any],
                   solution: Dict[str, Any],
                   frontier: Optional[List[Dict[str, Any]]] = None,
@@ -213,6 +232,7 @@ def build_results(config: Dict[str, Any],
             'hipoteses': info.get('hipoteses', []),
         }
 
+    status_dados = _status_dados(config.get('rotacoes') or {})
     results = {
         'cenario': {
             'municipio': cenario_cfg.get('municipio'),
@@ -223,10 +243,11 @@ def build_results(config: Dict[str, Any],
             'n_rotacoes': len(rotacoes_cfg),
         },
         'dados': {
-            'status': 'MOCK',
+            'status': status_dados['status'],
             'observacao': (
-                'Margens, riscos e janelas são MOCK — substituir pelos outputs do '
-                'MC do M1 (margem/risco) e do ZARC via adequacao.py (janelas).'
+                f"Janelas: {status_dados['janelas']}. Margens: {status_dados['margens']}. "
+                'Atualize com engine/atualiza_config.py quando o MC do M1 entregar '
+                'engine/margens_mc.json.'
             ),
             'gerado_em': datetime.now().isoformat(timespec='seconds'),
             'engine': (
@@ -361,7 +382,9 @@ def _secao_configuracao(config: Dict[str, Any]) -> List[str]:
     pareto_cfg = config.get('pareto', {}) or {}
     mc_cfg = config.get('monte_carlo', {}) or {}
 
-    linhas = ['CONFIGURAÇÃO E DADOS (TUDO MOCK — real: MC do M1 + ZARC)', '-' * LARGURA]
+    status = _status_dados(rotacoes_cfg)
+    linhas = [f"CONFIGURAÇÃO E DADOS — janelas: {status['janelas']} · margens: {status['margens']}",
+              '-' * LARGURA]
     talhoes_txt = ', '.join(
         f"{nome} {_fmt_br(info['area_ha'])} ha (solo grupo {info['grupo_solo']})"
         for nome, info in talhoes_cfg.items()
@@ -385,7 +408,7 @@ def _secao_configuracao(config: Dict[str, Any]) -> List[str]:
         linhas.append(f'      janelas: {janelas_txt}')
         chaves = [h.get('chave', '?') for h in (info.get('hipoteses') or [])]
         if chaves:
-            linhas.append(f"      hipóteses MOCK: {', '.join(chaves)} (fonte_url 'MOCK://…')")
+            linhas.append(f"      hipóteses rastreáveis: {', '.join(chaves)}")
     linhas.append('')
     linhas.append(
         f"Settings: {settings.get('decendios', 36)} decêndios | "
@@ -468,7 +491,10 @@ def generate_report(config: Dict[str, Any],
         '       "ha sob risco" = risco_total ÷ 1000 = hectares com margem negativa esperada.'
     )
     linhas.append('janelas: decêndios 1–36 (3/mês; 25–27 = setembro, 28–30 = outubro, 31–33 = novembro).')
-    linhas.append('MOCK: números provisórios — margem/risco vêm do MC do M1; janelas do ZARC (adequacao.py).')
+    status = _status_dados(config.get('rotacoes') or {})
+    linhas.append(f"STATUS: janelas {status['janelas']} · margens {status['margens']} — "
+                  'atualize com engine/atualiza_config.py quando o MC do M1 entregar '
+                  'engine/margens_mc.json.')
     linhas.append('=' * LARGURA)
 
     return '\n'.join(linhas)
