@@ -3,9 +3,16 @@
 # Pipeline de dados (D1/D2/M3)
 pandas>=2.0
 numpy>=1.26
+requests>=2.31
+tqdm>=4.60
+pyarrow>=14.0
+openpyxl>=3.1
+xlrd>=2.0
+
+# Mercado (D2) — Conab + B3
+yfinance>=0.2
 
 # Engine de decisão (M1/M2)
 ortools>=9.10
 PyYAML>=6.0
 matplotlib>=3.8
-tqdm>=4.60

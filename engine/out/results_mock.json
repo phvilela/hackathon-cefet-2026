@@ -10,7 +10,7 @@
   "dados": {
     "status": "MOCK",
     "observacao": "Margens, riscos e janelas são MOCK — substituir pelos outputs do MC do M1 (margem/risco) e do ZARC via adequacao.py (janelas).",
-    "gerado_em": "2026-10-23T09:36:04",
+    "gerado_em": "2026-10-23T16:35:36",
     "engine": "engine/ — CP-SAT inteiro: lexicográfico margem→risco, fronteira ε-constraint com knee (Equilibrado) e Monte Carlo de robustez"
   },
   "talhoes": {
@@ -68,31 +68,43 @@
           "chave": "produtividade_soja",
           "valor": "55 sc/ha",
           "fonte_url": "MOCK://hackatohm/pam-media-20anos",
-          "metodo": "média PAM 20 anos (MOCK)"
+          "metodo": "média PAM 20 anos (MOCK — M1 atualiza)"
         },
         {
           "chave": "preco_soja",
           "valor": "R$ 130/sc",
           "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
-          "metodo": "média Conab 5 safras (MOCK)"
+          "metodo": "média Conab 5 safras (MOCK — M1 atualiza)"
         },
         {
           "chave": "produtividade_milho_safrinha",
           "valor": "80 sc/ha",
           "fonte_url": "MOCK://hackatohm/pam-media-20anos",
-          "metodo": "média PAM 20 anos (MOCK)"
+          "metodo": "média PAM 20 anos (MOCK — M1 atualiza)"
         },
         {
-          "chave": "custo_total",
-          "valor": "R$ 7.610/ha",
-          "fonte_url": "MOCK://hackatohm/custos-regionais",
-          "metodo": "planilha de custos regional (MOCK)"
+          "chave": "custo_total_soja",
+          "valor": "R$ 7.291/ha",
+          "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-soja-1997-a-2026.xls",
+          "metodo": "Conab série histórica, Unaí-MG, 2026, agricultura empresarial"
+        },
+        {
+          "chave": "custo_total_milho_safrinha",
+          "valor": "R$ 6.671/ha",
+          "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/milho/milho_2a_safra_serie_historica_2005-2026.xls",
+          "metodo": "Conab série histórica, Unaí-MG, 2026, agricultura empresarial"
+        },
+        {
+          "chave": "custo_total_rotacao",
+          "valor": "R$ 13.962/ha",
+          "fonte_url": "soma soja + milho safrinha (Conab)",
+          "metodo": "custo total da rotação soja→milho safrinha no mesmo hectare"
         },
         {
           "chave": "janela_milho_safrinha",
           "valor": "decêndios 10-15 (MOCK)",
           "fonte_url": "MOCK://hackatohm/zarc-milho-safrinha",
-          "metodo": "ZARC/portaria milho safrinha (MOCK)"
+          "metodo": "ZARC/portaria milho safrinha (MOCK — adequacao.py)"
         }
       ]
     },
@@ -141,25 +153,37 @@
           "chave": "produtividade_soja",
           "valor": "55 sc/ha",
           "fonte_url": "MOCK://hackatohm/pam-media-20anos",
-          "metodo": "média PAM 20 anos (MOCK)"
+          "metodo": "média PAM 20 anos (MOCK — M1 atualiza)"
         },
         {
           "chave": "produtividade_sorgo",
           "valor": "4.000 kg/ha",
           "fonte_url": "MOCK://hackatohm/pam-media-20anos",
-          "metodo": "média PAM 20 anos (MOCK)"
+          "metodo": "média PAM 20 anos (MOCK — M1 atualiza)"
         },
         {
           "chave": "preco_sorgo",
           "valor": "R$ 0,55/kg",
           "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
-          "metodo": "média Conab 5 safras (MOCK)"
+          "metodo": "média Conab 5 safras (MOCK — M1 atualiza)"
         },
         {
-          "chave": "custo_total",
-          "valor": "R$ 5.450/ha",
-          "fonte_url": "MOCK://hackatohm/custos-regionais",
-          "metodo": "planilha de custos regional (MOCK)"
+          "chave": "custo_total_soja",
+          "valor": "R$ 7.291/ha",
+          "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-soja-1997-a-2026.xls",
+          "metodo": "Conab série histórica, Unaí-MG, 2026"
+        },
+        {
+          "chave": "custo_total_sorgo_safrinha",
+          "valor": "R$ 4.788/ha",
+          "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/seriehistoricacustossorgo2013a2026.xls",
+          "metodo": "Conab série histórica, Rio Verde-GO, 2026 (proxy Cerrado)"
+        },
+        {
+          "chave": "custo_total_rotacao",
+          "valor": "R$ 12.079/ha",
+          "fonte_url": "soma soja + sorgo safrinha (Conab)",
+          "metodo": "custo total da rotação soja→sorgo safrinha"
         }
       ]
     },
@@ -199,25 +223,37 @@
           "chave": "produtividade_feijao",
           "valor": "1.200 kg/ha",
           "fonte_url": "MOCK://hackatohm/pam-media-20anos",
-          "metodo": "média PAM 20 anos (MOCK)"
+          "metodo": "média PAM 20 anos (MOCK — M1 atualiza)"
         },
         {
           "chave": "preco_feijao",
           "valor": "R$ 9,00/kg",
           "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
-          "metodo": "média Conab 5 safras (MOCK)"
+          "metodo": "média Conab 5 safras (MOCK — M1 atualiza)"
         },
         {
           "chave": "produtividade_sorgo",
           "valor": "4.000 kg/ha",
           "fonte_url": "MOCK://hackatohm/pam-media-20anos",
-          "metodo": "média PAM 20 anos (MOCK)"
+          "metodo": "média PAM 20 anos (MOCK — M1 atualiza)"
         },
         {
-          "chave": "custo_total",
-          "valor": "R$ 8.500/ha",
-          "fonte_url": "MOCK://hackatohm/custos-regionais",
-          "metodo": "planilha de custos regional (MOCK)"
+          "chave": "custo_total_feijao",
+          "valor": "R$ 9.205/ha",
+          "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/feijao/feijao_1_safra_serie_historica-1998-2026.xls",
+          "metodo": "Conab série histórica, Unaí-MG, 2026"
+        },
+        {
+          "chave": "custo_total_sorgo_safrinha",
+          "valor": "R$ 4.788/ha",
+          "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/seriehistoricacustossorgo2013a2026.xls",
+          "metodo": "Conab série histórica, Rio Verde-GO, 2026 (proxy Cerrado)"
+        },
+        {
+          "chave": "custo_total_rotacao",
+          "valor": "R$ 13.993/ha",
+          "fonte_url": "soma feijão + sorgo safrinha (Conab)",
+          "metodo": "custo total da rotação feijão→sorgo safrinha"
         },
         {
           "chave": "observacao",
@@ -267,25 +303,25 @@
           "chave": "produtividade_milho",
           "valor": "110 sc/ha",
           "fonte_url": "MOCK://hackatohm/pam-media-20anos",
-          "metodo": "média PAM 20 anos (MOCK)"
+          "metodo": "média PAM 20 anos (MOCK — M1 atualiza)"
         },
         {
           "chave": "preco_milho",
           "valor": "R$ 58/sc",
           "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
-          "metodo": "média Conab 5 safras (MOCK)"
+          "metodo": "média Conab 5 safras (MOCK — M1 atualiza)"
         },
         {
           "chave": "custo_total",
-          "valor": "R$ 3.780/ha",
-          "fonte_url": "MOCK://hackatohm/custos-regionais",
-          "metodo": "planilha de custos regional (MOCK)"
+          "valor": "R$ 8.804/ha",
+          "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/milho/milho_1a_safra_serie_historica_1997-2026.xls",
+          "metodo": "Conab série histórica, Uruçuí-PI, 2026 (proxy Cerrado/MG)"
         },
         {
           "chave": "observacao",
           "valor": "milho 1ª safra e milho safrinha têm ZARC/portaria próprios — insumos distintos (MOCK)",
           "fonte_url": "MOCK://hackatohm/zarc-milho-verao",
-          "metodo": "ZARC milho 1ª safra (MOCK)"
+          "metodo": "ZARC milho 1ª safra (MOCK — adequacao.py)"
         }
       ]
     },
@@ -338,25 +374,25 @@
           "chave": "produtividade_soja",
           "valor": "55 sc/ha",
           "fonte_url": "MOCK://hackatohm/pam-media-20anos",
-          "metodo": "média PAM 20 anos (MOCK)"
+          "metodo": "média PAM 20 anos (MOCK — M1 atualiza)"
         },
         {
           "chave": "preco_soja",
           "valor": "R$ 130/sc",
           "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
-          "metodo": "média Conab 5 safras (MOCK)"
+          "metodo": "média Conab 5 safras (MOCK — M1 atualiza)"
         },
         {
           "chave": "custo_total",
-          "valor": "R$ 3.550/ha",
-          "fonte_url": "MOCK://hackatohm/custos-regionais",
-          "metodo": "planilha de custos regional (MOCK)"
+          "valor": "R$ 7.291/ha",
+          "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-soja-1997-a-2026.xls",
+          "metodo": "Conab série histórica, Unaí-MG, 2026"
         },
         {
           "chave": "observacao",
           "valor": "sem 2ª safra — sem prazo da safrinha, plantio pode ir até dezembro (MOCK)",
           "fonte_url": "MOCK://hackatohm/zarc-soja",
-          "metodo": "ZARC soja (MOCK)"
+          "metodo": "ZARC soja (MOCK — adequacao.py)"
         }
       ]
     },

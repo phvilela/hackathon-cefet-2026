@@ -34,77 +34,87 @@ talhoes:                    # no MVP real: gerado a partir do formulário (tela 
   T3: { area_ha: 100, grupo_solo: 3, irrigacao: false }   # argiloso
 
 rotacoes:                   # coeficientes vindos do MC do M1 (MOCK até sexta)
+  # Custos reais Conab (série histórica 2024-2026, região Unaí-MG / Cerrado)
+  # Fonte: pipeline/mercado.py → data/processed/mercado/conab_custos/
+  # soja (Unaí 2026): 7.291 | milho safrinha (Unaí 2026): 6.671 | sorgo safrinha (Rio Verde 2026): 4.788
+  # feijão 1a (Unaí 2026): 9.205 | milho 1a (Uruçuí 2026): 8.804
   soja_milho:
     culturas: ["soja", "milho safrinha"]
-    margem_esperada: 418000        # centavos de R$/ha (MOCK: ≈ R$ 4.180/ha)
-    risco: 120                     # P(margem < 0) em por-mil (MOCK: 12%)
+    margem_esperada: 418000        # centavos de R$/ha (MOCK: ≈ R$ 4.180/ha) — M1 atualiza na sexta
+    risco: 120                     # P(margem < 0) em por-mil (MOCK: 12%) — M1 atualiza na sexta
     janelas_viveis:                # por grupo de solo — MÁSCARA de 36 decêndios
       1: [28, 29, 30]              # arenoso: só outubro (safrinha precisa caber)
       2: [26, 27, 28, 29, 30]      # médio: set–out
       3: [25, 26, 27, 28, 29, 30] # argiloso: começa mais cedo
     hipoteses:
-      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "produtividade_milho_safrinha", valor: "80 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 7.610/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "janela_milho_safrinha", valor: "decêndios 10-15 (MOCK)", fonte_url: "MOCK://hackatohm/zarc-milho-safrinha", metodo: "ZARC/portaria milho safrinha (MOCK)" }
+      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK — M1 atualiza)" }
+      - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK — M1 atualiza)" }
+      - { chave: "produtividade_milho_safrinha", valor: "80 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK — M1 atualiza)" }
+      - { chave: "custo_total_soja", valor: "R$ 7.291/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-soja-1997-a-2026.xls", metodo: "Conab série histórica, Unaí-MG, 2026, agricultura empresarial" }
+      - { chave: "custo_total_milho_safrinha", valor: "R$ 6.671/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/milho/milho_2a_safra_serie_historica_2005-2026.xls", metodo: "Conab série histórica, Unaí-MG, 2026, agricultura empresarial" }
+      - { chave: "custo_total_rotacao", valor: "R$ 13.962/ha", fonte_url: "soma soja + milho safrinha (Conab)", metodo: "custo total da rotação soja→milho safrinha no mesmo hectare" }
+      - { chave: "janela_milho_safrinha", valor: "decêndios 10-15 (MOCK)", fonte_url: "MOCK://hackatohm/zarc-milho-safrinha", metodo: "ZARC/portaria milho safrinha (MOCK — adequacao.py)" }
 
   soja_sorgo:
     culturas: ["soja", "sorgo safrinha"]
-    margem_esperada: 390000        # centavos de R$/ha (MOCK: ≈ R$ 3.900/ha)
-    risco: 110                     # P(margem < 0) em por-mil (MOCK: 11%)
+    margem_esperada: 390000        # centavos de R$/ha (MOCK: ≈ R$ 3.900/ha) — M1 atualiza na sexta
+    risco: 110                     # P(margem < 0) em por-mil (MOCK: 11%) — M1 atualiza na sexta
     janelas_viveis:
       1: [29, 30, 31, 32, 33]                     # arenoso: out–nov
       2: [28, 29, 30, 31, 32, 33]                 # médio: out–nov
       3: [27, 28, 29, 30, 31, 32, 33, 34]         # argiloso: set–dez (sorgo tolera 2ª safra tardia)
     hipoteses:
-      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "preco_sorgo", valor: "R$ 0,55/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 5.450/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK — M1 atualiza)" }
+      - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK — M1 atualiza)" }
+      - { chave: "preco_sorgo", valor: "R$ 0,55/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK — M1 atualiza)" }
+      - { chave: "custo_total_soja", valor: "R$ 7.291/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-soja-1997-a-2026.xls", metodo: "Conab série histórica, Unaí-MG, 2026" }
+      - { chave: "custo_total_sorgo_safrinha", valor: "R$ 4.788/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/seriehistoricacustossorgo2013a2026.xls", metodo: "Conab série histórica, Rio Verde-GO, 2026 (proxy Cerrado)" }
+      - { chave: "custo_total_rotacao", valor: "R$ 12.079/ha", fonte_url: "soma soja + sorgo safrinha (Conab)", metodo: "custo total da rotação soja→sorgo safrinha" }
 
   feijao_sorgo:
     culturas: ["feijão das águas", "sorgo safrinha"]
-    margem_esperada: 450000        # centavos de R$/ha (MOCK: ≈ R$ 4.500/ha)
-    risco: 250                     # P(margem < 0) em por-mil (MOCK: 25%)
+    margem_esperada: 450000        # centavos de R$/ha (MOCK: ≈ R$ 4.500/ha) — M1 atualiza na sexta
+    risco: 250                     # P(margem < 0) em por-mil (MOCK: 25%) — M1 atualiza na sexta
     janelas_viveis:
       1: []                        # MOCK: inviável em arenoso (feijão é sensível a déficit hídrico)
       2: [24, 25, 26, 27, 28]      # médio: ago–out
       3: [23, 24, 25, 26, 27, 28, 29] # argiloso: ago–out
     hipoteses:
-      - { chave: "produtividade_feijao", valor: "1.200 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "preco_feijao", valor: "R$ 9,00/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 8.500/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "produtividade_feijao", valor: "1.200 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK — M1 atualiza)" }
+      - { chave: "preco_feijao", valor: "R$ 9,00/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK — M1 atualiza)" }
+      - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK — M1 atualiza)" }
+      - { chave: "custo_total_feijao", valor: "R$ 9.205/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/feijao/feijao_1_safra_serie_historica-1998-2026.xls", metodo: "Conab série histórica, Unaí-MG, 2026" }
+      - { chave: "custo_total_sorgo_safrinha", valor: "R$ 4.788/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/seriehistoricacustossorgo2013a2026.xls", metodo: "Conab série histórica, Rio Verde-GO, 2026 (proxy Cerrado)" }
+      - { chave: "custo_total_rotacao", valor: "R$ 13.993/ha", fonte_url: "soma feijão + sorgo safrinha (Conab)", metodo: "custo total da rotação feijão→sorgo safrinha" }
       - { chave: "observacao", valor: "margem alta, risco alto (MOCK)", fonte_url: "MOCK://hackatohm/m1-monte-carlo", metodo: "MC do M1 (MOCK)" }
 
   milho_verao:
     culturas: ["milho 1ª safra"]
-    margem_esperada: 260000        # centavos de R$/ha (MOCK: ≈ R$ 2.600/ha)
-    risco: 90                      # P(margem < 0) em por-mil (MOCK: 9%)
+    margem_esperada: 260000        # centavos de R$/ha (MOCK: ≈ R$ 2.600/ha) — M1 atualiza na sexta
+    risco: 90                      # P(margem < 0) em por-mil (MOCK: 9%) — M1 atualiza na sexta
     janelas_viveis:
       1: [29, 30, 31]              # arenoso: out
       2: [28, 29, 30, 31, 32]      # médio: out–nov
       3: [27, 28, 29, 30, 31, 32, 33] # argiloso: out–nov
     hipoteses:
-      - { chave: "produtividade_milho", valor: "110 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "preco_milho", valor: "R$ 58/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 3.780/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "observacao", valor: "milho 1ª safra e milho safrinha têm ZARC/portaria próprios — insumos distintos (MOCK)", fonte_url: "MOCK://hackatohm/zarc-milho-verao", metodo: "ZARC milho 1ª safra (MOCK)" }
+      - { chave: "produtividade_milho", valor: "110 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK — M1 atualiza)" }
+      - { chave: "preco_milho", valor: "R$ 58/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK — M1 atualiza)" }
+      - { chave: "custo_total", valor: "R$ 8.804/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/milho/milho_1a_safra_serie_historica_1997-2026.xls", metodo: "Conab série histórica, Uruçuí-PI, 2026 (proxy Cerrado/MG)" }
+      - { chave: "observacao", valor: "milho 1ª safra e milho safrinha têm ZARC/portaria próprios — insumos distintos (MOCK)", fonte_url: "MOCK://hackatohm/zarc-milho-verao", metodo: "ZARC milho 1ª safra (MOCK — adequacao.py)" }
 
   soja_solteira:
     culturas: ["soja"]
-    margem_esperada: 360000        # centavos de R$/ha (MOCK: ≈ R$ 3.600/ha)
-    risco: 130                     # P(margem < 0) em por-mil (MOCK: 13%)
+    margem_esperada: 360000        # centavos de R$/ha (MOCK: ≈ R$ 3.600/ha) — M1 atualiza na sexta
+    risco: 130                     # P(margem < 0) em por-mil (MOCK: 13%) — M1 atualiza na sexta
     janelas_viveis:
       1: [28, 29, 30, 31, 32, 33]                     # arenoso: out–nov
       2: [27, 28, 29, 30, 31, 32, 33, 34]             # médio: set–dez
       3: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35]     # argiloso: set–dez (sem 2ª safra, plantio tardio OK)
     hipoteses:
-      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 3.550/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "observacao", valor: "sem 2ª safra — sem prazo da safrinha, plantio pode ir até dezembro (MOCK)", fonte_url: "MOCK://hackatohm/zarc-soja", metodo: "ZARC soja (MOCK)" }
+      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK — M1 atualiza)" }
+      - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK — M1 atualiza)" }
+      - { chave: "custo_total", valor: "R$ 7.291/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-soja-1997-a-2026.xls", metodo: "Conab série histórica, Unaí-MG, 2026" }
+      - { chave: "observacao", valor: "sem 2ª safra — sem prazo da safrinha, plantio pode ir até dezembro (MOCK)", fonte_url: "MOCK://hackatohm/zarc-soja", metodo: "ZARC soja (MOCK — adequacao.py)" }
 
   capital_pousio:            # custo de oportunidade explícito: a opção "não plantar"
     culturas: ["capital no CDI (não plantar)"]
