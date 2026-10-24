@@ -9,3 +9,4 @@ __pycache__/
 # Dados
 /saida
 data/raw/inmet/zips/
+engine/out

@@ -2,7 +2,7 @@
 # HackatOhm 2026 — desafio Embrapa | Motor de decisão "o que plantar"
 # Fazenda: 600 ha em 3 talhões — Patos de Minas (safra 2026/27)
 #
-# Regenerado por engine/atualiza_config.py em 23/10/2026 — fontes:
+# Regenerado por engine/atualiza_config.py em 24/10/2026 — fontes:
 #   · janelas_viveis → REAIS: engine/janelas_zarc.json (ZARC via adequacao.py)
 #   · margem/risco   → MOCK: engine/margens_mc.json AUSENTE — margens/riscos atuais mantidos (aguardando MC do M1)
 #

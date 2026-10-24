@@ -1,0 +1,1 @@
+TODO: implementar coleta de preços Patrocínio via API/scraping
