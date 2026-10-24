@@ -91,7 +91,10 @@ hackatohm/
 │   └── results.json        → o arquivo oficial — é este que o site de demonstração vai ler
 │
 │  🚧 EM CONSTRUÇÃO (cronograma até 26/10)
-├── pipeline/             → (hoje) importação dos dados econômicos: IBGE, Conab, B3, clima
+├── pipeline/
+│   ├── sanity.py          → ✔ pronto: QA de ordem de grandeza — margens vs literatura,
+│   │                        unidades (R$/sc × sc/ha), recomposição da margem, chuva, nulos
+│   └── fato.py (pendente) → tabela fato: IBGE + Conab + clima numa linha só
 └── (domingo) o site de demonstração será criado na pasta web/ — ainda não existe
 │
 │  🛠️ FERRAMENTAS DO TIME
@@ -110,6 +113,7 @@ hackatohm/
 | entender **por que** escolhemos cada método | `relatorio_pesquisa_metodos.md` |
 | ver o **plano do time** e quem faz o quê | `PLANO_DESENVOLVIMENTO.md` |
 | mudar as premissas da fazenda virtual | `engine/config.yaml` |
+| checar **se os números são críveis** (QA) | `python3 pipeline/sanity.py` |
 | ver **os dados que o site vai ler** | `contract/results.json` (publicado por `contract/validate.py --publish`) |
 | entender o **código** do motor | `engine/README.md` |
 
@@ -127,7 +131,10 @@ python3 engine/adequacao.py
 # 3. Rodar o motor de decisão
 python3 engine/main.py --pareto --monte-carlo
 
-# 4. Validar o contrato e publicar o arquivo oficial
+# 4. Testes de sanidade: os números são críveis? (ordem de grandeza vs literatura)
+python3 pipeline/sanity.py
+
+# 5. Validar o contrato e publicar o arquivo oficial
 python3 contract/validate.py --publish
 ```
 
@@ -137,7 +144,7 @@ python3 contract/validate.py --publish
 - `pareto_frontier.png` — o gráfico do menu (mesmo desta página);
 - `results_mock.json` — os resultados em formato de dados.
 
-O passo 4 valida esse JSON (contra `contract/results.schema.json` + checagens de consistência) e **publica a cópia oficial em `contract/results.json`** — é este arquivo, e não o de `engine/out/`, que o site de demonstração vai ler. Assim o motor pode continuar sendo rodado sem surpreender o site: só entra no ar o que passar no porteiro.
+O passo 5 valida esse JSON (contra `contract/results.schema.json` + checagens de consistência) e **publica a cópia oficial em `contract/results.json`** — é este arquivo, e não o de `engine/out/`, que o site de demonstração vai ler. O passo 4, antes dele, é o **QA de credibilidade**: margens plausíveis contra a literatura, unidades certas (o clássico "R$/t virou R$/sc" explode aí), a margem declarada reconstituída a partir das próprias hipóteses da rotação, chuva plausível para o Cerrado. Assim o motor pode continuar sendo rodado sem surpreender o site: só entra no ar o que passar nos dois porteiros.
 
 > ⚠️ **Aviso honesto:** as **janelas de plantio são REAIS** (tábua de risco oficial do ZARC, safra 2026/27, com as portarias citadas em `data/raw/zarc/`). Os números de **dinheiro ainda são fictícios (mock)** até a simulação com dados históricos de IBGE/Conab/B3 entrar — tudo que é mock está marcado como tal no código e nos relatórios.
 >
