@@ -55,6 +55,7 @@ import io
 import json
 import os
 import re
+import unicodedata
 import zipfile
 from pathlib import Path
 from typing import Iterable, Optional
@@ -162,9 +163,10 @@ def ler_csv_inmet(caminho: Path) -> pd.DataFrame:
         linhas = f.readlines()
 
     # Detecta linha de cabeçalho (geralmente contém 'DATA' ou 'HORA')
+    # Nota: 'PRECIPITA' sem o Ç — a linha de metadado 'DATA DE FUNDAÇÃO...' não pode casar
     idx_cab = 0
     for i, l in enumerate(linhas):
-        if "DATA" in l.upper() and ("PRECIPITACAO" in l.upper() or "TEMPERATURA" in l.upper()):
+        if "DATA" in l.upper() and ("PRECIPITA" in l.upper() or "TEMPERATURA" in l.upper()):
             idx_cab = i
             break
     # Se não achou pelo padrão, tenta linha que tem ';' e palavras-chave
@@ -175,7 +177,15 @@ def ler_csv_inmet(caminho: Path) -> pd.DataFrame:
                 break
 
     df = pd.read_csv(caminho, sep=";", encoding="latin-1", skiprows=idx_cab, decimal=",")
-    df.columns = [str(c).strip().upper().replace(" ", "_") for c in df.columns]
+    # Normaliza nomes de coluna SEM ACENTO: 'PRECIPITAÇÃO_TOTAL,_HORÁRIO_(MM)' tem Ç/Á —
+    # sem isso o matching por 'PRECIPITACAO'/'HORARIO' nunca casa e a chuva vira 100% NaN.
+    df.columns = [
+        "".join(
+            ch for ch in unicodedata.normalize("NFD", str(c))
+            if unicodedata.category(ch) != "Mn"
+        ).upper().strip().replace(" ", "_")
+        for c in df.columns
+    ]
     return df
 
 
@@ -185,16 +195,18 @@ def normalizar_inmet(df: pd.DataFrame) -> pd.DataFrame:
     data, precipitacao_mm, temp_media_c, temp_min_c, temp_max_c, umidade_relativa, origem
     """
     out = pd.DataFrame()
-    # DATA
+    # DATA — sem dayfirst: os CSVs do INMET usam AAAA-MM-DD ou AAAA/MM/DD (ano primeiro).
+    # Com dayfirst=True o pandas lia '2020/01/13' como dia↔mês trocados → mês 13 não
+    # existe → NaT: sobreviviam só os 12 primeiros dias de cada mês (bug dos 144 dias/ano).
     if "DATA" in df.columns:
-        out["data"] = pd.to_datetime(df["DATA"], errors="coerce", dayfirst=True)
+        out["data"] = pd.to_datetime(df["DATA"], errors="coerce")
     elif "DATA_(YYYY-MM-DD)" in df.columns:
         out["data"] = pd.to_datetime(df["DATA_(YYYY-MM-DD)"], errors="coerce")
     else:
         # tenta primeira coluna com DATA
         for c in df.columns:
             if str(c).startswith("DATA"):
-                out["data"] = pd.to_datetime(df[c], errors="coerce", dayfirst=True)
+                out["data"] = pd.to_datetime(df[c], errors="coerce")
                 break
 
     # HORA (opcional) - manter para agregação horária
@@ -290,8 +302,8 @@ def carregar_todos_inmet(anos: Iterable[int]) -> pd.DataFrame:
     dfs = []
     for ano in anos:
         csv_extraido = None
-        # Procura já extraído
-        candidatos_existentes = list(RAW_INMET_CSV.glob(f"*PATROCINIO*{ano}*.CSV"))
+        # Procura já extraído (rglob: os CSVs do D1 vêm em subpastas por ano, ex.: csv/2006/)
+        candidatos_existentes = list(RAW_INMET_CSV.rglob(f"*PATROCINIO*{ano}*.CSV"))
         if candidatos_existentes:
             csv_extraido = candidatos_existentes[0]
         else:
