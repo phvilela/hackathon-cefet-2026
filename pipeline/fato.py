@@ -163,6 +163,7 @@ def _carregar_custos(caminho: Path) -> Dict[str, Dict[str, Any]]:
             'custo_rs_ha': float(reg['custo_medio_ha']),
             'regioes': str(reg['regioes']),
             'anos': str(reg['anos']),
+            'origem': 'conab_custos_regioes',
         }
     return custos
 
@@ -188,14 +189,23 @@ def _preco_para_rs_t(valor: str) -> Tuple[float, str]:
     return float('nan'), f'unidade inesperada: R$/{unidade}'
 
 
-def _carregar_precos_hipotese(caminho: Path) -> Dict[str, Dict[str, Any]]:
-    """engine/config.yaml → {cultura: {preco_rs_t, origem, fonte_url}} (hipótese até o D2)."""
+def _carregar_config(caminho: Path) -> Dict[str, Any]:
     if not caminho.exists():
-        print(f'Insumo ausente: {caminho} — o preço de hipótese vem do config do motor',
+        print(f'Insumo ausente: {caminho} — hipóteses de preço/custo vêm do config do motor',
               file=sys.stderr)
         raise SystemExit(2)
     with caminho.open('r', encoding='utf-8') as f:
-        config = yaml.safe_load(f) or {}
+        return yaml.safe_load(f) or {}
+
+
+CUSTO_CHAVE_CONFIG = {
+    'soja': ['custo_total_soja', 'custo_total'],
+    'milho': ['custo_total'],
+}
+
+
+def _extrair_precos(config: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    """{cultura: {preco_rs_t, origem}} a partir das hipóteses do config (pendência D2)."""
     saida: Dict[str, Dict[str, Any]] = {}
     for cultura, chave in CULTURA_PRECO.items():
         achado = None
@@ -207,19 +217,60 @@ def _carregar_precos_hipotese(caminho: Path) -> Dict[str, Dict[str, Any]]:
             if achado:
                 break
         if achado is None:
-            print(f'Hipótese {chave!r} não encontrada em {caminho}', file=sys.stderr)
+            print(f'Hipótese {chave!r} não encontrada no config', file=sys.stderr)
             raise SystemExit(2)
         preco_t, origem = _preco_para_rs_t(achado.get('valor', ''))
         if pd.isna(preco_t):
             print(f'Preço de hipótese ilegível p/ {chave}: {achado.get("valor")!r} ({origem})',
                   file=sys.stderr)
             raise SystemExit(2)
-        saida[cultura] = {
-            'preco_rs_t': round(preco_t, 2),
-            'origem': origem,
-            'fonte_url': str(achado.get('fonte_url', '')),
-        }
+        saida[cultura] = {'preco_rs_t': round(preco_t, 2), 'origem': origem}
     return saida
+
+
+def _extrair_custos(config: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    """Custos REAIS das hipóteses do config (Conab, D2) — {cultura: {...}} ou {} se ausentes.
+
+    Preferido ao resumo CSV (média de regiões incl. Sul); o config usa a
+    região-referência escolhida pelo D2 (Unaí-MG / Uruçuí-PI — proxy Cerrado),
+    a MESMA fonte que o motor consome.
+    """
+    saida: Dict[str, Dict[str, Any]] = {}
+    rotacoes = config.get('rotacoes') or {}
+    for cultura, chaves in CUSTO_CHAVE_CONFIG.items():
+        if cultura == 'milho':
+            grupos = [rotacoes.get('milho_verao') or {}]
+        else:
+            grupos = [info for info in rotacoes.values() if info.get('culturas') and cultura in [c.lower() for c in info['culturas']]]
+        for info in grupos:
+            for chave in chaves:
+                achado = next((h for h in info.get('hipoteses', []) if str(h.get('chave', '')) == chave), None)
+                if achado is not None:
+                    parse = _parse_hipotese_custo(achado.get('valor', ''))
+                    if parse is not None:
+                        saida[cultura] = {
+                            'custo_rs_ha': parse[0],
+                            'regioes': str(achado.get('metodo', 'config do motor')),
+                            'anos': 'config do motor',
+                            'origem': 'conab_custos_config',
+                        }
+                    break
+            if cultura in saida:
+                break
+    return saida
+
+
+def _parse_hipotese_custo(valor: str) -> Optional[Tuple[float, str]]:
+    """'R$ 7.291/ha' → (7291.0, 'R$/ha'); ilegível → None."""
+    m = re.search(r'R\$\s*([\d.,]+)\s*/\s*([a-zA-Z]+)', str(valor).strip())
+    if not m:
+        return None
+    bruto = m.group(1)
+    if ',' in bruto:
+        bruto = bruto.replace('.', '').replace(',', '.')
+    else:
+        bruto = bruto.replace('.', '')
+    return float(bruto), f'R$/{m.group(2).lower()}'
 
 
 def _chuva_da_janela(decendial: pd.DataFrame, janela: List[int], ano_plantio: int) -> Tuple[float, float]:
@@ -270,7 +321,7 @@ def montar_fato(prod: pd.DataFrame,
                 obs.append('PAM mistura milho 1ª+2ª safra; janela/custo da 1ª como referência')
             custo = custos[cultura]
             preco = precos[cultura]
-            obs.append(f"custo: regiões-referência Conab ({custo['anos']})")
+            obs.append(f"custo: {custo['regioes']}")
             linhas.append({
                 'municipio': MUNICIPIO,
                 'cod_ibge': COD_IBGE,
@@ -284,7 +335,7 @@ def montar_fato(prod: pd.DataFrame,
                 'preco_rs_t': preco['preco_rs_t'],
                 'origem_prod': 'notebook_pam_1974_2025',
                 'origem_chuva': 'inmet_a523_patrocinio_decendial',
-                'origem_custo': 'conab_custos_regioes',
+                'origem_custo': custo['origem'],
                 'origem_preco': preco['origem'],
                 'observacao': ' | '.join(obs),
             })
@@ -319,8 +370,14 @@ def main() -> None:
     prod = _carregar_produtividade(Path(args.prod))
     decendial = _carregar_decendial(Path(args.decendial))
     janelas = _carregar_janelas(Path(args.janelas))
-    custos = _carregar_custos(Path(args.custos))
-    precos = _carregar_precos_hipotese(Path(args.config))
+    config = _carregar_config(Path(args.config))
+    precos = _extrair_precos(config)
+    custos = _extrair_custos(config)
+    faltam = sorted(set(CULTURA_FATO.values()) - set(custos))
+    if faltam:
+        print(f'ℹ custos REAIS ausentes no config p/ {faltam} — usando o resumo do D2 '
+              '(média de regiões) como fallback')
+        custos = _carregar_custos(Path(args.custos))
 
     fato, puladas = montar_fato(prod, decendial, janelas, custos, precos)
 

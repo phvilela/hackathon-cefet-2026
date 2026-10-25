@@ -322,28 +322,71 @@ def carregar_todos_inmet(anos: Iterable[int]) -> pd.DataFrame:
     return pd.concat(dfs, ignore_index=True)
 
 
+def _carregar_nasa_prec() -> Optional[dict]:
+    """PRECTOTCORR diário do NASA POWER (data/raw/nasa_power/*.json) → {date: mm}.
+
+    Uso: preencher lacunas do INMET — regra do data/raw/README.md do D1:
+    toda linha processada deve ter origem = 'inmet' ou 'power'.
+    """
+    caminho = RAW_NASA / "nasa_power_patos_2005_2025.json"
+    if not caminho.exists():
+        print(f"[AVISO] NASA POWER ausente ({caminho}): sem fill de lacunas de chuva")
+        return None
+    with open(caminho, "r", encoding="utf-8") as f:
+        nasa = json.load(f)
+    p = (nasa.get("properties") or {}).get("parameter") or {}
+    prec = p.get("PRECTOTCORR") or {}
+    return {
+        pd.to_datetime(k, format="%Y%m%d").date(): float(v)
+        for k, v in prec.items()
+        if float(v) >= 0
+    }
+
+
+COBERTURA_PREC_MINIMA = 0.8
+
+
 def agregar_diario(df: pd.DataFrame) -> pd.DataFrame:
-    """Agrega série horária para diária."""
+    """Agrega série horária para diária, com fill NASA POWER p/ dias de chuva falha.
+
+    O sensor de precipitação do INMET falha sem avisar (a temperatura segue): um
+    dia com poucas horas válidas de chuva tem soma subestimada (ex.: 2024/25,
+    nov–dez com 3% de cobertura horária). Regra: dia com cobertura horária de
+    precipitação < 80% e valor NASA disponível → usa NASA (origem='power').
+    """
     if df.empty:
         return df
     df = df.copy()
     df["data"] = df["data"].dt.date
-    agg_dict = {
-        "precipitacao_mm": "sum",
-        "origem": lambda x: x.mode().iloc[0] if len(x.dropna().mode()) else (x.iloc[0] if len(x) else "inmet"),
-        "estacao": "first",
-        "estacao_codigo": "first",
-        "fonte": "first",
-    }
+    g = df.groupby("data")
+    df_d = g.agg(
+        precipitacao_mm=("precipitacao_mm", lambda s: s.sum(min_count=1)),
+        cobertura_prec=("precipitacao_mm", lambda s: s.notna().mean()),
+        origem=("origem", lambda x: x.mode().iloc[0] if len(x.dropna().mode()) else (x.iloc[0] if len(x) else "inmet")),
+        estacao=("estacao", "first"),
+        estacao_codigo=("estacao_codigo", "first"),
+        fonte=("fonte", "first"),
+    ).reset_index()
     if "temp_media_c" in df.columns:
-        agg_dict["temp_media_c"] = "mean"
+        df_d["temp_media_c"] = g["temp_media_c"].mean().values
     if "temp_min_c" in df.columns:
-        agg_dict["temp_min_c"] = "min"
+        df_d["temp_min_c"] = g["temp_min_c"].min().values
     if "temp_max_c" in df.columns:
-        agg_dict["temp_max_c"] = "max"
+        df_d["temp_max_c"] = g["temp_max_c"].max().values
     if "umidade_relativa" in df.columns:
-        agg_dict["umidade_relativa"] = "mean"
-    df_d = df.groupby(["data"], as_index=False).agg(agg_dict)
+        df_d["umidade_relativa"] = g["umidade_relativa"].mean().values
+
+    nasa = _carregar_nasa_prec()
+    substituidos = 0
+    if nasa:
+        mascara = (df_d["cobertura_prec"] < COBERTURA_PREC_MINIMA) & df_d["data"].isin(nasa)
+        substituidos = int(mascara.sum())
+        df_d.loc[mascara, "precipitacao_mm"] = df_d.loc[mascara, "data"].map(nasa)
+        df_d.loc[mascara, "origem"] = "power"
+    if substituidos:
+        print(f"[OK] Fill NASA POWER: {substituidos} dia(s) com chuva INMET falha "
+              f"(< {COBERTURA_PREC_MINIMA:.0%} de cobertura horária) substituídos (origem='power')")
+    df_d = df_d.drop(columns=["cobertura_prec"])
     df_d["data"] = pd.to_datetime(df_d["data"])
     return df_d
 
