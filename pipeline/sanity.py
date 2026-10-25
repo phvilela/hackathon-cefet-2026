@@ -272,6 +272,18 @@ def checar_chuva(csv_dir: Path, regra_integral: bool) -> List[Dict[str, str]]:
         resultados.append(_res('B4', GRUPO_B, ERRO if regra_integral else AVISO, texto))
     else:
         resultados.append(_res('B4', GRUPO_B, OK, 'nenhuma coluna com > 10% de nulos (regra dos 10% do plano)'))
+
+    meses = [c for c in num_cols if 'Safra' not in c and ':' not in c]
+    if meses:
+        total_anual = df[meses].sum(axis=1, min_count=5)
+        media_anual = total_anual.mean()
+        if media_anual <= 800:
+            resultados.append(_res('B5', GRUPO_B, ERRO,
+                f'chuva anual média {media_anual:.0f} mm ≤ 800 mm — série zerada ou incompleta? '
+                '(sentinela anti-bug: pegaria chuva 100% zero de uma vez)'))
+        else:
+            resultados.append(_res('B5', GRUPO_B, OK,
+                f'chuva anual média {media_anual:.0f} mm > 800 mm (Cerrado MG ~1.100 mm) ✓'))
     return resultados
 
 
@@ -502,11 +514,13 @@ def checar_fato(caminho: Path) -> List[Dict[str, str]]:
     if negativos:
         resultados.append(_res('E3·sinais', GRUPO_E, ERRO,
             f'{negativos} linha(s) com custo/preço ≤ 0 — sinal trocado ou unidade errada'))
-    if 'chuva_janela_mm' in colunas:
-        fora = fato[(fato['chuva_janela_mm'].notna()) & ((fato['chuva_janela_mm'] < 20) | (fato['chuva_janela_mm'] > 800))]
+    for col_chuva in [c for c in colunas if c.startswith('chuva')]:
+        fora = fato[fato[col_chuva].notna() & ((fato[col_chuva] < 10) | (fato[col_chuva] > 1000))]
         if len(fora):
             resultados.append(_res('E3·chuva', GRUPO_E, ERRO,
-                f'{len(fora)} linha(s) com chuva da janela fora de [20, 800] mm'))
+                f'{len(fora)} linha(s) com {col_chuva} fora de [10, 1000] mm — '
+                'piso 10 (seca extrema real ok, ex.: El Niño 2024/25); teto 1000 '
+                '(janela chuvosa real chega a ~950; alvo: zero/unidade errada)'))
 
     pct_nulos = (fato[list(minimas)].isna().mean() * 100).round(0)
     alvo = pct_nulos[pct_nulos > 10]
@@ -516,6 +530,16 @@ def checar_fato(caminho: Path) -> List[Dict[str, str]]:
             f'nulos > 10% em {len(alvo)} coluna(s) — {detalhe} (regra INTEGRAL do plano: sem explicação reprova)'))
     else:
         resultados.append(_res('E4', GRUPO_E, OK, 'nenhuma coluna com > 10% de nulos'))
+
+    if 'origem_preco' in colunas:
+        n_hip = int(fato['origem_preco'].astype(str).str.startswith('hipotese').sum())
+        if n_hip:
+            resultados.append(_res('E5', GRUPO_E, AVISO,
+                f'{n_hip}/{len(fato)} linha(s) com preço de HIPÓTESE do config '
+                "(origem_preco='hipotese_*') — trocar pela praça Patrocínio (Conab) quando o D2 entregar"))
+        else:
+            resultados.append(_res('E5', GRUPO_E, OK,
+                'preço com origem oficial (não hipótese) ✓'))
     return resultados
 
 
