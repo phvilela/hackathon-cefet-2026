@@ -1,0 +1,9 @@
+cultura,produto_original,nivel_comercializacao,estado,periodo,data_inicio,data_fim,preco_original,preco_rs_tonelada,fonte,fonte_arquivo,observacao
+boi,BOI GORDO   (15 kg),PRODUTOR,MG,28/09/26 a 02/10/26,28/09/26,02/10/26,341.34,22756.0,Conab/SIAGRO,Consulta-precos-semanal.xlsx,Preços médios semanais MG - nível PRODUTOR/VAREJO - convertido para R$/t
+cafe,"CAFÉ ARÁBICA TIPO 6, BEBIDA DURA   (60 kg)",PRODUTOR,MG,28/09/26 a 02/10/26,28/09/26,02/10/26,1555.0,25916.67,Conab/SIAGRO,Consulta-precos-semanal.xlsx,Preços médios semanais MG - nível PRODUTOR/VAREJO - convertido para R$/t
+feijao,FEIJÃO COMUM CORES   (60 kg),PRODUTOR,MG,28/09/26 a 02/10/26,28/09/26,02/10/26,304.03,5067.17,Conab/SIAGRO,Consulta-precos-semanal.xlsx,Preços médios semanais MG - nível PRODUTOR/VAREJO - convertido para R$/t
+feijao,FEIJÃO COMUM CORES TIPO 1   (kg),VAREJO,MG,28/09/26 a 02/10/26,28/09/26,02/10/26,8.98,8980.0,Conab/SIAGRO,Consulta-precos-semanal.xlsx,Preços médios semanais MG - nível PRODUTOR/VAREJO - convertido para R$/t
+milho,MILHO EM GRÃOS   (60 kg),PRODUTOR,MG,28/09/26 a 02/10/26,28/09/26,02/10/26,65.39,1089.83,Conab/SIAGRO,Consulta-precos-semanal.xlsx,Preços médios semanais MG - nível PRODUTOR/VAREJO - convertido para R$/t
+soja,SOJA EM GRÃOS   (60 kg),PRODUTOR,MG,28/09/26 a 02/10/26,28/09/26,02/10/26,151.53,2525.5,Conab/SIAGRO,Consulta-precos-semanal.xlsx,Preços médios semanais MG - nível PRODUTOR/VAREJO - convertido para R$/t
+sorgo,SORGO GRANÍFERO EM GRÃOS   (60 kg),PRODUTOR,MG,28/09/26 a 02/10/26,28/09/26,02/10/26,53.16,886.0,Conab/SIAGRO,Consulta-precos-semanal.xlsx,Preços médios semanais MG - nível PRODUTOR/VAREJO - convertido para R$/t
+suino,SUÍNO VIVO   (kg),PRODUTOR,MG,28/09/26 a 02/10/26,28/09/26,02/10/26,6.2,6200.0,Conab/SIAGRO,Consulta-precos-semanal.xlsx,Preços médios semanais MG - nível PRODUTOR/VAREJO - convertido para R$/t
