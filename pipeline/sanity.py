@@ -58,6 +58,11 @@ FAIXAS_PRECO = {
     'sorgo': ('R$/kg', 0.30, 1.00, 'Conab/CEPEA — sorgo granífero (~R$ 0,45–0,70/kg)'),
 }
 
+FAIXAS_PRECO_FATO = {
+    'soja': (700, 4200),
+    'milho': (400, 2500),
+}
+
 ROTACOES_ESPERADAS = ['soja_milho', 'soja_sorgo', 'feijao_sorgo', 'milho_verao', 'soja_solteira', 'capital_pousio']
 
 
@@ -595,6 +600,18 @@ def checar_fato(caminho: Path) -> List[Dict[str, str]]:
                 f'{len(fora)} linha(s) com {col_chuva} fora de [10, 1200] mm — '
                 'piso 10 (seca extrema real ok); teto 1200 (janela chuvosa com fill NASA '
                 'chega a ~1.000, ex.: La Niña 2021/22; alvo: zero/unidade errada = 10×)'))
+
+    if 'preco_rs_t' in colunas and 'cultura' in colunas:
+        for cultura, grupo in fato.groupby('cultura'):
+            faixa = FAIXAS_PRECO_FATO.get(str(cultura).lower())
+            if faixa is None:
+                continue
+            fora = grupo[grupo['preco_rs_t'].notna()
+                         & ((grupo['preco_rs_t'] < faixa[0]) | (grupo['preco_rs_t'] > faixa[1]))]
+            if len(fora):
+                resultados.append(_res('E3·preco', GRUPO_E, ERRO,
+                    f'{len(fora)} linha(s) de {cultura} com preco_rs_t fora de '
+                    f'[{faixa[0]:,}, {faixa[1]:,}] R$/t — unidade errada (R$/sc→R$/t ≈ ×16,7)?'.replace(',', '.')))
 
     pct_nulos = (fato[list(minimas)].isna().mean() * 100).round(0)
     alvo = pct_nulos[pct_nulos > 10]

@@ -47,6 +47,7 @@ import yaml
 
 REPO = Path(__file__).resolve().parents[1]
 PROD_CSV_DEFAULT = REPO / 'notebooks/saida/produtividade.csv'
+SERIE_M1_DEFAULT = REPO / 'notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv'
 DECENDIAL_DEFAULT = REPO / 'data/processed/clima/clima_patrcinio_decendial.csv'
 JANELAS_DEFAULT = REPO / 'engine/janelas_zarc.json'
 CUSTOS_DEFAULT = REPO / 'data/processed/mercado/conab_custos/resumo_custos_para_engine.csv'
@@ -69,7 +70,9 @@ CULTURA_PRECO = {'soja': 'preco_soja', 'milho': 'preco_milho'}
 
 
 def _carregar_produtividade(caminho: Path) -> pd.DataFrame:
-    """CSV do notebook (ano civil, Soja, Milho em kg/ha) → longo [ano_civil, cultura, prod_kg_ha]."""
+    """CSV do notebook (ano civil, Soja, Milho em kg/ha) → longo [ano_civil, cultura, prod_kg_ha].
+
+    FALLBACK: a fonte preferida é a série do M1 (_carregar_serie_m1)."""
     if not caminho.exists():
         print(f'[G2] Insumo ausente: {caminho} — série de produtividade não encontrada',
               file=sys.stderr)
@@ -81,6 +84,40 @@ def _carregar_produtividade(caminho: Path) -> pd.DataFrame:
     longo = longo[longo['cultura_pam'].isin(CULTURA_FATO)]
     longo['cultura'] = longo['cultura_pam'].map(CULTURA_FATO)
     return longo[['ano_civil', 'cultura', 'prod_kg_ha']].dropna(subset=['prod_kg_ha'])
+
+
+def _carregar_serie_m1(caminho: Path) -> Optional[pd.DataFrame]:
+    """Série do M1 (SIDRA t/5457): prod + preço implícito da PAM por ano civil.
+
+    Fonte: notebooks/analise_preco_produtividade.py (M1) — preço implícito =
+    valor da produção ÷ quantidade produzida (R$/saca 60 kg), versão REAL
+    deflacionada pelo IPCA (BCB série 433) e NOMINAL.
+    1 linha = ano civil × cultura {milho, soja}; None se o arquivo não existir.
+    """
+    if not caminho.exists():
+        print(f'ℹ série do M1 ausente ({caminho}) — fallback: notebook p/ prod + '
+              'hipótese do config p/ preço')
+        return None
+    df = pd.read_csv(caminho, header=None, skiprows=3,
+                     names=['ano_civil', 'rend_milho', 'rend_soja',
+                            'pnom_milho', 'pnom_soja', 'preal_milho', 'preal_soja'])
+    partes = []
+    for cultura, (rend, pnom, preal) in (
+        ('milho', ('rend_milho', 'pnom_milho', 'preal_milho')),
+        ('soja', ('rend_soja', 'pnom_soja', 'preal_soja')),
+    ):
+        partes.append(pd.DataFrame({
+            'ano_civil': df['ano_civil'],
+            'cultura': cultura,
+            'prod_kg_ha': df[rend],
+            'preco_nominal_rs_sc': df[pnom],
+            'preco_real_rs_sc': df[preal],
+        }))
+    serie = pd.concat(partes, ignore_index=True).dropna(subset=['prod_kg_ha'])
+    print(f'✔ Série do M1 carregada: {serie["ano_civil"].nunique()} anos civis '
+          f'({serie["ano_civil"].min()}–{serie["ano_civil"].max()}) — prod e preço '
+          'implícito PAM/SIDRA por ano-safra')
+    return serie
 
 
 def _carregar_decendial(caminho: Path) -> pd.DataFrame:
@@ -295,17 +332,22 @@ def _chuva_da_janela(decendial: pd.DataFrame, janela: List[int], ano_plantio: in
     return sum(achados), cobertura
 
 
-def montar_fato(prod: pd.DataFrame,
+def montar_fato(fonte: pd.DataFrame,
                 decendial: pd.DataFrame,
                 janelas: Dict[str, List[int]],
                 custos: Dict[str, Dict[str, Any]],
-                precos: Dict[str, Dict[str, Any]]) -> Tuple[pd.DataFrame, Dict[str, int]]:
+                precos: Dict[str, Dict[str, Any]],
+                tem_serie: bool = False) -> Tuple[pd.DataFrame, Dict[str, int]]:
     """Devolve (fato, safras_puladas_por_cultura). O fato só contém anos-safra
     COMPLETOS (prod + chuva com cobertura) — é a matéria-prima do bootstrap
-    pareado do M1; safra sem chuva utilizável fica de fora, contada e informada."""
+    pareado do M1; safra sem chuva utilizável fica de fora, contada e informada.
+
+    `fonte` com série do M1 (tem_serie=True): prod e preços NOMINAL/REAL por
+    ano civil (PAM/SIDRA t/5457); sem série: notebook p/ prod + hipótese fixa
+    do config p/ preço (fallback)."""
     linhas: List[Dict[str, Any]] = []
     puladas: Dict[str, int] = {}
-    for cultura, grupo_prod in prod.groupby('cultura'):
+    for cultura, grupo_prod in fonte.groupby('cultura'):
         janela = janelas[cultura]
         for _, reg in grupo_prod.iterrows():
             ano_colheita = int(reg['ano_civil'])
@@ -320,8 +362,21 @@ def montar_fato(prod: pd.DataFrame,
             if cultura == 'milho':
                 obs.append('PAM mistura milho 1ª+2ª safra; janela/custo da 1ª como referência')
             custo = custos[cultura]
-            preco = precos[cultura]
             obs.append(f"custo: {custo['regioes']}")
+            if tem_serie:
+                p_real = float(reg['preco_real_rs_sc'])
+                p_nom = float(reg['preco_nominal_rs_sc'])
+                preco_rs_t = round(p_real * 1000 / PESO_SACA_KG, 2)
+                origem_prod = 'pam_sidra_t5457'
+                origem_preco = 'pam_preco_implicito_sidra'
+                obs.append(f'preço REAL IPCA R$ {p_real:.2f}/sc (nominal R$ {p_nom:.2f}/sc) '
+                           '— implícito PAM valor÷quantidade')
+                preco_nominal, preco_real = p_nom, p_real
+            else:
+                preco_rs_t = precos[cultura]['preco_rs_t']
+                origem_prod = 'notebook_pam_1974_2025'
+                origem_preco = precos[cultura]['origem']
+                preco_nominal, preco_real = float('nan'), float('nan')
             linhas.append({
                 'municipio': MUNICIPIO,
                 'cod_ibge': COD_IBGE,
@@ -332,11 +387,13 @@ def montar_fato(prod: pd.DataFrame,
                 'chuva_plantio_mm': chuva,
                 'frac_cobertura_janela': round(cobertura, 2),
                 'custo_rs_ha': custo['custo_rs_ha'],
-                'preco_rs_t': preco['preco_rs_t'],
-                'origem_prod': 'notebook_pam_1974_2025',
+                'preco_nominal_rs_sc': preco_nominal,
+                'preco_real_rs_sc': preco_real,
+                'preco_rs_t': preco_rs_t,
+                'origem_prod': origem_prod,
                 'origem_chuva': 'inmet_a523_patrocinio_decendial',
                 'origem_custo': custo['origem'],
-                'origem_preco': preco['origem'],
+                'origem_preco': origem_preco,
                 'observacao': ' | '.join(obs),
             })
     fato = pd.DataFrame(linhas)
@@ -354,7 +411,9 @@ def main() -> None:
         ),
     )
     parser.add_argument('--prod', default=str(PROD_CSV_DEFAULT),
-                        help=f'série de produtividade (default: {PROD_CSV_DEFAULT})')
+                        help=f'série de produtividade FALLBACK (default: {PROD_CSV_DEFAULT})')
+    parser.add_argument('--serie-m1', default=str(SERIE_M1_DEFAULT),
+                        help=f'série do M1 (prod + preços PAM/SIDRA; preferida) (default: {SERIE_M1_DEFAULT})')
     parser.add_argument('--decendial', default=str(DECENDIAL_DEFAULT),
                         help=f'decendial de chuva (default: {DECENDIAL_DEFAULT})')
     parser.add_argument('--janelas', default=str(JANELAS_DEFAULT),
@@ -362,12 +421,13 @@ def main() -> None:
     parser.add_argument('--custos', default=str(CUSTOS_DEFAULT),
                         help=f'custos Conab do D2 (default: {CUSTOS_DEFAULT})')
     parser.add_argument('--config', default=str(CONFIG_DEFAULT),
-                        help=f'config do motor (hipóteses de preço) (default: {CONFIG_DEFAULT})')
+                        help=f'config do motor (hipóteses de preço/custo) (default: {CONFIG_DEFAULT})')
     parser.add_argument('--saida', default=str(SAIDA_DEFAULT),
                         help=f'diretório de saída (default: {SAIDA_DEFAULT})')
     args = parser.parse_args()
 
-    prod = _carregar_produtividade(Path(args.prod))
+    serie = _carregar_serie_m1(Path(args.serie_m1))
+    fonte = serie if serie is not None else _carregar_produtividade(Path(args.prod))
     decendial = _carregar_decendial(Path(args.decendial))
     janelas = _carregar_janelas(Path(args.janelas))
     config = _carregar_config(Path(args.config))
@@ -379,7 +439,8 @@ def main() -> None:
               '(média de regiões) como fallback')
         custos = _carregar_custos(Path(args.custos))
 
-    fato, puladas = montar_fato(prod, decendial, janelas, custos, precos)
+    fato, puladas = montar_fato(fonte, decendial, janelas, custos, precos,
+                                tem_serie=serie is not None)
 
     safras_uteis = fato['ano_safra'].nunique()
     if safras_uteis < SAFRAS_MINIMAS:
