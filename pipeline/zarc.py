@@ -1,260 +1,170 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-pipeline/zarc.py
-================
-Consolidação das janelas de plantio do ZARC para Patos de Minas (MG)
-HackatOhm 2026 - "O que plantar?"
+pipeline/zarc.py — D2: Converte janelas ZARC (JSON do engine) → formato tabela para fato.parquet
 
-OBJETIVO
---------
-Transformar a tábua de risco oficial do ZARC em um formato enxuto por
-cultura × grupo de solo, com a lista de decêndios viáveis.
+Entrada:  engine/janelas_zarc.json (gerado por engine/adequacao.py)
+Saída:    data/processed/zarc/janelas_zarc.parquet
+          data/processed/zarc/rotacoes_zarc.parquet
 
-FONTES
-------
-- data/raw/zarc/tabua-risco-2026-2027-patos-de-minas-3148004.csv
-- geocodigo 3148004, safra 2026/27
-
-REGRAS
-------
-- A tábua publica risco 20/30/40%; célula 0 significa fora do zoneamento.
-  Portanto viável = 0 < risco <= 40.
-- Sorgo usa grupo nativo 1/2/3. Soja, milho e feijão usam AD1/AD3/AD5
-  (códigos 11/13/15), mapeados a partir do grupo de solo do talhão.
-- Quando há mais de um ciclo, vale o menor risco por decêndio.
-- Apenas manejo de sequeiro (o v0 não modela feijão irrigado).
-
-SAÍDAS
-------
-- data/processed/zarc/zarc_janelas_por_cultura_solo.json
-- data/processed/zarc/zarc_janelas_por_cultura_solo.csv
-- data/processed/zarc/zarc_janelas_por_cultura_solo_mvp.csv
-- data/processed/zarc/zarc_janelas_mvp.json
-
-AUTOR / DATA
-------------
-D1 - Clima & Produtividade | HackatOhm 2026 | 2026-10-23
+Formato fato-friendly: uma linha por (cultura, grupo_solo, decendio, viavel, risco, tipo)
 """
+
 from __future__ import annotations
-
 import json
+import sys
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
-RAW_ZARC = ROOT / "data" / "raw" / "zarc" / "tabua-risco-2026-2027-patos-de-minas-3148004.csv"
-OUT_DIR = ROOT / "data" / "processed" / "zarc"
-
-RISCO_LIMITE = 40
-DECENDIOS = range(1, 37)
-
-CULTURAS = {
-    "soja": {
-        "nome_zarc": "Soja",
-        "tipo_solo": "AD",
-        "grupos": {1: 11, 2: 13, 3: 15},
-        "solo_usado": {1: "AD1", 2: "AD3", 3: "AD5"},
-    },
-    "milho_verao": {
-        "nome_zarc": "Milho 1ª Safra",
-        "tipo_solo": "AD",
-        "grupos": {1: 11, 2: 13, 3: 15},
-        "solo_usado": {1: "AD1", 2: "AD3", 3: "AD5"},
-    },
-    "milho_safrinha": {
-        "nome_zarc": "Milho 2ª Safra",
-        "tipo_solo": "AD",
-        "grupos": {1: 11, 2: 13, 3: 15},
-        "solo_usado": {1: "AD1", 2: "AD3", 3: "AD5"},
-    },
-    "feijao": {
-        "nome_zarc": "Feijão",
-        "tipo_solo": "AD",
-        "grupos": {1: 11, 2: 13, 3: 15},
-        "solo_usado": {1: "AD1", 2: "AD3", 3: "AD5"},
-    },
-    "feijao_2": {
-        "nome_zarc": "Feijão 2ª Safra",
-        "tipo_solo": "AD",
-        "grupos": {1: 11, 2: 13, 3: 15},
-        "solo_usado": {1: "AD1", 2: "AD3", 3: "AD5"},
-    },
-    "sorgo_granifero": {
-        "nome_zarc": "Sorgo Granífero",
-        "tipo_solo": "nativo",
-        "grupos": {1: 1, 2: 2, 3: 3},
-        "solo_usado": {1: "grupo 1", 2: "grupo 2", 3: "grupo 3"},
-    },
-    "sorgo_safrinha": {
-        "nome_zarc": "Sorgo Granífero 2ª Safra",
-        "tipo_solo": "nativo",
-        "grupos": {1: 1, 2: 2, 3: 3},
-        "solo_usado": {1: "grupo 1", 2: "grupo 2", 3: "grupo 3"},
-    },
-}
+REPO = Path(__file__).resolve().parents[1]
+JSON_PATH = REPO / "engine/janelas_zarc.json"
+OUT_DIR = REPO / "data/processed/zarc"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def carregar_zarc() -> pd.DataFrame:
-    return pd.read_csv(RAW_ZARC, sep=";")
+def load_janelas() -> dict[str, Any]:
+    with open(JSON_PATH, encoding="utf-8") as f:
+        return json.load(f)
 
 
-def risco_minimo(sub: pd.DataFrame) -> dict[int, int]:
-    risco: dict[int, int] = {}
-    for _, row in sub.iterrows():
-        for dec in DECENDIOS:
-            valor = pd.to_numeric(row.get(f"dec{dec}"), errors="coerce")
-            if pd.isna(valor):
-                continue
-            risco[dec] = min(risco.get(dec, 1000), int(valor))
-    return {dec: valor for dec, valor in risco.items() if 0 < valor <= RISCO_LIMITE}
+def culturas_to_table(data: dict) -> pd.DataFrame:
+    """culturas -> linhas: cultura, grupo_solo, decendio, viavel, risco, solo_usado, ciclos"""
+    rows = []
+    for cultura, grupos in data["culturas"].items():
+        for grupo_solo, info in grupos.items():
+            solo_usado = info.get("solo_usado", "")
+            ciclos = info.get("ciclos_disponiveis", [])
+            decendios_viaveis = set(info.get("decendios", []))
+            risco_map = info.get("risco_por_decendio", {})
+
+            for dec in range(1, 37):
+                viavel = dec in decendios_viaveis
+                risco = risco_map.get(str(dec), 0)
+                rows.append({
+                    "cultura": cultura,
+                    "grupo_solo": int(grupo_solo),
+                    "decendio": dec,
+                    "viavel": viavel,
+                    "risco_percent": risco,
+                    "solo_usado": solo_usado,
+                    "ciclos_disponiveis": "|".join(map(str, ciclos)),
+                    "municipio": data["cenario"]["municipio"],
+                    "cod_ibge": data["cenario"]["cod_ibge"],
+                    "safra": data["cenario"]["safra"],
+                })
+    return pd.DataFrame(rows)
 
 
-def consolidar(df: pd.DataFrame) -> list[dict]:
-    registros = []
-    for chave, meta in CULTURAS.items():
-        base = df[
-            (df["Nome_cultura"] == meta["nome_zarc"])
-            & (df["Nome_Outros_Manejos"].fillna("Sequeiro") == "Sequeiro")
-        ]
-        for grupo in (1, 2, 3):
-            codigo_solo = meta["grupos"][grupo]
-            sub = base[base["Cod_Solo"] == codigo_solo]
-            risco = risco_minimo(sub)
-            registros.append(
-                {
-                    "cultura_key": chave,
-                    "cultura": meta["nome_zarc"],
-                    "grupo_solo": grupo,
-                    "cod_solo": codigo_solo,
-                    "solo_usado": meta["solo_usado"][grupo],
-                    "decendios": sorted(risco),
-                    "risco_por_decendio": {str(dec): risco[dec] for dec in sorted(risco)},
-                    "ciclos_disponiveis": sorted(
-                        {int(ciclo) for ciclo in sub["Cod_Ciclo"].dropna().unique()}
-                    ),
-                    "portaria": sub["Portaria"].dropna().iloc[0]
-                    if not sub["Portaria"].dropna().empty
-                    else None,
-                }
-            )
-    return registros
+def rotacoes_to_table(data: dict) -> pd.DataFrame:
+    """rotacoes -> linhas: rotacao, grupo_solo, decendio, primeira_viavel, segunda_viavel, primeira_ciclo, ciclo_dias"""
+    rows = []
+    for rotacao, grupos in data["rotacoes"].items():
+        for grupo_solo, info in grupos.items():
+            primeira_viaveis = set(info.get("primeira", []))
+            segunda_viaveis = set(info.get("segunda", []))
+            primeira_ciclo = info.get("primeira_ciclo", "")
+            ciclo_dias = info.get("premissa_ciclo_primeira_decendios", 0)
+
+            todos_dec = set(primeira_viaveis) | set(segunda_viaveis)
+            for dec in range(1, 37):
+                rows.append({
+                    "rotacao": rotacao,
+                    "grupo_solo": int(grupo_solo),
+                    "decendio": dec,
+                    "primeira_viavel": dec in primeira_viaveis,
+                    "segunda_viavel": dec in segunda_viaveis,
+                    "primeira_ciclo": primeira_ciclo,
+                    "ciclo_primeira_decendios": ciclo_dias,
+                    "municipio": data["cenario"]["municipio"],
+                    "cod_ibge": data["cenario"]["cod_ibge"],
+                    "safra": data["cenario"]["safra"],
+                })
+    return pd.DataFrame(rows)
 
 
-def validar(registros: list[dict]) -> None:
-    por_chave = {(r["cultura_key"], r["grupo_solo"]): r for r in registros}
-    esperado = {
-        ("soja", 1): 10,
-        ("soja", 2): 10,
-        ("soja", 3): 10,
-        ("milho_verao", 1): 5,
-        ("milho_safrinha", 1): 2,
-        ("milho_safrinha", 2): 4,
-        ("milho_safrinha", 3): 5,
-        ("feijao", 1): 4,
-        ("feijao", 2): 9,
-        ("feijao", 3): 9,
-        ("feijao_2", 1): 0,
-        ("feijao_2", 2): 4,
-        ("feijao_2", 3): 5,
-        ("sorgo_granifero", 1): 8,
-        ("sorgo_granifero", 2): 9,
-        ("sorgo_granifero", 3): 9,
-        ("sorgo_safrinha", 1): 5,
-        ("sorgo_safrinha", 2): 6,
-        ("sorgo_safrinha", 3): 7,
-    }
-    erros = []
-    for chave, quantidade in esperado.items():
-        registro = por_chave.get(chave)
-        if registro is None:
-            erros.append(f"ausente: {chave}")
-            continue
-        obtido = len(registro["decendios"])
-        if obtido != quantidade:
-            erros.append(f"{chave}: esperado {quantidade}, obtido {obtido}")
-        if any(risco <= 0 or risco > RISCO_LIMITE for risco in registro["risco_por_decendio"].values()):
-            erros.append(f"{chave}: risco fora da faixa 0 < r <= {RISCO_LIMITE}")
-    if erros:
-        raise ValueError("Falha na validação do ZARC:\n- " + "\n- ".join(erros))
+def premissas_to_table(data: dict) -> pd.DataFrame:
+    """premissas -> linhas rastreáveis para tabela de hipóteses"""
+    rows = []
+    for p in data["premissas"]:
+        rows.append({
+            "chave": p["chave"],
+            "valor": str(p["valor"]),
+            "metodo": p["metodo"],
+            "fonte_url": p["fonte_url"],
+            "categoria": "ZARC",
+        })
+    return pd.DataFrame(rows)
 
 
-def escrever(registros: list[dict]) -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    (OUT_DIR / "zarc_janelas_por_cultura_solo.json").write_text(
-        json.dumps(registros, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-
-    csv_rows = []
-    for registro in registros:
-        csv_rows.append(
-            {
-                "cultura_key": registro["cultura_key"],
-                "cultura": registro["cultura"],
-                "grupo_solo": registro["grupo_solo"],
-                "cod_solo": registro["cod_solo"],
-                "solo_usado": registro["solo_usado"],
-                "qtd_decendios": len(registro["decendios"]),
-                "decendios": ";".join(str(dec) for dec in registro["decendios"]),
-                "risco_por_decendio": json.dumps(
-                    registro["risco_por_decendio"], ensure_ascii=False
-                ),
-                "ciclos_disponiveis": ";".join(
-                    str(ciclo) for ciclo in registro["ciclos_disponiveis"]
-                ),
-                "portaria": registro["portaria"],
-            }
-        )
-    df = pd.DataFrame(csv_rows)
-    df.to_csv(OUT_DIR / "zarc_janelas_por_cultura_solo.csv", index=False)
-    df[df["cultura_key"].isin(CULTURAS)].to_csv(
-        OUT_DIR / "zarc_janelas_por_cultura_solo_mvp.csv", index=False
-    )
-
-    mvp = {}
-    for registro in registros:
-        mvp.setdefault(registro["cultura_key"], {})[str(registro["grupo_solo"])] = {
-            "decendios": registro["decendios"],
-            "risco_por_decendio": registro["risco_por_decendio"],
-            "solo_usado": registro["solo_usado"],
-            "ciclos_disponiveis": registro["ciclos_disponiveis"],
-        }
-    (OUT_DIR / "zarc_janelas_mvp.json").write_text(
-        json.dumps(
-            {
-                "fonte": {
-                    "arquivo": str(RAW_ZARC.relative_to(ROOT)),
-                    "municipio": "Patos de Minas",
-                    "cod_ibge": 3148004,
-                    "safra": "2026/27",
-                },
-                "criterio": f"decêndio viável se 0 < risco <= {RISCO_LIMITE}",
-                "culturas": mvp,
-            },
-            ensure_ascii=False,
-            indent=2,
-        ),
-        encoding="utf-8",
-    )
+def portarias_to_table(data: dict) -> pd.DataFrame:
+    """portarias por cultura -> linhas"""
+    rows = []
+    for cultura, portarias in data["fonte"]["portarias_por_cultura"].items():
+        for port in portarias:
+            rows.append({
+                "cultura": cultura,
+                "portaria": port,
+                "municipio": data["cenario"]["municipio"],
+                "cod_ibge": data["cenario"]["cod_ibge"],
+                "safra": data["cenario"]["safra"],
+            })
+    return pd.DataFrame(rows)
 
 
-def main() -> None:
-    print(f"[INICIO] Lendo {RAW_ZARC}")
-    df = carregar_zarc()
-    print(f"[OK] {len(df)} linhas brutas")
-    registros = consolidar(df)
-    validar(registros)
-    escrever(registros)
-    print(f"[OK] {len(registros)} combinações cultura x grupo de solo")
-    for registro in registros:
-        print(
-            f"  {registro['cultura_key']:<17} grupo {registro['grupo_solo']} "
-            f"({registro['solo_usado']:<8}) {len(registro['decendios']):>2} decêndios "
-            f"{registro['decendios']}"
-        )
-    print(f"[OK] Saídas em {OUT_DIR}")
+def main() -> int:
+    if not JSON_PATH.exists():
+        print(f"❌ {JSON_PATH} não existe. Rode primeiro: python3 engine/adequacao.py", file=sys.stderr)
+        return 1
+
+    print(f"Lendo {JSON_PATH}...")
+    data = load_janelas()
+
+    # 1. Culturas (plantio solteiro)
+    df_cult = culturas_to_table(data)
+    out_cult = OUT_DIR / "janelas_zarc_culturas.parquet"
+    df_cult.to_parquet(out_cult, index=False)
+    print(f"✅ {out_cult.name}: {len(df_cult)} linhas")
+
+    # 2. Rotações (pareadas)
+    df_rot = rotacoes_to_table(data)
+    out_rot = OUT_DIR / "janelas_zarc_rotacoes.parquet"
+    df_rot.to_parquet(out_rot, index=False)
+    print(f"✅ {out_rot.name}: {len(df_rot)} linhas")
+
+    # 3. Premissas (para hipóteses rastreáveis)
+    df_prem = premissas_to_table(data)
+    out_prem = OUT_DIR / "premissas_zarc.parquet"
+    df_prem.to_parquet(out_prem, index=False)
+    print(f"✅ {out_prem.name}: {len(df_prem)} linhas")
+
+    # 4. Portarias
+    df_port = portarias_to_table(data)
+    out_port = OUT_DIR / "portarias_zarc.parquet"
+    df_port.to_parquet(out_port, index=False)
+    print(f"✅ {out_port.name}: {len(df_port)} linhas")
+
+    # 5. Resumo legível
+    print("\n--- Resumo janelas viáveis (culturas) ---")
+    for cultura in sorted(df_cult["cultura"].unique()):
+        sub = df_cult[df_cult["cultura"] == cultura]
+        for grupo in sorted(sub["grupo_solo"].unique()):
+            decs = sub[(sub["grupo_solo"] == grupo) & (sub["viavel"])]["decendio"].tolist()
+            print(f"  {cultura:15} grupo {grupo}: {decs}")
+
+    print("\n--- Resumo rotações (primeira cultura) ---")
+    for rot in sorted(df_rot["rotacao"].unique()):
+        sub = df_rot[df_rot["rotacao"] == rot]
+        for grupo in sorted(sub["grupo_solo"].unique()):
+            decs = sub[(sub["grupo_solo"] == grupo) & (sub["primeira_viavel"])]["decendio"].tolist()
+            if decs:
+                print(f"  {rot:15} grupo {grupo}: {decs}")
+            else:
+                print(f"  {rot:15} grupo {grupo}: INVIÁVEL")
+
+    print(f"\nArquivos salvos em {OUT_DIR}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
