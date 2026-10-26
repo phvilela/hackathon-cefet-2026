@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { Comparacao } from "./components/Comparacao";
 import { Header } from "./components/Header";
 import { Icon } from "./components/Icon";
 import { RotationsCard } from "./components/RotationsCard";
 import { ScenarioBar } from "./components/ScenarioBar";
 import { TalhaoCard } from "./components/TalhaoCard";
 import { ZarcPanel } from "./components/ZarcPanel";
+import resultadosRaw from "./data/results.json";
 import zarcRaw from "./data/zarc.json";
 import {
   carregarCenario,
@@ -18,13 +20,17 @@ import {
   grupoDoTalhao,
   type CenarioState,
   type PerfilRisco,
+  type Resultados,
   type Talhao,
   type ZarcData,
 } from "./types";
 
 const zarc = zarcRaw as unknown as ZarcData;
+const resultados = resultadosRaw as unknown as Resultados;
 const AREA_REFERENCIA = 600;
 const numero = new Intl.NumberFormat("pt-BR");
+
+type Tela = "talhoes" | "comparacao";
 
 function cenarioInicial(): CenarioState {
   return carregarCenario() ?? cenarioDoPreset("desafio");
@@ -33,6 +39,7 @@ function cenarioInicial(): CenarioState {
 export default function App() {
   const [cenario, setCenario] = useState<CenarioState>(cenarioInicial);
   const [selectedId, setSelectedId] = useState("T1");
+  const [tela, setTela] = useState<Tela>("talhoes");
 
   useEffect(() => {
     salvarCenario(cenario);
@@ -76,10 +83,14 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header />
+      <Header tela={tela} onNavigate={setTela} />
 
       <main className="page">
-        <section className="hero">
+        {tela === "comparacao" ? (
+          <Comparacao resultados={resultados} />
+        ) : (
+          <>
+            <section className="hero">
           <div className="hero-copy">
             <div className="eyebrow">
               <span className="eyebrow-rule" />
@@ -206,6 +217,8 @@ export default function App() {
             talhao={selected}
           />
         </div>
+          </>
+        )}
       </main>
 
       <footer className="site-footer">

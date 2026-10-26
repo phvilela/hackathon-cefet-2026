@@ -11,7 +11,9 @@ type IconName =
   | "check"
   | "pin"
   | "calendar"
-  | "sliders";
+  | "sliders"
+  | "trend"
+  | "shield";
 
 interface IconProps {
   name: IconName;
@@ -33,6 +35,18 @@ const paths: Record<IconName, ReactNode> = {
     </>
   ),
   droplet: <path d="M12 3s6 6.2 6 11a6 6 0 0 1-12 0c0-4.8 6-11 6-11Z" />,
+  trend: (
+    <>
+      <path d="M3 17 9 11l4 4 8-8" />
+      <path d="M15 7h6v6" />
+    </>
+  ),
+  shield: (
+    <>
+      <path d="M12 3 5 6v6c0 4.4 3 7.5 7 9 4-1.5 7-4.6 7-9V6l-7-3Z" />
+      <path d="m9 12 2 2 4-4" />
+    </>
+  ),
   download: (
     <>
       <path d="M12 3v12" />
