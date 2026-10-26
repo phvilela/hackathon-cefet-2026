@@ -94,7 +94,12 @@ hackatohm/
 ├── pipeline/
 │   ├── sanity.py          → ✔ pronto: QA de ordem de grandeza — margens vs literatura,
 │   │                        unidades (R$/sc × sc/ha), recomposição da margem, chuva, nulos
-│   └── fato.py (pendente) → tabela fato: IBGE + Conab + clima numa linha só
+│   ├── fato.py            → ✔ GERADO: tabela fato oficial (19 safras × soja/milho) com
+│   │                        prod + preço real PAM/SIDRA (t/5457, série do M1) + custo
+│   │                        Conab + chuva INMET A523 com fill NASA POWER — origem_* por
+│   │                        linha (rastreabilidade); gates de qualidade no script
+│   ├── clima.py · pam.py · zarc.py  → importadores D1 (data/raw → data/processed)
+│   └── mercado.py         → importador D2 (custos Conab + B3)
 └── (domingo) o site de demonstração será criado na pasta web/ — ainda não existe
 │
 │  🛠️ FERRAMENTAS DO TIME

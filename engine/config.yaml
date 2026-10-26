@@ -2,9 +2,9 @@
 # HackatOhm 2026 — desafio Embrapa | Motor de decisão "o que plantar"
 # Fazenda: 600 ha em 3 talhões — Patos de Minas (safra 2026/27)
 #
-# Regenerado por engine/atualiza_config.py em 24/10/2026 — fontes:
+# Regenerado por engine/atualiza_config.py em 26/10/2026 — fontes:
 #   · janelas_viveis → REAIS: engine/janelas_zarc.json (ZARC via adequacao.py)
-#   · margem/risco   → MOCK: engine/margens_mc.json AUSENTE — margens/riscos atuais mantidos (aguardando MC do M1)
+#   · margem/risco   → REAIS: engine/margens_mc.json (MC do M1)
 #
 # ⚠ AVISO MOCK vs REAL:
 #   - janelas_viveis JÁ são reais (ZARC, safra 2026/27). Lista VAZIA = rotação
@@ -40,83 +40,78 @@ talhoes:   # gerado do formulário (tela 1); irrigacao: true habilita manejo irr
 rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada número
   soja_milho:
     culturas: ["soja", "milho safrinha"]
-    margem_esperada: 418000   # centavos de R$/ha
-    risco: 120   # P[margem<0] em por-mil (‰)
+    margem_esperada: 449673   # centavos de R$/ha
+    risco: 220   # P[margem<0] em por-mil (‰)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: []
       2: [28, 29]
       3: [28, 29, 30]
     hipoteses:
-      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "produtividade_milho_safrinha", valor: "80 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 7.610/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
+      - { chave: "referencia_preco_prod", valor: "preço SIDRA × produtividade PAM (regime 2026/27)", fonte_url: "https://apisidra.ibge.gov.br/values/t/54", metodo: "margem esperada = preço_ref × prod_ref − custo Conab" }
+      - { chave: "volatilidade_historica", valor: "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência", fonte_url: "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv", metodo: "MC: desvios multiplicativos preço×prod preservando correlação" }
+      - { chave: "custo_conab", valor: "custo médio R$/ha Conab 2024-2026 (Cerrado)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao", metodo: "resumo_custos_para_engine.csv" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
       - { chave: "janela_segunda_cultura", valor: "plantio da 2ª cultura — g1: sem janela (inviável) · g2: [2-3] · g3: [2-4]", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "janelas pareadas do ZARC — engine/adequacao.py" }
 
   soja_sorgo:
     culturas: ["soja", "sorgo safrinha"]
-    margem_esperada: 390000   # centavos de R$/ha
-    risco: 110   # P[margem<0] em por-mil (‰)
+    margem_esperada: 247364   # centavos de R$/ha
+    risco: 281   # P[margem<0] em por-mil (‰)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [28, 29, 30]
       2: [28, 29, 30, 31]
       3: [28, 29, 30, 31, 32]
     hipoteses:
-      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "preco_sorgo", valor: "R$ 0,55/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 5.450/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
+      - { chave: "referencia_preco_prod", valor: "preço SIDRA × produtividade PAM (regime 2026/27)", fonte_url: "https://apisidra.ibge.gov.br/values/t/54", metodo: "margem esperada = preço_ref × prod_ref − custo Conab" }
+      - { chave: "volatilidade_historica", valor: "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência", fonte_url: "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv", metodo: "MC: desvios multiplicativos preço×prod preservando correlação" }
+      - { chave: "custo_conab", valor: "custo médio R$/ha Conab 2024-2026 (Cerrado)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao", metodo: "resumo_custos_para_engine.csv" }
+      - { chave: "preco_sorgo_ref", valor: "R$ 0,55/kg (Conab) c/ CV 20% lognormal", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao", metodo: "sem série anual em Patos — volatilidade documentada" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
       - { chave: "janela_segunda_cultura", valor: "plantio da 2ª cultura — g1: [2-4] · g2: [2-5] · g3: [2-6]", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "janelas pareadas do ZARC — engine/adequacao.py" }
 
   feijao_sorgo:
     culturas: ["feijão das águas", "sorgo safrinha"]
-    margem_esperada: 450000   # centavos de R$/ha
-    risco: 250   # P[margem<0] em por-mil (‰)
+    margem_esperada: 38041   # centavos de R$/ha
+    risco: 498   # P[margem<0] em por-mil (‰)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [29, 30, 31]
       2: [28, 29, 30, 31, 32]
       3: [28, 29, 30, 31, 32, 33]
     hipoteses:
-      - { chave: "produtividade_feijao", valor: "1.200 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "preco_feijao", valor: "R$ 9,00/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 8.500/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
+      - { chave: "referencia_preco_prod", valor: "preço SIDRA × produtividade PAM (regime 2026/27)", fonte_url: "https://apisidra.ibge.gov.br/values/t/54", metodo: "margem esperada = preço_ref × prod_ref − custo Conab" }
+      - { chave: "volatilidade_historica", valor: "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência", fonte_url: "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv", metodo: "MC: desvios multiplicativos preço×prod preservando correlação" }
+      - { chave: "custo_conab", valor: "custo médio R$/ha Conab 2024-2026 (Cerrado)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao", metodo: "resumo_custos_para_engine.csv" }
+      - { chave: "preco_sorgo_ref", valor: "R$ 0,55/kg (Conab) c/ CV 20% lognormal", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao", metodo: "sem série anual em Patos — volatilidade documentada" }
+      - { chave: "preco_feijao_ref", valor: "R$ 9,00/kg (Conab) c/ CV 25% lognormal", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao", metodo: "sem série anual em Patos — volatilidade documentada" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
       - { chave: "janela_segunda_cultura", valor: "plantio da 2ª cultura — g1: [2-4] · g2: [1-5] · g3: [1-6]", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "janelas pareadas do ZARC — engine/adequacao.py" }
 
   milho_verao:
     culturas: ["milho 1ª safra"]
-    margem_esperada: 260000   # centavos de R$/ha
-    risco: 90   # P[margem<0] em por-mil (‰)
+    margem_esperada: 89679   # centavos de R$/ha
+    risco: 515   # P[margem<0] em por-mil (‰)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [31, 32, 33, 34, 35]
       2: [30, 31, 32, 33, 34, 35, 36]
       3: [30, 31, 32, 33, 34, 35, 36]
     hipoteses:
-      - { chave: "produtividade_milho", valor: "110 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "preco_milho", valor: "R$ 58/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 3.780/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
+      - { chave: "referencia_preco_prod", valor: "preço SIDRA × produtividade PAM (regime 2026/27)", fonte_url: "https://apisidra.ibge.gov.br/values/t/54", metodo: "margem esperada = preço_ref × prod_ref − custo Conab" }
+      - { chave: "volatilidade_historica", valor: "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência", fonte_url: "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv", metodo: "MC: desvios multiplicativos preço×prod preservando correlação" }
+      - { chave: "custo_conab", valor: "custo médio R$/ha Conab 2024-2026 (Cerrado)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao", metodo: "resumo_custos_para_engine.csv" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
 
   soja_solteira:
     culturas: ["soja"]
-    margem_esperada: 360000   # centavos de R$/ha
-    risco: 130   # P[margem<0] em por-mil (‰)
+    margem_esperada: 369544   # centavos de R$/ha
+    risco: 200   # P[margem<0] em por-mil (‰)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
       2: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
       3: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
     hipoteses:
-      - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 3.550/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
-      - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
+      - { chave: "referencia_preco_prod", valor: "preço SIDRA × produtividade PAM (regime 2026/27)", fonte_url: "https://apisidra.ibge.gov.br/values/t/54", metodo: "margem esperada = preço_ref × prod_ref − custo Conab" }
+      - { chave: "volatilidade_historica", valor: "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência", fonte_url: "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv", metodo: "MC: desvios multiplicativos preço×prod preservando correlação" }
+      - { chave: "custo_conab", valor: "custo médio R$/ha Conab 2024-2026 (Cerrado)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao", metodo: "resumo_custos_para_engine.csv" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
 
   capital_pousio:
@@ -128,8 +123,8 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
       2: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
       3: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
     hipoteses:
-      - { chave: "custo_oportunidade", valor: "Selic ~13% a.a. sobre capital de custeio (~R$ 3.500/ha) por ~5 meses ≈ R$ 200/ha", fonte_url: "MOCK://hackatohm/selic-b3", metodo: "referência de 'não plantar' (MOCK — M1 calibra com a Selic vigente)" }
-      - { chave: "observacao", valor: "piso de comparação: o modelo só recomenda plantar o que rende mais que o capital aplicado", fonte_url: "MOCK://hackatohm/custo-oportunidade", metodo: "custo de oportunidade explícito (MOCK)" }
+      - { chave: "custo_oportunidade", valor: "Selic 13,75% a.a. (Copom 22/10/2026) sobre custeio ~R$ 3.500/ha por ~5 meses ≈ R$ 200/ha", fonte_url: "https://www.bcb.gov.br/controleinflacao/historicotaxasjuros", metodo: "referência de 'não plantar': custeio aplicado no CDI durante o ciclo da cultura" }
+      - { chave: "observacao", valor: "piso de comparação: o modelo só recomenda plantar o que rende mais que o capital aplicado", fonte_url: "https://www.bcb.gov.br/controleinflacao/historicotaxasjuros", metodo: "custo de oportunidade explícito do capital parado" }
 
 optimization:
   mode: "pareto"
