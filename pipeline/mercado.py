@@ -434,15 +434,18 @@ def generate_cost_summary_for_engine() -> Path:
 # MAIN
 # ──────────────────────────────────────────────────────────────────────
 def main(argv: List[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="D2 — Mercado: Conab + B3")
+    parser = argparse.ArgumentParser(description="D2 — Mercado: Conab + B3 + ZARC + Hipóteses")
     parser.add_argument("--custos", action="store_true", help="Baixar/processar custos Conab")
     parser.add_argument("--precos", action="store_true", help="Baixar preços Patrocínio")
     parser.add_argument("--b3", action="store_true", help="Registrar cotações B3 do dia")
+    parser.add_argument("--zarc", action="store_true", help="Processar ZARC (janela → tabela)")
+    parser.add_argument("--hipoteses", action="store_true", help="Gerar tabela hipóteses rastreáveis")
     parser.add_argument("--resumo", action="store_true", help="Gerar resumo de custos para engine")
+    parser.add_argument("--all", action="store_true", help="Rodar tudo (padrão)")
     args = parser.parse_args(argv)
 
     # Default: roda tudo se nenhuma flag
-    run_all = not (args.custos or args.precos or args.b3 or args.resumo)
+    run_all = args.all or not (args.custos or args.precos or args.b3 or args.zarc or args.hipoteses or args.resumo)
 
     if run_all or args.custos:
         print("=" * 60)
@@ -458,6 +461,22 @@ def main(argv: List[str] | None = None) -> int:
     if run_all or args.resumo:
         print("\nGERANDO RESUMO PARA ENGINE/CONFIG.YAML")
         generate_cost_summary_for_engine()
+
+    if run_all or args.zarc:
+        print("\nPROCESSAMENTO: ZARC → Tabelas fato")
+        import subprocess
+        result = subprocess.run([sys.executable, "pipeline/zarc.py"], capture_output=True, text=True)
+        print(result.stdout)
+        if result.stderr:
+            print(result.stderr, file=sys.stderr)
+
+    if run_all or args.hipoteses:
+        print("\nGERANDO: Tabela de hipóteses rastreáveis")
+        import subprocess
+        result = subprocess.run([sys.executable, "pipeline/hipoteses.py"], capture_output=True, text=True)
+        print(result.stdout)
+        if result.stderr:
+            print(result.stderr, file=sys.stderr)
 
     if run_all or args.precos:
         download_conab_precos_patrocinio()

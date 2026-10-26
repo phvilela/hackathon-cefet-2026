@@ -1,138 +1,170 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-pipeline/zarc.py
-================
-Consolidação das janelas de plantio do ZARC para Patos de Minas (MG)
-HackatOhm 2026 - "O que plantar?"
+pipeline/zarc.py — D2: Converte janelas ZARC (JSON do engine) → formato tabela para fato.parquet
 
-OBJETIVO
---------
-Transformar a tábua de risco oficial do ZARC em um formato enxuto por
-cultura × grupo de solo, com a lista de decêndios viáveis (risco <= 40%).
+Entrada:  engine/janelas_zarc.json (gerado por engine/adequacao.py)
+Saída:    data/processed/zarc/janelas_zarc.parquet
+          data/processed/zarc/rotacoes_zarc.parquet
 
-FONTES
-------
-- data/raw/zarc/tabua-risco-2026-2027-patos-de-minas-3148004.csv
-- geocodigo 3148004, safra 2026/27
-
-REGRAS
-------
-- Grupo de solo: Cod_Solo (1,2,3) mapeado para grupos do modelo
-- Decêndios: dec1..dec36 (valores 0,20,30,40,... representam % de risco)
-- Viável quando risco <= 40% (conforme engine/config.yaml: risco_maximo_percent: 40)
-- Foco no MVP: soja, milho 1ª safra, milho 2ª safra, feijão, feijão 2ª safra, sorgo granífero, sorgo granífero 2ª safra
-
-SAÍDAS
-------
-- data/processed/zarc/zarc_janelas_por_cultura_solo.json
-- data/processed/zarc/zarc_janelas_por_cultura_solo.csv
-- data/processed/zarc/zarc_janelas_mvp.json
-
-AUTOR / DATA
-------------
-D1 - Clima & Produtividade | HackatOhm 2026 | 2026-10-23
+Formato fato-friendly: uma linha por (cultura, grupo_solo, decendio, viavel, risco, tipo)
 """
+
 from __future__ import annotations
-
 import json
+import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Any
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
-RAW_ZARC = ROOT / "data" / "raw" / "zarc" / "tabua-risco-2026-2027-patos-de-minas-3148004.csv"
-OUT_DIR = ROOT / "data" / "processed" / "zarc"
-
-RISCO_LIMITE = 40
-
-
-def _ensure_dirs():
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+REPO = Path(__file__).resolve().parents[1]
+JSON_PATH = REPO / "engine/janelas_zarc.json"
+OUT_DIR = REPO / "data/processed/zarc"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def carregar_zarc() -> pd.DataFrame:
-    df = pd.read_csv(RAW_ZARC, sep=";")
-    return df
+def load_janelas() -> dict[str, Any]:
+    with open(JSON_PATH, encoding="utf-8") as f:
+        return json.load(f)
 
 
-def consolidar(df: pd.DataFrame) -> pd.DataFrame:
+def culturas_to_table(data: dict) -> pd.DataFrame:
+    """culturas -> linhas: cultura, grupo_solo, decendio, viavel, risco, solo_usado, ciclos"""
     rows = []
-    dec_cols = [f"dec{i}" for i in range(1, 37)]
-    for _, r in df.iterrows():
-        cultura = str(r["Nome_cultura"]).strip()
-        solo = int(r["Cod_Solo"])
-        ciclo = r.get("Cod_Ciclo")
-        manejo = r.get("Nome_Outros_Manejos")
-        viaveis = []
-        for i, c in enumerate(dec_cols, start=1):
-            val = r.get(c)
-            try:
-                v = float(val)
-            except Exception:
-                v = 100
-            if v <= RISCO_LIMITE:
-                viaveis.append(i)
+    for cultura, grupos in data["culturas"].items():
+        for grupo_solo, info in grupos.items():
+            solo_usado = info.get("solo_usado", "")
+            ciclos = info.get("ciclos_disponiveis", [])
+            decendios_viaveis = set(info.get("decendios", []))
+            risco_map = info.get("risco_por_decendio", {})
+
+            for dec in range(1, 37):
+                viavel = dec in decendios_viaveis
+                risco = risco_map.get(str(dec), 0)
+                rows.append({
+                    "cultura": cultura,
+                    "grupo_solo": int(grupo_solo),
+                    "decendio": dec,
+                    "viavel": viavel,
+                    "risco_percent": risco,
+                    "solo_usado": solo_usado,
+                    "ciclos_disponiveis": "|".join(map(str, ciclos)),
+                    "municipio": data["cenario"]["municipio"],
+                    "cod_ibge": data["cenario"]["cod_ibge"],
+                    "safra": data["cenario"]["safra"],
+                })
+    return pd.DataFrame(rows)
+
+
+def rotacoes_to_table(data: dict) -> pd.DataFrame:
+    """rotacoes -> linhas: rotacao, grupo_solo, decendio, primeira_viavel, segunda_viavel, primeira_ciclo, ciclo_dias"""
+    rows = []
+    for rotacao, grupos in data["rotacoes"].items():
+        for grupo_solo, info in grupos.items():
+            primeira_viaveis = set(info.get("primeira", []))
+            segunda_viaveis = set(info.get("segunda", []))
+            primeira_ciclo = info.get("primeira_ciclo", "")
+            ciclo_dias = info.get("premissa_ciclo_primeira_decendios", 0)
+
+            todos_dec = set(primeira_viaveis) | set(segunda_viaveis)
+            for dec in range(1, 37):
+                rows.append({
+                    "rotacao": rotacao,
+                    "grupo_solo": int(grupo_solo),
+                    "decendio": dec,
+                    "primeira_viavel": dec in primeira_viaveis,
+                    "segunda_viavel": dec in segunda_viaveis,
+                    "primeira_ciclo": primeira_ciclo,
+                    "ciclo_primeira_decendios": ciclo_dias,
+                    "municipio": data["cenario"]["municipio"],
+                    "cod_ibge": data["cenario"]["cod_ibge"],
+                    "safra": data["cenario"]["safra"],
+                })
+    return pd.DataFrame(rows)
+
+
+def premissas_to_table(data: dict) -> pd.DataFrame:
+    """premissas -> linhas rastreáveis para tabela de hipóteses"""
+    rows = []
+    for p in data["premissas"]:
         rows.append({
-            "cultura": cultura,
-            "grupo_solo": solo,
-            "cod_ciclo": ciclo,
-            "manejo": manejo,
-            "decendios_viaveis": viaveis,
-            "qtd_decendios": len(viaveis),
-            "portaria": r.get("Portaria"),
+            "chave": p["chave"],
+            "valor": str(p["valor"]),
+            "metodo": p["metodo"],
+            "fonte_url": p["fonte_url"],
+            "categoria": "ZARC",
         })
-    res = pd.DataFrame(rows)
-    return res
+    return pd.DataFrame(rows)
 
 
-def filtrar_mvp(df: pd.DataFrame) -> pd.DataFrame:
-    mvp = [
-        "Soja",
-        "Milho 1ª Safra",
-        "Milho 2ª Safra",
-        "Feijão",
-        "Feijão 2ª Safra",
-        "Feijão Caupi",
-        "Sorgo Granífero",
-        "Sorgo Granífero 2ª Safra",
-    ]
-    dfm = df[df["cultura"].isin(mvp)].copy()
-    return dfm
+def portarias_to_table(data: dict) -> pd.DataFrame:
+    """portarias por cultura -> linhas"""
+    rows = []
+    for cultura, portarias in data["fonte"]["portarias_por_cultura"].items():
+        for port in portarias:
+            rows.append({
+                "cultura": cultura,
+                "portaria": port,
+                "municipio": data["cenario"]["municipio"],
+                "cod_ibge": data["cenario"]["cod_ibge"],
+                "safra": data["cenario"]["safra"],
+            })
+    return pd.DataFrame(rows)
 
 
-def gerar_mapeamento_mvp(dfm: pd.DataFrame) -> Dict:
-    out = {}
-    for cultura, g in dfm.groupby("cultura"):
-        out[cultura] = {}
-        for solo, s in g.groupby("grupo_solo"):
-            # preferir entrada com mais decêndios ou manter lista única
-            decs = []
-            for _, row in s.iterrows():
-                decs.extend(row["decendios_viaveis"])
-            # remover duplicados mantendo ordem
-            decs_unicos = sorted(set(decs))
-            out[cultura][str(solo)] = decs_unicos
-    return out
+def main() -> int:
+    if not JSON_PATH.exists():
+        print(f"❌ {JSON_PATH} não existe. Rode primeiro: python3 engine/adequacao.py", file=sys.stderr)
+        return 1
 
+    print(f"Lendo {JSON_PATH}...")
+    data = load_janelas()
 
-def main():
-    _ensure_dirs()
-    print(f"[INICIO] Lendo {RAW_ZARC}")
-    df = carregar_zarc()
-    print(f"[OK] {len(df)} linhas")
-    cons = consolidar(df)
-    mvp = filtrar_mvp(cons)
-    print(f"[OK] MVP: {len(mvp)} combinações")
-    cons.to_csv(OUT_DIR / "zarc_janelas_por_cultura_solo.csv", index=False)
-    cons.to_json(OUT_DIR / "zarc_janelas_por_cultura_solo.json", orient="records", force_ascii=False, indent=2)
-    mvp.to_csv(OUT_DIR / "zarc_janelas_por_cultura_solo_mvp.csv", index=False)
-    mapa = gerar_mapeamento_mvp(mvp)
-    (OUT_DIR / "zarc_janelas_mvp.json").write_text(json.dumps(mapa, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"[OK] Salvo em {OUT_DIR}")
-    print(json.dumps(mapa, ensure_ascii=False, indent=2))
+    # 1. Culturas (plantio solteiro)
+    df_cult = culturas_to_table(data)
+    out_cult = OUT_DIR / "janelas_zarc_culturas.parquet"
+    df_cult.to_parquet(out_cult, index=False)
+    print(f"✅ {out_cult.name}: {len(df_cult)} linhas")
+
+    # 2. Rotações (pareadas)
+    df_rot = rotacoes_to_table(data)
+    out_rot = OUT_DIR / "janelas_zarc_rotacoes.parquet"
+    df_rot.to_parquet(out_rot, index=False)
+    print(f"✅ {out_rot.name}: {len(df_rot)} linhas")
+
+    # 3. Premissas (para hipóteses rastreáveis)
+    df_prem = premissas_to_table(data)
+    out_prem = OUT_DIR / "premissas_zarc.parquet"
+    df_prem.to_parquet(out_prem, index=False)
+    print(f"✅ {out_prem.name}: {len(df_prem)} linhas")
+
+    # 4. Portarias
+    df_port = portarias_to_table(data)
+    out_port = OUT_DIR / "portarias_zarc.parquet"
+    df_port.to_parquet(out_port, index=False)
+    print(f"✅ {out_port.name}: {len(df_port)} linhas")
+
+    # 5. Resumo legível
+    print("\n--- Resumo janelas viáveis (culturas) ---")
+    for cultura in sorted(df_cult["cultura"].unique()):
+        sub = df_cult[df_cult["cultura"] == cultura]
+        for grupo in sorted(sub["grupo_solo"].unique()):
+            decs = sub[(sub["grupo_solo"] == grupo) & (sub["viavel"])]["decendio"].tolist()
+            print(f"  {cultura:15} grupo {grupo}: {decs}")
+
+    print("\n--- Resumo rotações (primeira cultura) ---")
+    for rot in sorted(df_rot["rotacao"].unique()):
+        sub = df_rot[df_rot["rotacao"] == rot]
+        for grupo in sorted(sub["grupo_solo"].unique()):
+            decs = sub[(sub["grupo_solo"] == grupo) & (sub["primeira_viavel"])]["decendio"].tolist()
+            if decs:
+                print(f"  {rot:15} grupo {grupo}: {decs}")
+            else:
+                print(f"  {rot:15} grupo {grupo}: INVIÁVEL")
+
+    print(f"\nArquivos salvos em {OUT_DIR}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

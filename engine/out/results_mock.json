@@ -10,7 +10,7 @@
   "dados": {
     "status": "PARCIAL",
     "observacao": "Janelas: REAIS (ZARC 2026/27, engine/adequacao.py). Margens: MOCK — aguardando engine/margens_mc.json (MC do M1). Atualize com engine/atualiza_config.py quando o MC do M1 entregar engine/margens_mc.json.",
-    "gerado_em": "2026-10-24T17:34:22",
+    "gerado_em": "2026-10-24T18:30:57",
     "engine": "engine/ — CP-SAT inteiro: lexicográfico margem→risco, fronteira ε-constraint com knee (Equilibrado) e Monte Carlo de robustez"
   },
   "talhoes": {
