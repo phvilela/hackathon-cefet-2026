@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "./components/Header";
 import { Icon } from "./components/Icon";
-import { RotationsCard } from "./components/RotationsCard";
+import { FarmSummary } from "./components/FarmSummary";
 import { ScenarioBar } from "./components/ScenarioBar";
+import { SolutionPanel } from "./components/SolutionPanel";
 import { TalhaoCard } from "./components/TalhaoCard";
 import { ZarcPanel } from "./components/ZarcPanel";
 import zarcRaw from "./data/zarc.json";
@@ -10,13 +11,16 @@ import {
   carregarCenario,
   cenarioDoPreset,
   exportarCenario,
+  renumerarTalhoes,
   salvarCenario,
 } from "./lib/cenario";
 import {
+  FAMILIA_DA_CULTURA,
   PERFIL_META,
   culturasViaveis,
   grupoDoTalhao,
   type CenarioState,
+  type FamiliaCultura,
   type PerfilRisco,
   type Talhao,
   type ZarcData,
@@ -39,19 +43,19 @@ export default function App() {
   }, [cenario]);
 
   const totalArea = cenario.talhoes.reduce((acc, talhao) => acc + talhao.areaHa, 0);
-  const irrigados = cenario.talhoes.filter((talhao) => talhao.irrigacao).length;
   const selected = cenario.talhoes.find((talhao) => talhao.id === selectedId) ?? cenario.talhoes[0];
   const perfil = PERFIL_META[cenario.perfil];
 
   const culturas = useMemo(() => {
     const set = new Set<string>();
+    const familias = new Set(cenario.culturas);
     for (const talhao of cenario.talhoes) {
-      for (const cultura of culturasViaveis(zarc, grupoDoTalhao(talhao))) {
-        set.add(cultura.key);
+      for (const { key } of culturasViaveis(zarc, grupoDoTalhao(talhao))) {
+        if (familias.has(FAMILIA_DA_CULTURA[key])) set.add(key);
       }
     }
     return set;
-  }, [cenario.talhoes]);
+  }, [cenario.talhoes, cenario.culturas]);
 
   function aplicarPreset(id: string) {
     setCenario(cenarioDoPreset(id));
@@ -72,6 +76,49 @@ export default function App() {
     }));
   }
 
+  function alterarCultura(familia: FamiliaCultura) {
+    setCenario((atual) => {
+      const tem = atual.culturas.includes(familia);
+      if (tem && atual.culturas.length === 1) return atual;
+      return {
+        ...atual,
+        preset: "personalizado",
+        culturas: tem
+          ? atual.culturas.filter((item) => item !== familia)
+          : [...atual.culturas, familia],
+      };
+    });
+  }
+
+  function adicionarTalhao() {
+    const proximoIndice =
+      Math.max(0, ...cenario.talhoes.map((talhao) => Number(talhao.id.replace(/\D/g, "")) || 0)) + 1;
+    const novo: Talhao = {
+      id: `T${proximoIndice}`,
+      nome: `Talhão ${cenario.talhoes.length + 1}`,
+      areaHa: 0,
+      textura: "medio",
+      irrigacao: false,
+    };
+    setCenario({
+      ...cenario,
+      preset: "personalizado",
+      talhoes: renumerarTalhoes([...cenario.talhoes, novo]),
+    });
+    setSelectedId(novo.id);
+  }
+
+  function removerTalhao(id: string) {
+    if (cenario.talhoes.length <= 1) return;
+    const restantes = renumerarTalhoes(cenario.talhoes.filter((talhao) => talhao.id !== id));
+    setCenario({
+      ...cenario,
+      preset: "personalizado",
+      talhoes: restantes,
+    });
+    if (selectedId === id) setSelectedId(restantes[0].id);
+  }
+
   const diferenca = totalArea - AREA_REFERENCIA;
 
   return (
@@ -79,81 +126,27 @@ export default function App() {
       <Header />
 
       <main className="page">
-        <section className="hero">
-          <div className="hero-copy">
-            <div className="eyebrow">
-              <span className="eyebrow-rule" />
-              Patos de Minas · MG
-              <span className="eyebrow-sep" />
-              Safra 2026/27
-            </div>
-            <h1>
-              Cada talhão tem uma janela.
-              <br />
-              <em>O ZARC mostra quando.</em>
-            </h1>
-            <p>
-              Comece pela textura e pela área de cada pedaço da fazenda. A recomendação
-              cruza a adequação real do ZARC com margem e risco, sem esconder nenhuma
-              premissa.
-            </p>
-            <div className="hero-chips">
-              <span>
-                <Icon name="pin" size={14} /> IBGE 3148004
-              </span>
-              <span>
-                <Icon name="layers" size={14} /> 3 grupos de solo
-              </span>
-              <span>
-                <Icon name="calendar" size={14} /> janelas decendiais
-              </span>
-            </div>
-          </div>
-
-          <div className="hero-stats">
-            <div className={`stat stat-area ${diferenca !== 0 ? "has-warning" : ""}`}>
-              <span className="stat-label">Área cadastrada</span>
-              <div className="stat-value">
-                <strong>{numero.format(totalArea)}</strong>
-                <span>ha</span>
-              </div>
-              <div className="area-track" aria-hidden="true">
-                <span
-                  className={diferenca > 0 ? "over" : ""}
-                  style={{ width: `${Math.min((totalArea / AREA_REFERENCIA) * 100, 100)}%` }}
-                />
-              </div>
-              <span className="stat-hint">
-                {diferenca === 0
-                  ? "de 600 ha de referência"
-                  : `${diferenca > 0 ? "+" : ""}${numero.format(diferenca)} ha vs. referência de 600 ha`}
-              </span>
-            </div>
-
-            <div className="stat">
-              <span className="stat-label">Talhões</span>
-              <div className="stat-value">
-                <strong>{cenario.talhoes.length}</strong>
-              </div>
-              <span className="stat-hint">
-                {irrigados === 0 ? "todos em sequeiro" : `${irrigados} com irrigação`}
-              </span>
-            </div>
-
-            <div className="stat">
-              <span className="stat-label">Culturas com janela</span>
-              <div className="stat-value">
-                <strong>{culturas.size}</strong>
-              </div>
-              <span className="stat-hint">entre soja, milho, feijão e sorgo</span>
-            </div>
-
-            <div className="stat stat-profile">
-              <span className="stat-label">Perfil de risco</span>
-              <div className="stat-value stat-text">{perfil.label}</div>
-              <span className="stat-hint">{perfil.hint}</span>
-            </div>
-          </div>
+        <section className="summary-grid">
+          <FarmSummary
+            totalArea={totalArea}
+            talhoes={cenario.talhoes}
+            culturasCount={culturas.size}
+            culturas={cenario.culturas}
+            perfil={cenario.perfil}
+            diferenca={diferenca}
+            onChangeArea={(id, areaHa) => alterarTalhao(id, { areaHa })}
+            onToggleCultura={alterarCultura}
+            onPerfil={alterarPerfil}
+            onRemoverTalhao={removerTalhao}
+            onAdicionarTalhao={adicionarTalhao}
+          />
+          <SolutionPanel
+            zarc={zarc}
+            talhoes={cenario.talhoes}
+            talhao={selected}
+            culturas={cenario.culturas}
+            onSelectTalhao={setSelectedId}
+          />
         </section>
 
         <ScenarioBar
@@ -196,8 +189,6 @@ export default function App() {
                 ))}
               </div>
             </section>
-
-            <RotationsCard zarc={zarc} talhao={selected} />
           </div>
 
           <ZarcPanel

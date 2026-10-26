@@ -11,7 +11,8 @@ type IconName =
   | "check"
   | "pin"
   | "calendar"
-  | "sliders";
+  | "sliders"
+  | "chevron";
 
 interface IconProps {
   name: IconName;
@@ -80,6 +81,7 @@ const paths: Record<IconName, ReactNode> = {
       <circle cx="18" cy="18" r="2" />
     </>
   ),
+  chevron: <path d="m6 9 6 6 6-6" />,
 };
 
 export function Icon({ name, size = 18 }: IconProps) {
