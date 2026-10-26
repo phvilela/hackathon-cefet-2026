@@ -40,6 +40,11 @@ def load_all() -> dict[str, pd.DataFrame]:
     if conab_custos.exists():
         dfs["conab_custos"] = pd.read_parquet(conab_custos)
 
+    # Conab Preços MG
+    conab_precos_mg = REPO / "data/processed/mercado/conab_precos/mg_precos_semanais.parquet"
+    if conab_precos_mg.exists():
+        dfs["conab_precos_mg"] = pd.read_parquet(conab_precos_mg)
+
     # B3 cotações
     b3_files = list((REPO / "data/processed/mercado/b3").glob("*.parquet"))
     if b3_files:
@@ -125,7 +130,22 @@ def build_hipoteses_table(dfs: dict) -> pd.DataFrame:
                     "observacao": f"Região: {r['regiao']}-{r['uf']}, Ano: {int(r['ano'])}, Produtividade: {r.get('produtividade_kg_ha', 'N/A')}",
                 })
 
-    # 4. B3 Cotações (proxy ações agro)
+    # 4. Conab Preços MG (Preços médios semanais estado MG)
+    if "conab_precos_mg" in dfs:
+        df_precos = dfs["conab_precos_mg"]
+        for _, r in df_precos.iterrows():
+            rows.append({
+                "variavel": f"preco_conab_mg_{r['cultura']}_{r['nivel_comercializacao'].lower()}",
+                "valor": f"{r['preco_rs_tonelada']:.2f}",
+                "unidade": "R$/t",
+                "fonte": "Conab/SIAGRO",
+                "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/precos-agropecuarios",
+                "metodo": f"Preço médio semanal MG - nível {r['nivel_comercializacao']} - convertido de R$/unidade para R$/t",
+                "categoria": "Preço de Mercado (Conab MG)",
+                "observacao": f"Produto: {r['produto_original']} | Período: {r['periodo']} | Preço original: R$ {r['preco_original']} | Estado: {r['estado']}",
+            })
+
+    # 5. B3 Cotações (proxy ações agro)
     if "b3_cotacoes" in dfs:
         for _, r in dfs["b3_cotacoes"].iterrows():
             rows.append({
@@ -139,7 +159,7 @@ def build_hipoteses_table(dfs: dict) -> pd.DataFrame:
                 "observacao": f"{r['empresa']} - Data: {r['data']}",
             })
 
-    # 5. Engine Config (parâmetros MOCK - marcados como tal)
+    # 6. Engine Config (parâmetros MOCK - marcados como tal)
     if "engine_config" in dfs:
         cfg = dfs["engine_config"]
         for rot_id, rot in cfg.get("rotacoes", {}).items():
