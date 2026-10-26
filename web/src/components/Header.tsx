@@ -1,6 +1,11 @@
 import { Icon } from "./Icon";
 
-export function Header() {
+interface HeaderProps {
+  tela?: "talhoes" | "comparacao" | "rastreabilidade";
+  onNavigate?: (tela: "talhoes" | "comparacao" | "rastreabilidade") => void;
+}
+
+export function Header({ tela = "talhoes", onNavigate }: HeaderProps) {
   return (
     <header className="site-header">
       <div className="header-inner">
@@ -9,21 +14,36 @@ export function Header() {
             <Icon name="leaf" size={22} />
           </span>
           <span className="brand-copy">
-            <strong>O que plantar?</strong>
+            <strong>Safra Certa</strong>
             <small>Embrapa · HackatOhm 2026</small>
           </span>
         </div>
 
         <nav className="main-nav" aria-label="Etapas da recomendação">
-          <span className="nav-item active" aria-current="page">
+          <button
+            type="button"
+            className={`nav-item ${tela === "talhoes" ? "active" : ""}`}
+            aria-current={tela === "talhoes" ? "page" : undefined}
+            onClick={() => onNavigate?.("talhoes")}
+          >
             Talhões
-          </span>
-          <span className="nav-item disabled">
-            Comparação <em>em breve</em>
-          </span>
-          <span className="nav-item disabled">
-            Rastreabilidade <em>em breve</em>
-          </span>
+          </button>
+          <button
+            type="button"
+            className={`nav-item ${tela === "comparacao" ? "active" : ""}`}
+            aria-current={tela === "comparacao" ? "page" : undefined}
+            onClick={() => onNavigate?.("comparacao")}
+          >
+            Comparação
+          </button>
+          <button
+            type="button"
+            className={`nav-item ${tela === "rastreabilidade" ? "active" : ""}`}
+            aria-current={tela === "rastreabilidade" ? "page" : undefined}
+            onClick={() => onNavigate?.("rastreabilidade")}
+          >
+            Rastreabilidade
+          </button>
         </nav>
 
         <div className="header-meta">

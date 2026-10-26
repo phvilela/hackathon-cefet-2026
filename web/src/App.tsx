@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import { Comparacao } from "./components/Comparacao";
 import { Header } from "./components/Header";
 import { Icon } from "./components/Icon";
 import { FarmSummary } from "./components/FarmSummary";
+import { Rastreabilidade } from "./components/Rastreabilidade";
 import { ScenarioBar } from "./components/ScenarioBar";
 import { SolutionPanel } from "./components/SolutionPanel";
 import { TalhaoCard } from "./components/TalhaoCard";
 import { ZarcPanel } from "./components/ZarcPanel";
+import resultadosRaw from "./data/results.json";
 import zarcRaw from "./data/zarc.json";
 import {
   carregarCenario,
@@ -22,13 +25,17 @@ import {
   type CenarioState,
   type FamiliaCultura,
   type PerfilRisco,
+  type Resultados,
   type Talhao,
   type ZarcData,
 } from "./types";
 
 const zarc = zarcRaw as unknown as ZarcData;
+const resultados = resultadosRaw as unknown as Resultados;
 const AREA_REFERENCIA = 600;
 const numero = new Intl.NumberFormat("pt-BR");
+
+type Tela = "talhoes" | "comparacao" | "rastreabilidade";
 
 function cenarioInicial(): CenarioState {
   return carregarCenario() ?? cenarioDoPreset("desafio");
@@ -37,6 +44,7 @@ function cenarioInicial(): CenarioState {
 export default function App() {
   const [cenario, setCenario] = useState<CenarioState>(cenarioInicial);
   const [selectedId, setSelectedId] = useState("T1");
+  const [tela, setTela] = useState<Tela>("talhoes");
 
   useEffect(() => {
     salvarCenario(cenario);
@@ -123,30 +131,36 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header />
+      <Header tela={tela} onNavigate={setTela} />
 
       <main className="page">
-        <section className="summary-grid">
-          <FarmSummary
-            totalArea={totalArea}
-            talhoes={cenario.talhoes}
-            culturasCount={culturas.size}
-            culturas={cenario.culturas}
-            perfil={cenario.perfil}
-            diferenca={diferenca}
-            onChangeArea={(id, areaHa) => alterarTalhao(id, { areaHa })}
-            onToggleCultura={alterarCultura}
-            onPerfil={alterarPerfil}
-            onRemoverTalhao={removerTalhao}
-            onAdicionarTalhao={adicionarTalhao}
-          />
-          <SolutionPanel
-            zarc={zarc}
-            talhoes={cenario.talhoes}
-            talhao={selected}
-            culturas={cenario.culturas}
-            onSelectTalhao={setSelectedId}
-          />
+        {tela === "comparacao" ? (
+          <Comparacao resultados={resultados} />
+        ) : tela === "rastreabilidade" ? (
+          <Rastreabilidade resultados={resultados} />
+        ) : (
+          <>
+            <section className="summary-grid">
+              <FarmSummary
+                totalArea={totalArea}
+                talhoes={cenario.talhoes}
+                culturasCount={culturas.size}
+                culturas={cenario.culturas}
+                perfil={cenario.perfil}
+                diferenca={diferenca}
+                onChangeArea={(id, areaHa) => alterarTalhao(id, { areaHa })}
+                onToggleCultura={alterarCultura}
+                onPerfil={alterarPerfil}
+                onRemoverTalhao={removerTalhao}
+                onAdicionarTalhao={adicionarTalhao}
+              />
+              <SolutionPanel
+                zarc={zarc}
+                talhoes={cenario.talhoes}
+                talhao={selected}
+                culturas={cenario.culturas}
+                onSelectTalhao={setSelectedId}
+              />
         </section>
 
         <ScenarioBar
@@ -197,6 +211,8 @@ export default function App() {
             talhao={selected}
           />
         </div>
+          </>
+        )}
       </main>
 
       <footer className="site-footer">
@@ -205,13 +221,13 @@ export default function App() {
             <Icon name="leaf" size={17} />
           </span>
           <div>
-            <strong>O que plantar?</strong>
+            <strong>Safra Certa</strong>
             <span>Embrapa · HackatOhm 2026</span>
           </div>
         </div>
         <p className="footer-note">
-          Janelas ZARC reais da safra 2026/27. Margens e risco da Tela 2 seguem em
-          calibração pelo Monte Carlo (M1).
+          Janelas ZARC reais da safra 2026/27 e margens do Monte Carlo. Cada número
+          tem fonte, método e URL — veja em Rastreabilidade.
         </p>
         <div className="footer-sources">
           <a

@@ -344,3 +344,84 @@ export function brl(value: number) {
     maximumFractionDigits: 0,
   }).format(value);
 }
+
+export function ha(valor: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    maximumFractionDigits: 1,
+  }).format(valor);
+}
+
+/* ── Contrato motor → frontend (contract/results.json) ────────────────── */
+
+export type StatusDados = "REAL" | "PARCIAL" | "MOCK";
+
+export interface Hipotese {
+  chave: string;
+  valor: string;
+  fonte_url: string;
+  metodo: string;
+}
+
+export interface Plano {
+  perfil: PerfilRisco;
+  descricao: string;
+  margem_floor_centavos: number;
+  margem_centavos: number;
+  margem_reais: number;
+  risco_por_mil_ha: number;
+  ha_sob_risco: number;
+  status: string;
+  plano_por_talhao: Record<string, Record<string, number>>;
+  area_por_rotacao: Record<string, number>;
+}
+
+export interface RotacaoResult {
+  culturas: string[];
+  margem_centavos_por_ha: number;
+  margem_reais_por_ha: number;
+  risco_por_mil: number;
+  janelas_viveis_decendios: Record<string, number[]>;
+  grupos_viveis: string[];
+  hipoteses: Hipotese[];
+}
+
+export interface Robustez {
+  runs: number;
+  jitter_percent: number;
+  seed: number;
+  successful_runs: number;
+  failed_runs: number;
+  stability_mean: number;
+  stability_min: number;
+  stability_max: number;
+  max_talhoes_mudados: number;
+  pct_runs_sem_mudanca: number;
+  distribuicao_mudancas_talhoes: Record<string, number>;
+  frase_estabilidade: string;
+  margem_total_centavos: {
+    media: number;
+    minimo: number;
+    maximo: number;
+    desvio_padrao: number;
+  };
+  observacao: string;
+}
+
+export interface Resultados {
+  cenario: Record<string, unknown>;
+  dados: { status: StatusDados; observacao: string; gerado_em: string; engine: string };
+  talhoes: Record<string, { area_ha: number; grupo_solo: GrupoSolo }>;
+  rotacoes: Record<string, RotacaoResult>;
+  plano_otimo: Plano;
+  fronteira_pareto: Plano[];
+  knee: Plano;
+  planos: Record<PerfilRisco, Plano>;
+  robustez: Robustez;
+}
+
+/** Cor por perfil — casa com --green (equilibrado), --clay (arrojado), --blue (conservador). */
+export const PERFIL_TONE_HEX: Record<PerfilRisco, string> = {
+  arrojado: "#b8643a",
+  equilibrado: "#2f6b46",
+  conservador: "#426c75",
+};

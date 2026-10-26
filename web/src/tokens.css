@@ -1,0 +1,91 @@
+/* ============================================================================
+ * web/src/tokens.css — Identidade visual "Safra Certa" (Desafio Embrapa)
+ * ----------------------------------------------------------------------------
+ * Fonte única de verdade dos tokens de design. Extraído da Tela 1 (Talhões) e
+ * mantido À PARTE do styles.css para que as Telas 2 e 3 importem sem reescrever.
+ *
+ * Uso (em qualquer tela/componente novo):
+ *     @import "./tokens.css";
+ * e referencie sempre via var(--token). NUNCA hardcode hex nos componentes.
+ *
+ * Regra de ouro: se um valor de cor/tipo/forma não está aqui, provavelmente não
+ * deve existir. Adicione o token primeiro, depois use.
+ * ==========================================================================*/
+
+:root {
+  /* ── Paleta base (papel/Cerrado) ─────────────────────────────────────── */
+  --bg: #f2efe7;          /* fundo da página — papel quente */
+  --surface: #fbfaf6;     /* superfície de card */
+  --surface-2: #f5f1e8;   /* superfície rebaixada / stat */
+  --ink: #17251b;         /* texto principal (verde muito escuro, não preto) */
+  --muted: #5c6659;       /* texto secundário / rótulos */
+  --line: #ded9cb;        /* borda padrão */
+  --line-soft: #ebe6da;   /* borda sutil (dividers internos) */
+
+  /* ── Marcas da identidade ────────────────────────────────────────────── */
+  --green: #1d4d33;       /* verde primário — títulos de destaque, perfil eq. */
+  --green-2: #2f6b46;     /* verde interativo — links, foco, ícones ativos */
+  --lime: #c9df7b;        /* ACENTO VIVO — SÓ em fundo escuro (chips ativos) */
+  --clay: #b8643a;        /* terracota — atenção, risco alto, perfil arrojado */
+  --sand: #e9e1d0;        /* areia — preenchimentos neutros */
+  --blue: #426c75;        /* azul acinzentado — perfil conservador */
+
+  /* ── Semântica de risco ZARC (4 tons) — usada no calendário e legendas ─ */
+  --risk-low: #3f7d4f;    /* risco 20% (janela boa) */
+  --risk-mid: #6d7a2b;    /* risco 30% (médio) — no legend-dot usa #8c9c42 */
+  --risk-mid-alt: #8c9c42;/* variante do ponto de legenda */
+  --risk-high: #d2a445;   /* risco 40% (limite) */
+  --risk-off: #ece7db;    /* fora da janela — sempre hachurado, nunca sólido */
+
+  /* ── Cores por cultura (cor de preenchimento + tinta legível em cima) ── */
+  --crop-soja: #d9b64a;        --crop-soja-ink: #5b4811;
+  --crop-milho-1a: #e4a13c;    --crop-milho-1a-ink: #653b0a;
+  --crop-milho-2a: #c97a2b;    --crop-milho-2a-ink: #5a2e05;
+  --crop-feijao: #b07a4c;      --crop-feijao-ink: #4e2d16;
+  --crop-feijao-2a: #8b5e3c;   --crop-feijao-2a-ink: #3b2110;
+  --crop-sorgo: #9a6b3f;       --crop-sorgo-ink: #3f2814;
+  --crop-sorgo-2a: #7f6136;    --crop-sorgo-2a-ink: #33240e;
+
+  /* ── Tipografia ──────────────────────────────────────────────────────── */
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "DejaVu Sans",
+    "Noto Sans", sans-serif;      /* corpo, rótulos, UI */
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    "Gelasio", "DejaVu Serif", "Noto Serif", serif; /* números e títulos */
+
+  /* Escala de tipo (recomendada para as Telas 2/3) */
+  --fs-hero: clamp(2.7rem, 5.2vw, 4.55rem);  /* h1 editorial */
+  --fs-stat: 2.25rem;                        /* número grande (stat) */
+  --fs-title: 1.45rem;                       /* título de bloco */
+  --fs-body: 15px;                           /* corpo padrão */
+  --fs-lede: 16px;                           /* parágrafo de leitura (hero) */
+  --fs-label: 9.5px;                         /* rótulo caixa-alta tracked */
+  --fs-chip: 11px;                           /* chip / botão pequeno */
+
+  /* ── Raios (forma) ───────────────────────────────────────────────────── */
+  --radius-pill: 999px;   /* chips, tags, badges */
+  --radius-card: 23px;    /* .panel (card principal) */
+  --radius-stat: 18px;    /* .stat (bloco de número) */
+  --radius-md: 13px;      /* callouts, blocos internos */
+  --radius-sm: 9px;       /* botões, células, inputs */
+  --radius-mark: 13px;    /* brand-mark */
+
+  /* ── Sombras (sempre esverdeadas, nunca cinza puro) ──────────────────── */
+  --shadow-sm: 0 8px 24px -18px rgba(23, 63, 42, 0.4);
+  --shadow-md: 0 22px 50px -30px rgba(23, 63, 42, 0.45);
+
+  /* ── Espaçamento (grade de 8px, com meio-passo de 4px) ───────────────── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 11px;
+  --sp-4: 16px;
+  --sp-5: 22px;
+  --sp-6: 30px;
+  --sp-7: 48px;
+  --sp-8: 70px;
+
+  /* ── Layout ──────────────────────────────────────────────────────────── */
+  --page-max: 1240px;     /* largura máxima do conteúdo */
+  --page-pad: 32px;       /* respiro lateral */
+
+  color-scheme: light;
+}
