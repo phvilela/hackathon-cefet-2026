@@ -294,8 +294,157 @@ def process_conab_custos() -> Dict[str, Path]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Conab PREÇOS — Praça Patrocínio
+# Conab PREÇOS — MG State Weekly Averages (from downloaded Excel)
 # ──────────────────────────────────────────────────────────────────────
+def process_conab_precos_mg() -> Optional[Path]:
+    """
+    Processa preços semanais MG (Conab) do arquivo Excel baixado.
+    Converte R$/60kg → R$/t (×16.667) e padroniza colunas.
+    """
+    RAW_PRECOS = RAW / "conab_precos"
+    PROC_PRECOS = PROC / "conab_precos"
+    PROC_PRECOS.mkdir(parents=True, exist_ok=True)
+
+    xlsx_path = RAW_PRECOS / "Consulta-precos-semanal.xlsx"
+    if not xlsx_path.exists():
+        print(f"  ⚠ Arquivo não encontrado: {xlsx_path}")
+        return None
+
+    print("\n=== Conab PREÇOS — MG State Weekly Averages ===")
+    print(f"  Lendo: {xlsx_path.name}")
+
+    try:
+        # Lê a aba "Preços" com header na linha 11 (0-indexed = 11)
+        df = pd.read_excel(xlsx_path, sheet_name="Preços", header=11)
+        df.columns = ["idx", "produto", "nivel", "uf", "periodo", "preco"]
+        
+        # Remove linhas vazias e de metadados
+        df = df.dropna(subset=["produto", "preco"])
+        df = df[~df["produto"].astype(str).str.contains("Fonte:|As informações|Proibida|Desde setembro", case=False, na=False)]
+        
+        # Extrai data do período (formato: "28/09/26 a 02/10/26")
+        def parse_periodo(p):
+            if pd.isna(p):
+                return None, None
+            s = str(p)
+            match = re.match(r"(\d{2}/\d{2}/\d{2})\s*a\s*(\d{2}/\d{2}/\d{2})", s)
+            if match:
+                return match.group(1), match.group(2)
+            return None, None
+        
+        df[["data_inicio", "data_fim"]] = df["periodo"].apply(
+            lambda x: pd.Series(parse_periodo(x))
+        )
+        
+        # Converte preço string "R$ 151,53" → float
+        def parse_preco(p):
+            if pd.isna(p):
+                return None
+            s = str(p).replace("R$", "").replace(".", "").replace(",", ".").strip()
+            try:
+                return float(s)
+            except:
+                return None
+        
+        df["preco_bruto"] = df["preco"].apply(parse_preco)
+        
+        # Converte R$/60kg → R$/t (multiplica por 16.667)
+        # Identifica unidade pela descrição do produto
+        def convert_to_reais_por_tonelada(row):
+            preco = row["preco_bruto"]
+            if pd.isna(preco):
+                return None
+            produto = str(row["produto"]).upper()
+            if "(60 KG)" in produto or "(60 kg)" in produto or "(60 Kg)" in produto:
+                return round(preco * 1000 / 60, 2)  # R$/60kg → R$/t
+            elif "(KG)" in produto or "(kg)" in produto:
+                return round(preco * 1000, 2)  # R$/kg → R$/t
+            elif "(T)" in produto or "(t)" in produto:
+                return preco  # já em R$/t
+            elif "(L)" in produto or "(l)" in produto:
+                return None  # líquido, não converter
+            elif "(UN)" in produto or "(un)" in produto:
+                return None  # unitário, não converter
+            elif "(15 KG)" in produto or "(15 kg)" in produto:
+                return round(preco * 1000 / 15, 2)
+            elif "(20 KG)" in produto or "(20 kg)" in produto:
+                return round(preco * 1000 / 20, 2)
+            elif "(22 KG)" in produto or "(22 kg)" in produto:
+                return round(preco * 1000 / 22, 2)
+            elif "(25 KG)" in produto or "(25 kg)" in produto:
+                return round(preco * 1000 / 25, 2)
+            elif "(30 DZ)" in produto or "(30 dz)" in produto:
+                return None  # ovos
+            elif "(40.8 KG)" in produto:
+                return round(preco * 1000 / 40.8, 2)
+            elif "(50 KG)" in produto or "(50 kg)" in produto:
+                return round(preco * 1000 / 50, 2)
+            elif "(900 ML)" in produto:
+                return None
+            else:
+                return preco  # assume já em unidade padrão
+        
+        df["preco_rs_t"] = df.apply(convert_to_reais_por_tonelada, axis=1)
+        
+        # Filtra apenas culturas de interesse
+        culturas_alvo = {
+            "SOJA EM GRÃOS": "soja",
+            "MILHO EM GRÃOS": "milho",
+            "SORGO GRANÍFERO EM GRÃOS": "sorgo",
+            "FEIJÃO COMUM CORES": "feijao",
+            "FEIJÃO COMUM CORES TIPO 1": "feijao",
+            "CAFÉ ARÁBICA": "cafe",
+            "BOI GORDO": "boi",
+            "SUÍNO VIVO": "suino",
+            "FRANGO VIVO": "frango",
+        }
+        
+        def map_cultura(produto):
+            p = str(produto).upper()
+            for k, v in culturas_alvo.items():
+                if k in p:
+                    return v
+            return None
+        
+        df["cultura"] = df["produto"].apply(map_cultura)
+        df = df.dropna(subset=["cultura"])
+        
+        # Seleciona colunas finais
+        df_out = df[["cultura", "produto", "nivel", "uf", "periodo", "data_inicio", "data_fim", "preco_bruto", "preco_rs_t"]].copy()
+        df_out = df_out.rename(columns={
+            "produto": "produto_original",
+            "nivel": "nivel_comercializacao",
+            "uf": "estado",
+            "preco_bruto": "preco_original",
+            "preco_rs_t": "preco_rs_tonelada"
+        })
+        
+        # Adiciona metadados
+        df_out["fonte"] = "Conab/SIAGRO"
+        df_out["fonte_arquivo"] = "Consulta-precos-semanal.xlsx"
+        df_out["observacao"] = "Preços médios semanais MG - nível PRODUTOR/VAREJO - convertido para R$/t"
+        
+        # Salva
+        out_path = PROC_PRECOS / "mg_precos_semanais.parquet"
+        df_out.to_parquet(out_path, index=False)
+        
+        # Também salva CSV legível
+        out_csv = PROC_PRECOS / "mg_precos_semanais.csv"
+        df_out.to_csv(out_csv, index=False)
+        
+        print(f"  ✅ {out_path.name}: {len(df_out)} registros")
+        print(f"  Culturas: {df_out['cultura'].value_counts().to_dict()}")
+        print(f"  Níveis: {df_out['nivel_comercializacao'].value_counts().to_dict()}")
+        
+        return out_path
+        
+    except Exception as e:
+        print(f"  ✗ Erro processando preços MG: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 def download_conab_precos_patrocinio() -> Optional[Path]:
     """
     Tenta baixar preços da praça Patrocínio (MG).
@@ -479,6 +628,8 @@ def main(argv: List[str] | None = None) -> int:
             print(result.stderr, file=sys.stderr)
 
     if run_all or args.precos:
+        print("\nPROCESSAMENTO: Conab PREÇOS MG → Parquet")
+        process_conab_precos_mg()
         download_conab_precos_patrocinio()
 
     if run_all or args.b3:
