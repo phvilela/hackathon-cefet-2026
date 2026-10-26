@@ -1,6 +1,6 @@
 ## Método (rascunho — seção do relatório final)
 
-> M2 (motor de decisão) · rascunho de 22/10 — números reais pendentes na seção "Faltam".
+> M2 (motor de decisão) · **números reais do congelamento de 26/10** (`contract/results.json`, status `REAL`).
 
 ### 1. Arquitetura em três camadas
 
@@ -19,13 +19,26 @@ A camada 1 corta o espaço de opções; a 2 gera os coeficientes econômicos; a 
 Regras auditáveis que espelham o ZARC de Patos de Minas:
 
 - **Viabilidade climática:** "o decêndio d é viável para a cultura X no grupo de solo G se o risco ZARC de X em G em d for ≤ 40%". Cada cultura × grupo de solo vira uma **máscara de 36 decêndios**, derivada da tábua de risco oficial.
-- **Sequência:** milho safrinha só após a colheita da soja no mesmo talhão: liberação = plantio + ciclo da soja (~115–125 dias), premissa rastreável.
+- **Sequência:** milho safrinha só após a colheita da soja no mesmo talhão: liberação = plantio + **ciclo precoce da soja (Grupo I, 10 decêndios ≈ 100 dias)**, premissa rastreável. O Grupo I é o único que fecha a janela da 2ª cultura — Grupos II/III colhem tarde demais.
 
 Toda recomendação pode ser lida como a lista de regras que a produziu — explicabilidade nativa, não pós-hoc.
 
 ### 3. Camada 2 — Margem sob risco (insumo do CP-SAT)
 
-Para cada rotação viável, o Monte Carlo do M1 (bootstrap de ~20 anos de produtividade e preços reais) entrega a distribuição da margem: esperança, P(margem < 0) e P5 — os coeficientes da camada 3. Formulação: seção do M1.
+Para cada rotação viável, o Monte Carlo do M1 (bootstrap de 31 anos de produtividade × preço pareados, PAM/SIDRA de Patos de Minas) entrega a distribuição da margem: esperança e P(margem < 0) — os coeficientes da camada 3.
+
+**Coeficientes congelados** (regime de preços 2026/27; margem em R$/ha, risco em ‰ = P[margem < 0] × 10):
+
+| Rotação | Margem esperada | Risco (‰) | P[margem < 0] |
+|---|---|---|---|
+| soja → milho safrinha | R$ 4.496,73/ha | 220 | 22,0% |
+| soja solteira | R$ 3.695,44/ha | 200 | 20,0% |
+| soja → sorgo safrinha | R$ 2.473,64/ha | 281 | 28,1% |
+| milho 1ª safra | R$ 896,79/ha | 515 | 51,5% |
+| feijão das águas → sorgo | R$ 380,41/ha | 498 | 49,8% |
+| capital pousio (CDI) | R$ 200,00/ha | 0 | 0,0% |
+
+Sorgo e feijão não têm série anual em Patos; usam preço Conab de referência com volatilidade lognormal documentada (CV 20% e 25%). Custos são médias Conab 2024–2026 das regiões de Cerrado.
 
 ### 4. Camada 3 — Alocação ótima (CP-SAT)
 
@@ -62,13 +75,38 @@ Todo número carrega um **cartão de hipótese**: valor + fonte (URL) + método 
 - Guiducci & Hirakuri (Embrapa, SOBER 2020) — Monte Carlo agro validado. ⚠️ título exato
 - Markowitz (1952) — analogia fronteira margem × risco. ⚠️ analogia conceitual
 
-### Faltam (preencher depois)
+### 8. Resultados congelados (26/10, status `REAL`)
 
-- Valores concretos da fronteira Pareto: nº de pontos, (margem, risco) por ponto, áreas por rotação em cada plano.
-- Coeficientes por rotação vindos do MC do M1: margem esperada, P(margem < 0), P5.
-- Taxa de estabilidade da recomendação sob perturbação ±10% — e o critério exato de "plano se mantém".
-- Tempo de solve medido (alvo: < 1 min) e status de otimalidade reportado pelo solver.
-- Talhões do cenário: quantidade, áreas (somando 600 ha) e grupos de solo 1/2/3 atribuídos.
-- Valor fixado do ciclo da soja na regra de sequência (dentro da faixa 115–125 dias).
-- Piso de risco ZARC (40%) confirmado com D2; versão do OR-Tools usada.
-- Checagem das citações marcadas com ⚠️ antes da versão final.
+**Cenário:** 600 ha em 3 talhões — T1 300 ha (grupo de solo 2, médio) · T2 200 ha (grupo 1, arenoso) · T3 100 ha (grupo 3, argiloso). 6 rotações candidatas.
+
+**Fronteira de Pareto** (7 pontos, ε-constraint, piso de margem ≥ 85% do ótimo; todos com prova de otimalidade):
+
+| # | Margem total | Ha sob risco |
+|---|---|---|
+| 1 | R$ 2.537.780 | 128,0 |
+| 2 | R$ 2.461.972 | 123,7 |
+| 3 | R$ 2.385.874 | 119,4 |
+| 4 | R$ 2.309.775 | 115,0 |
+| **5 (knee)** | **R$ 2.233.677** | **110,6** |
+| 6 | R$ 2.157.869 | 106,3 |
+| 7 | R$ 120.000 | 0,0 |
+
+**Os três perfis do menu:**
+
+| Perfil | Margem | Ha sob risco | Alocação |
+|---|---|---|---|
+| **Arrojado** | R$ 2.537.780 | 128,0 | soja→milho 400 ha · soja solteira 200 ha |
+| **Equilibrado** (knee) | R$ 2.233.677 | 110,6 | soja→milho 400 ha · soja solteira 113 ha · **capital pousio 87 ha** |
+| **Conservador** | R$ 120.000 | 0,0 | capital pousio 600 ha |
+
+> "Ha sob risco" = risco total (‰·ha) ÷ 1000 = hectares com margem negativa esperada. O perfil Equilibrado paga R$ 304.103 de margem (−12%) para fugir de 17,4 ha de risco (−13,6%) — e ainda reserva 87 ha no CDI.
+
+**Robustez sob ±10% em preço/custo** (30 re-solves, seed 42): **30/30 cenários resolvidos**, estabilidade média **100%** — a alocação **não muda em nenhum talhão** em nenhum cenário (distribuição de mudanças: 30 rodadas com 0 talhões alterados). A recomendação não é fruto da estimativa pontual.
+
+**Tempo de solve:** ~14 ms (CP-SAT, status `OPTIMAL` com prova) — muito abaixo do alvo de 1 min.
+
+**Versões:** OR-Tools 9.15 · piso de risco ZARC ≤ 40% (confirmado com D2) · ciclo da soja = Grupo I (10 decêndios ≈ 100 dias).
+
+### 9. Pendências antes da versão final
+
+- Checagem das citações marcadas com ⚠️ (§8 Referências) — conferir forma exata de Haimes (1971), Akplogan et al. (2013) e Guiducci & Hirakuri (Embrapa/SOBER 2020).
