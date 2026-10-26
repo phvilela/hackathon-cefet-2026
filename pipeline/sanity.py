@@ -223,7 +223,70 @@ def checar_produtividade(csv_dir: Path) -> List[Dict[str, str]]:
 
 # ------------------------------------------------------------------------ grupo B
 
+def _checar_chuva_decendial(caminho: Path, regra_integral: bool) -> List[Dict[str, str]]:
+    """Grupo B sobre o decendial oficial do D1 — a fonte da chuva do fato."""
+    resultados: List[Dict[str, str]] = []
+    df = pd.read_csv(caminho)
+    df.columns = [str(c).strip().lower() for c in df.columns]
+    chuva = next((c for c in df.columns if 'precipitacao' in c), None)
+    if chuva is None or 'ano' not in df.columns:
+        return [_res('B0', GRUPO_B, AVISO, f'formato inesperado em {caminho}: {list(df.columns)}')]
+    anual = df.groupby('ano')[chuva].sum()
+
+    li, ls = anual.min(), anual.max()
+    if li < 500 or ls > 2000:
+        resultados.append(_res('B1', GRUPO_B, ERRO,
+            f'chuva anual fora de [500, 2000] mm: min {li:.0f}, máx {ls:.0f} — '
+            'unidade errada (mm vs cm)? estação errada? (Cerrado MG)'))
+    else:
+        resultados.append(_res('B1', GRUPO_B, OK,
+            f'chuva anual por ano dentro de [500, 2000] mm — observado {li:.0f}–{ls:.0f} mm '
+            f'({anual.index.min()}–{anual.index.max()})'))
+
+    media = anual.mean()
+    if not (800 <= media <= 1600):
+        resultados.append(_res('B2', GRUPO_B, ERRO if media < 800 else AVISO,
+            f'chuva anual média {media:.0f} mm fora de [800, 1600] mm (Cerrado MG) — '
+            'série zerada (bug) ou estação a conferir'))
+    else:
+        resultados.append(_res('B2', GRUPO_B, OK,
+            f'chuva anual média {media:.0f} mm ∈ [800, 1600] mm (Cerrado MG ~1.100 mm)'))
+
+    sentinelas = int((df[df.columns.difference(['ano', 'decendio'])] == 9999).sum().sum())
+    if sentinelas:
+        resultados.append(_res('B3', GRUPO_B, ERRO,
+            f'{sentinelas} célula(s) com valor 9999 — sentinela de falha do INMET: '
+            'tratar como nulo (pegadinha do PLANO)'))
+    else:
+        resultados.append(_res('B3', GRUPO_B, OK, 'nenhuma sentinela 9999 (falha INMET) na série'))
+
+    num_cols = [c for c in df.columns if c not in ('ano', 'decendio')]
+    pct_nulos = (df[num_cols].isna().mean() * 100).round(0)
+    alvo = pct_nulos[pct_nulos > 10]
+    if len(alvo):
+        detalhe = ', '.join(f'{c}: {v:.0f}%' for c, v in alvo.items())
+        resultados.append(_res('B4', GRUPO_B, ERRO if regra_integral else AVISO,
+            f'nulos > 10% em {len(alvo)} coluna(s) — {detalhe} (regra dos 10% do PLANO)'))
+    else:
+        resultados.append(_res('B4', GRUPO_B, OK, 'nenhuma coluna com > 10% de nulos (regra dos 10% do plano)'))
+
+    dec_por_ano = df.groupby('ano')['decendio'].nunique()
+    incompletos = dec_por_ano[dec_por_ano < 30]
+    if len(incompletos):
+        detalhe = ', '.join(f'{ano}: {n} dec' for ano, n in incompletos.items())
+        resultados.append(_res('B5', GRUPO_B, AVISO,
+            f'{len(incompletos)} ano(s) com cobertura < 30 decêndios — {detalhe} '
+            '(2006 é esperado: estação A523 inaugurada em ago/2006)'))
+    else:
+        resultados.append(_res('B5', GRUPO_B, OK, f'cobertura de decêndios completa ({int(dec_por_ano.min())}–{int(dec_por_ano.max())}/ano)'))
+    return resultados
+
+
 def checar_chuva(csv_dir: Path, regra_integral: bool) -> List[Dict[str, str]]:
+    decendial = REPO / 'data/processed/clima/clima_patrcinio_decendial.csv'
+    if decendial.exists():
+        return _checar_chuva_decendial(decendial, regra_integral)
+
     resultados: List[Dict[str, str]] = []
     caminho = csv_dir / 'chuva_mensal.csv'
     if not caminho.exists():
@@ -272,6 +335,18 @@ def checar_chuva(csv_dir: Path, regra_integral: bool) -> List[Dict[str, str]]:
         resultados.append(_res('B4', GRUPO_B, ERRO if regra_integral else AVISO, texto))
     else:
         resultados.append(_res('B4', GRUPO_B, OK, 'nenhuma coluna com > 10% de nulos (regra dos 10% do plano)'))
+
+    meses = [c for c in num_cols if 'Safra' not in c and ':' not in c]
+    if meses:
+        total_anual = df[meses].sum(axis=1, min_count=5)
+        media_anual = total_anual.mean()
+        if media_anual <= 800:
+            resultados.append(_res('B5', GRUPO_B, ERRO,
+                f'chuva anual média {media_anual:.0f} mm ≤ 800 mm — série zerada ou incompleta? '
+                '(sentinela anti-bug: pegaria chuva 100% zero de uma vez)'))
+        else:
+            resultados.append(_res('B5', GRUPO_B, OK,
+                f'chuva anual média {media_anual:.0f} mm > 800 mm (Cerrado MG ~1.100 mm) ✓'))
     return resultados
 
 
@@ -371,7 +446,12 @@ def checar_unidades(contrato: Dict[str, Any]) -> List[Dict[str, str]]:
 
         prods = {k[len('produtividade_'):]: v for k, v in achados.items() if k.startswith('produtividade_')}
         precos = {k[len('preco_'):]: v for k, v in achados.items() if k.startswith('preco_')}
-        custo = achados.get('custo_total')
+        custo = achados.get('custo_total_rotacao') or achados.get('custo_total')
+        margem_mocada = any(
+            'MOCK' in str(h.get('valor', ''))
+            for h in info.get('hipoteses', [])
+            if str(h.get('chave', '')) == 'observacao'
+        )
 
         if not prods and not precos:
             resultados.append(_res(ident, GRUPO_D, OK,
@@ -403,7 +483,8 @@ def checar_unidades(contrato: Dict[str, Any]) -> List[Dict[str, str]]:
 
         if custo is None:
             resultados.append(_res(ident, GRUPO_D, AVISO,
-                'sem custo_total declarado — margem não auditável contra as próprias hipóteses'))
+                'sem custo_total/custo_total_rotacao declarado — margem não auditável '
+                'contra as próprias hipóteses'))
             continue
         sem_par = sorted(set(prods) ^ set(precos))
         if sem_par:
@@ -431,11 +512,16 @@ def checar_unidades(contrato: Dict[str, Any]) -> List[Dict[str, str]]:
         if diff <= 0.15:
             resultados.append(_res(ident, GRUPO_D, OK,
                 f'margem recomposta R$ {_brs(recomp)}/ha ≈ declarada R$ {_brs(declarada)}/ha (Δ {diff:.0%}) — '
-                f'{parcelas} − custo {custo[0]:g} R$/ha ✓'))
+                f'{parcelas} − custo {_brs(custo[0])} R$/ha ✓'))
+        elif margem_mocada:
+            resultados.append(_res(ident, GRUPO_D, AVISO,
+                f'margem recomposta R$ {_brs(recomp)}/ha ≠ declarada R$ {_brs(declarada)}/ha (Δ {diff:.0%}) — '
+                f'{parcelas} − custo {_brs(custo[0])} R$/ha: margem ainda MOCK com custo REAL (Conab), '
+                'coerência total só após o MC do M1 (margens_mc.json)'))
         else:
             resultados.append(_res(ident, GRUPO_D, ERRO,
                 f'margem recomposta R$ {_brs(recomp)}/ha ≠ declarada R$ {_brs(declarada)}/ha (Δ {diff:.0%} > 15%) — '
-                f'{parcelas} − custo {custo[0]:g} R$/ha: unidade trocada? custo deduzido 2×?'))
+                f'{parcelas} − custo {_brs(custo[0])} R$/ha: unidade trocada? custo deduzido 2×?'))
     return resultados
 
 
@@ -502,11 +588,13 @@ def checar_fato(caminho: Path) -> List[Dict[str, str]]:
     if negativos:
         resultados.append(_res('E3·sinais', GRUPO_E, ERRO,
             f'{negativos} linha(s) com custo/preço ≤ 0 — sinal trocado ou unidade errada'))
-    if 'chuva_janela_mm' in colunas:
-        fora = fato[(fato['chuva_janela_mm'].notna()) & ((fato['chuva_janela_mm'] < 20) | (fato['chuva_janela_mm'] > 800))]
+    for col_chuva in [c for c in colunas if c.startswith('chuva')]:
+        fora = fato[fato[col_chuva].notna() & ((fato[col_chuva] < 10) | (fato[col_chuva] > 1200))]
         if len(fora):
             resultados.append(_res('E3·chuva', GRUPO_E, ERRO,
-                f'{len(fora)} linha(s) com chuva da janela fora de [20, 800] mm'))
+                f'{len(fora)} linha(s) com {col_chuva} fora de [10, 1200] mm — '
+                'piso 10 (seca extrema real ok); teto 1200 (janela chuvosa com fill NASA '
+                'chega a ~1.000, ex.: La Niña 2021/22; alvo: zero/unidade errada = 10×)'))
 
     pct_nulos = (fato[list(minimas)].isna().mean() * 100).round(0)
     alvo = pct_nulos[pct_nulos > 10]
@@ -516,6 +604,16 @@ def checar_fato(caminho: Path) -> List[Dict[str, str]]:
             f'nulos > 10% em {len(alvo)} coluna(s) — {detalhe} (regra INTEGRAL do plano: sem explicação reprova)'))
     else:
         resultados.append(_res('E4', GRUPO_E, OK, 'nenhuma coluna com > 10% de nulos'))
+
+    if 'origem_preco' in colunas:
+        n_hip = int(fato['origem_preco'].astype(str).str.startswith('hipotese').sum())
+        if n_hip:
+            resultados.append(_res('E5', GRUPO_E, AVISO,
+                f'{n_hip}/{len(fato)} linha(s) com preço de HIPÓTESE do config '
+                "(origem_preco='hipotese_*') — trocar pela praça Patrocínio (Conab) quando o D2 entregar"))
+        else:
+            resultados.append(_res('E5', GRUPO_E, OK,
+                'preço com origem oficial (não hipótese) ✓'))
     return resultados
 
 

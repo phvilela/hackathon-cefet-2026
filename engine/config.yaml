@@ -4,14 +4,17 @@
 #
 # Regenerado por engine/atualiza_config.py em 24/10/2026 — fontes:
 #   · janelas_viveis → REAIS: engine/janelas_zarc.json (ZARC via adequacao.py)
-#   · margem/risco   → MOCK: engine/margens_mc.json AUSENTE — margens/riscos atuais mantidos (aguardando MC do M1)
+#   · custos         → REAIS: Conab série histórica 2026 (D2, pipeline/mercado.py)
+#   · margem/risco   → MOCK: engine/margens_mc.json AUSENTE — mantidos (aguardando MC do M1)
 #
 # ⚠ AVISO MOCK vs REAL:
 #   - janelas_viveis JÁ são reais (ZARC, safra 2026/27). Lista VAZIA = rotação
 #     INVIÁVEL naquele grupo de solo (ex.: soja_milho no arenoso — a safrinha
 #     não fecha) — a validação do motor aceita (só exige ≥1 grupo viável).
-#   - margem_esperada/risco ver o status acima; hipóteses de cada rotação
-#     registram a fonte e o método (rastreabilidade).
+#   - custos JÁ são reais (Conab, hipóteses custo_total_* com URL oficial;
+#     região-referência Unaí-MG / Rio Verde-GO / Uruçuí-PI como proxy Cerrado).
+#   - margem_esperada/risco ainda MOCK: com custo real da rotação soja→milho
+#     (R$ 13.962/ha) a margem só sai do Monte Carlo do M1 (fato → MC → margens).
 #
 # Unidades (CP-SAT só tem inteiros — nunca float no objetivo):
 #   margem_esperada: centavos de R$ por hectare (R$ 4.180/ha → 418000)
@@ -40,8 +43,8 @@ talhoes:   # gerado do formulário (tela 1); irrigacao: true habilita manejo irr
 rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada número
   soja_milho:
     culturas: ["soja", "milho safrinha"]
-    margem_esperada: 418000   # centavos de R$/ha
-    risco: 120   # P[margem<0] em por-mil (‰)
+    margem_esperada: 418000   # centavos de R$/ha (MOCK — MC do M1 atualiza)
+    risco: 120   # P[margem<0] em por-mil (‰) (MOCK — MC do M1 atualiza)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: []
       2: [28, 29]
@@ -50,15 +53,17 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
       - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
       - { chave: "produtividade_milho_safrinha", valor: "80 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 7.610/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "custo_total_soja", valor: "R$ 7.291/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-soja-1997-a-2026.xls", metodo: "Conab série histórica, Unaí-MG, 2026, agricultura empresarial" }
+      - { chave: "custo_total_milho_safrinha", valor: "R$ 6.671/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/milho/milho_2a_safra_serie_historica_2005-2026.xls", metodo: "Conab série histórica, Unaí-MG, 2026" }
+      - { chave: "custo_total_rotacao", valor: "R$ 13.962/ha", fonte_url: "soma soja + milho safrinha (Conab)", metodo: "custo total da rotação soja→milho safrinha no mesmo hectare" }
       - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
       - { chave: "janela_segunda_cultura", valor: "plantio da 2ª cultura — g1: sem janela (inviável) · g2: [2-3] · g3: [2-4]", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "janelas pareadas do ZARC — engine/adequacao.py" }
 
   soja_sorgo:
     culturas: ["soja", "sorgo safrinha"]
-    margem_esperada: 390000   # centavos de R$/ha
-    risco: 110   # P[margem<0] em por-mil (‰)
+    margem_esperada: 390000   # centavos de R$/ha (MOCK — MC do M1 atualiza)
+    risco: 110   # P[margem<0] em por-mil (‰) (MOCK — MC do M1 atualiza)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [28, 29, 30]
       2: [28, 29, 30, 31]
@@ -67,15 +72,17 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
       - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "preco_sorgo", valor: "R$ 0,55/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 5.450/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "custo_total_soja", valor: "R$ 7.291/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-soja-1997-a-2026.xls", metodo: "Conab série histórica, Unaí-MG, 2026" }
+      - { chave: "custo_total_sorgo_safrinha", valor: "R$ 4.788/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/seriehistoricacustossorgo2013a2026.xls", metodo: "Conab série histórica, Rio Verde-GO, 2026 (proxy Cerrado)" }
+      - { chave: "custo_total_rotacao", valor: "R$ 12.079/ha", fonte_url: "soma soja + sorgo safrinha (Conab)", metodo: "custo total da rotação soja→sorgo safrinha" }
       - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
       - { chave: "janela_segunda_cultura", valor: "plantio da 2ª cultura — g1: [2-4] · g2: [2-5] · g3: [2-6]", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "janelas pareadas do ZARC — engine/adequacao.py" }
 
   feijao_sorgo:
     culturas: ["feijão das águas", "sorgo safrinha"]
-    margem_esperada: 450000   # centavos de R$/ha
-    risco: 250   # P[margem<0] em por-mil (‰)
+    margem_esperada: 450000   # centavos de R$/ha (MOCK — MC do M1 atualiza)
+    risco: 250   # P[margem<0] em por-mil (‰) (MOCK — MC do M1 atualiza)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [29, 30, 31]
       2: [28, 29, 30, 31, 32]
@@ -84,15 +91,17 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
       - { chave: "produtividade_feijao", valor: "1.200 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "preco_feijao", valor: "R$ 9,00/kg", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
       - { chave: "produtividade_sorgo", valor: "4.000 kg/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 8.500/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "custo_total_feijao", valor: "R$ 9.205/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/feijao/feijao_1_safra_serie_historica-1998-2026.xls", metodo: "Conab série histórica, Unaí-MG, 2026" }
+      - { chave: "custo_total_sorgo_safrinha", valor: "R$ 4.788/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/seriehistoricacustossorgo2013a2026.xls", metodo: "Conab série histórica, Rio Verde-GO, 2026 (proxy Cerrado)" }
+      - { chave: "custo_total_rotacao", valor: "R$ 13.993/ha", fonte_url: "soma feijão + sorgo safrinha (Conab)", metodo: "custo total da rotação feijão→sorgo safrinha" }
       - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
       - { chave: "janela_segunda_cultura", valor: "plantio da 2ª cultura — g1: [2-4] · g2: [1-5] · g3: [1-6]", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "janelas pareadas do ZARC — engine/adequacao.py" }
 
   milho_verao:
     culturas: ["milho 1ª safra"]
-    margem_esperada: 260000   # centavos de R$/ha
-    risco: 90   # P[margem<0] em por-mil (‰)
+    margem_esperada: 260000   # centavos de R$/ha (MOCK — MC do M1 atualiza)
+    risco: 90   # P[margem<0] em por-mil (‰) (MOCK — MC do M1 atualiza)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [31, 32, 33, 34, 35]
       2: [30, 31, 32, 33, 34, 35, 36]
@@ -100,14 +109,14 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
     hipoteses:
       - { chave: "produtividade_milho", valor: "110 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "preco_milho", valor: "R$ 58/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 3.780/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "custo_total", valor: "R$ 8.804/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/milho/milho_1a_safra_serie_historica_1997-2026.xls", metodo: "Conab série histórica, Uruçuí-PI, 2026 (proxy Cerrado)" }
       - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
 
   soja_solteira:
     culturas: ["soja"]
-    margem_esperada: 360000   # centavos de R$/ha
-    risco: 130   # P[margem<0] em por-mil (‰)
+    margem_esperada: 360000   # centavos de R$/ha (MOCK — MC do M1 atualiza)
+    risco: 130   # P[margem<0] em por-mil (‰) (MOCK — MC do M1 atualiza)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
       2: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
@@ -115,7 +124,7 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
     hipoteses:
       - { chave: "produtividade_soja", valor: "55 sc/ha", fonte_url: "MOCK://hackatohm/pam-media-20anos", metodo: "média PAM 20 anos (MOCK)" }
       - { chave: "preco_soja", valor: "R$ 130/sc", fonte_url: "MOCK://hackatohm/conab-media-5-safras", metodo: "média Conab 5 safras (MOCK)" }
-      - { chave: "custo_total", valor: "R$ 3.550/ha", fonte_url: "MOCK://hackatohm/custos-regionais", metodo: "planilha de custos regional (MOCK)" }
+      - { chave: "custo_total", valor: "R$ 7.291/ha", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-soja-1997-a-2026.xls", metodo: "Conab série histórica, Unaí-MG, 2026" }
       - { chave: "observacao", valor: "margens ainda MOCK — aguardando engine/margens_mc.json do MC do M1", fonte_url: "MOCK://hackatohm/m1-monte-carlo-pendente", metodo: "margens provisórias do config.yaml (MOCK) — substituir pelo MC do M1" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
 
