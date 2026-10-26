@@ -2060,6 +2060,229 @@ h2 {
   }
 }
 
+/* ============================================================================
+ * TELA 3 — RASTREABILIDADE (por que soja? fonte clicável)
+ * ==========================================================================*/
+
+.painel-rastreio {
+  padding-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.rastreio-abas {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  align-self: flex-start;
+}
+
+.rastreio-aba {
+  padding: 8px 15px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--fs-chip);
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.rastreio-aba:hover {
+  color: var(--ink);
+}
+
+.rastreio-aba.active {
+  background: var(--surface);
+  color: var(--green);
+  font-weight: 650;
+  box-shadow: var(--shadow-sm);
+}
+
+.rastreio-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rastreio-card,
+.fonte-card {
+  padding: 20px 22px;
+}
+
+.rastreio-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rastreio-cabecalho > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rastreio-cabecalho h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--green);
+}
+
+.crop-dot-grupo {
+  display: inline-flex;
+}
+
+.crop-dot-grupo i {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+}
+
+.crop-dot-grupo i + i {
+  margin-left: -5px;
+}
+
+.rastreio-numeros {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+
+.rastreio-margem {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.rastreio-risco {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.hipotese-lista {
+  list-style: none;
+  margin: 15px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.hipotese {
+  display: grid;
+  grid-template-columns: 190px 1fr 1fr auto;
+  gap: 14px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 12px;
+}
+
+.hipotese:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.hipotese.pendente {
+  opacity: 0.6;
+}
+
+.hipotese-chave {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hipotese-valor {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.hipotese-metodo {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.hipotese-fonte {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: end;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--green-2);
+  font-size: 10px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+a.hipotese-fonte:hover {
+  background: var(--surface);
+  border-color: var(--green-2);
+}
+
+.hipotese-fonte.interna {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+.fonte-orgao {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--green-2);
+}
+
+.fonte-url {
+  font-family: var(--font-sans) !important;
+  font-size: 0.9rem !important;
+  color: var(--ink) !important;
+  word-break: break-all;
+}
+
+.fonte-usos {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .hipotese {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .hipotese-fonte {
+    justify-self: start;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

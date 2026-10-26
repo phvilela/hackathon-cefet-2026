@@ -1,8 +1,8 @@
 import { Icon } from "./Icon";
 
 interface HeaderProps {
-  tela?: "talhoes" | "comparacao";
-  onNavigate?: (tela: "talhoes" | "comparacao") => void;
+  tela?: "talhoes" | "comparacao" | "rastreabilidade";
+  onNavigate?: (tela: "talhoes" | "comparacao" | "rastreabilidade") => void;
 }
 
 export function Header({ tela = "talhoes", onNavigate }: HeaderProps) {
@@ -36,9 +36,14 @@ export function Header({ tela = "talhoes", onNavigate }: HeaderProps) {
           >
             Comparação
           </button>
-          <span className="nav-item disabled">
-            Rastreabilidade <em>em breve</em>
-          </span>
+          <button
+            type="button"
+            className={`nav-item ${tela === "rastreabilidade" ? "active" : ""}`}
+            aria-current={tela === "rastreabilidade" ? "page" : undefined}
+            onClick={() => onNavigate?.("rastreabilidade")}
+          >
+            Rastreabilidade
+          </button>
         </nav>
 
         <div className="header-meta">

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Comparacao } from "./components/Comparacao";
 import { Header } from "./components/Header";
 import { Icon } from "./components/Icon";
+import { Rastreabilidade } from "./components/Rastreabilidade";
 import { RotationsCard } from "./components/RotationsCard";
 import { ScenarioBar } from "./components/ScenarioBar";
 import { TalhaoCard } from "./components/TalhaoCard";
@@ -30,7 +31,7 @@ const resultados = resultadosRaw as unknown as Resultados;
 const AREA_REFERENCIA = 600;
 const numero = new Intl.NumberFormat("pt-BR");
 
-type Tela = "talhoes" | "comparacao";
+type Tela = "talhoes" | "comparacao" | "rastreabilidade";
 
 function cenarioInicial(): CenarioState {
   return carregarCenario() ?? cenarioDoPreset("desafio");
@@ -88,6 +89,8 @@ export default function App() {
       <main className="page">
         {tela === "comparacao" ? (
           <Comparacao resultados={resultados} />
+        ) : tela === "rastreabilidade" ? (
+          <Rastreabilidade resultados={resultados} />
         ) : (
           <>
             <section className="hero">
