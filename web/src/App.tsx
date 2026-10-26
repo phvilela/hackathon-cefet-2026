@@ -235,8 +235,8 @@ export default function App() {
           </div>
         </div>
         <p className="footer-note">
-          Janelas ZARC reais da safra 2026/27. Margens e risco da Tela 2 seguem em
-          calibração pelo Monte Carlo (M1).
+          Janelas ZARC reais da safra 2026/27 e margens do Monte Carlo. Cada número
+          tem fonte, método e URL — veja em Rastreabilidade.
         </p>
         <div className="footer-sources">
           <a
