@@ -1,0 +1,898 @@
+{
+  "cenario": {
+    "municipio": "Patos de Minas",
+    "cod_ibge": 3148004,
+    "safra": "2026/27",
+    "area_total_ha": 600,
+    "n_talhoes": 3,
+    "n_rotacoes": 6
+  },
+  "dados": {
+    "status": "MOCK",
+    "observacao": "Margens, riscos e janelas são MOCK — substituir pelos outputs do MC do M1 (margem/risco) e do ZARC via adequacao.py (janelas).",
+    "gerado_em": "2026-10-23T09:36:04",
+    "engine": "engine/ — CP-SAT inteiro: lexicográfico margem→risco, fronteira ε-constraint com knee (Equilibrado) e Monte Carlo de robustez"
+  },
+  "talhoes": {
+    "T1": {
+      "area_ha": 300,
+      "grupo_solo": 2
+    },
+    "T2": {
+      "area_ha": 200,
+      "grupo_solo": 1
+    },
+    "T3": {
+      "area_ha": 100,
+      "grupo_solo": 3
+    }
+  },
+  "rotacoes": {
+    "soja_milho": {
+      "culturas": [
+        "soja",
+        "milho safrinha"
+      ],
+      "margem_centavos_por_ha": 418000,
+      "margem_reais_por_ha": 4180.0,
+      "risco_por_mil": 120,
+      "janelas_viveis_decendios": {
+        "1": [
+          28,
+          29,
+          30
+        ],
+        "2": [
+          26,
+          27,
+          28,
+          29,
+          30
+        ],
+        "3": [
+          25,
+          26,
+          27,
+          28,
+          29,
+          30
+        ]
+      },
+      "grupos_viveis": [
+        1,
+        2,
+        3
+      ],
+      "hipoteses": [
+        {
+          "chave": "produtividade_soja",
+          "valor": "55 sc/ha",
+          "fonte_url": "MOCK://hackatohm/pam-media-20anos",
+          "metodo": "média PAM 20 anos (MOCK)"
+        },
+        {
+          "chave": "preco_soja",
+          "valor": "R$ 130/sc",
+          "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
+          "metodo": "média Conab 5 safras (MOCK)"
+        },
+        {
+          "chave": "produtividade_milho_safrinha",
+          "valor": "80 sc/ha",
+          "fonte_url": "MOCK://hackatohm/pam-media-20anos",
+          "metodo": "média PAM 20 anos (MOCK)"
+        },
+        {
+          "chave": "custo_total",
+          "valor": "R$ 7.610/ha",
+          "fonte_url": "MOCK://hackatohm/custos-regionais",
+          "metodo": "planilha de custos regional (MOCK)"
+        },
+        {
+          "chave": "janela_milho_safrinha",
+          "valor": "decêndios 10-15 (MOCK)",
+          "fonte_url": "MOCK://hackatohm/zarc-milho-safrinha",
+          "metodo": "ZARC/portaria milho safrinha (MOCK)"
+        }
+      ]
+    },
+    "soja_sorgo": {
+      "culturas": [
+        "soja",
+        "sorgo safrinha"
+      ],
+      "margem_centavos_por_ha": 390000,
+      "margem_reais_por_ha": 3900.0,
+      "risco_por_mil": 110,
+      "janelas_viveis_decendios": {
+        "1": [
+          29,
+          30,
+          31,
+          32,
+          33
+        ],
+        "2": [
+          28,
+          29,
+          30,
+          31,
+          32,
+          33
+        ],
+        "3": [
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ]
+      },
+      "grupos_viveis": [
+        1,
+        2,
+        3
+      ],
+      "hipoteses": [
+        {
+          "chave": "produtividade_soja",
+          "valor": "55 sc/ha",
+          "fonte_url": "MOCK://hackatohm/pam-media-20anos",
+          "metodo": "média PAM 20 anos (MOCK)"
+        },
+        {
+          "chave": "produtividade_sorgo",
+          "valor": "4.000 kg/ha",
+          "fonte_url": "MOCK://hackatohm/pam-media-20anos",
+          "metodo": "média PAM 20 anos (MOCK)"
+        },
+        {
+          "chave": "preco_sorgo",
+          "valor": "R$ 0,55/kg",
+          "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
+          "metodo": "média Conab 5 safras (MOCK)"
+        },
+        {
+          "chave": "custo_total",
+          "valor": "R$ 5.450/ha",
+          "fonte_url": "MOCK://hackatohm/custos-regionais",
+          "metodo": "planilha de custos regional (MOCK)"
+        }
+      ]
+    },
+    "feijao_sorgo": {
+      "culturas": [
+        "feijão das águas",
+        "sorgo safrinha"
+      ],
+      "margem_centavos_por_ha": 450000,
+      "margem_reais_por_ha": 4500.0,
+      "risco_por_mil": 250,
+      "janelas_viveis_decendios": {
+        "1": [],
+        "2": [
+          24,
+          25,
+          26,
+          27,
+          28
+        ],
+        "3": [
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29
+        ]
+      },
+      "grupos_viveis": [
+        2,
+        3
+      ],
+      "hipoteses": [
+        {
+          "chave": "produtividade_feijao",
+          "valor": "1.200 kg/ha",
+          "fonte_url": "MOCK://hackatohm/pam-media-20anos",
+          "metodo": "média PAM 20 anos (MOCK)"
+        },
+        {
+          "chave": "preco_feijao",
+          "valor": "R$ 9,00/kg",
+          "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
+          "metodo": "média Conab 5 safras (MOCK)"
+        },
+        {
+          "chave": "produtividade_sorgo",
+          "valor": "4.000 kg/ha",
+          "fonte_url": "MOCK://hackatohm/pam-media-20anos",
+          "metodo": "média PAM 20 anos (MOCK)"
+        },
+        {
+          "chave": "custo_total",
+          "valor": "R$ 8.500/ha",
+          "fonte_url": "MOCK://hackatohm/custos-regionais",
+          "metodo": "planilha de custos regional (MOCK)"
+        },
+        {
+          "chave": "observacao",
+          "valor": "margem alta, risco alto (MOCK)",
+          "fonte_url": "MOCK://hackatohm/m1-monte-carlo",
+          "metodo": "MC do M1 (MOCK)"
+        }
+      ]
+    },
+    "milho_verao": {
+      "culturas": [
+        "milho 1ª safra"
+      ],
+      "margem_centavos_por_ha": 260000,
+      "margem_reais_por_ha": 2600.0,
+      "risco_por_mil": 90,
+      "janelas_viveis_decendios": {
+        "1": [
+          29,
+          30,
+          31
+        ],
+        "2": [
+          28,
+          29,
+          30,
+          31,
+          32
+        ],
+        "3": [
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33
+        ]
+      },
+      "grupos_viveis": [
+        1,
+        2,
+        3
+      ],
+      "hipoteses": [
+        {
+          "chave": "produtividade_milho",
+          "valor": "110 sc/ha",
+          "fonte_url": "MOCK://hackatohm/pam-media-20anos",
+          "metodo": "média PAM 20 anos (MOCK)"
+        },
+        {
+          "chave": "preco_milho",
+          "valor": "R$ 58/sc",
+          "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
+          "metodo": "média Conab 5 safras (MOCK)"
+        },
+        {
+          "chave": "custo_total",
+          "valor": "R$ 3.780/ha",
+          "fonte_url": "MOCK://hackatohm/custos-regionais",
+          "metodo": "planilha de custos regional (MOCK)"
+        },
+        {
+          "chave": "observacao",
+          "valor": "milho 1ª safra e milho safrinha têm ZARC/portaria próprios — insumos distintos (MOCK)",
+          "fonte_url": "MOCK://hackatohm/zarc-milho-verao",
+          "metodo": "ZARC milho 1ª safra (MOCK)"
+        }
+      ]
+    },
+    "soja_solteira": {
+      "culturas": [
+        "soja"
+      ],
+      "margem_centavos_por_ha": 360000,
+      "margem_reais_por_ha": 3600.0,
+      "risco_por_mil": 130,
+      "janelas_viveis_decendios": {
+        "1": [
+          28,
+          29,
+          30,
+          31,
+          32,
+          33
+        ],
+        "2": [
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34
+        ],
+        "3": [
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35
+        ]
+      },
+      "grupos_viveis": [
+        1,
+        2,
+        3
+      ],
+      "hipoteses": [
+        {
+          "chave": "produtividade_soja",
+          "valor": "55 sc/ha",
+          "fonte_url": "MOCK://hackatohm/pam-media-20anos",
+          "metodo": "média PAM 20 anos (MOCK)"
+        },
+        {
+          "chave": "preco_soja",
+          "valor": "R$ 130/sc",
+          "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
+          "metodo": "média Conab 5 safras (MOCK)"
+        },
+        {
+          "chave": "custo_total",
+          "valor": "R$ 3.550/ha",
+          "fonte_url": "MOCK://hackatohm/custos-regionais",
+          "metodo": "planilha de custos regional (MOCK)"
+        },
+        {
+          "chave": "observacao",
+          "valor": "sem 2ª safra — sem prazo da safrinha, plantio pode ir até dezembro (MOCK)",
+          "fonte_url": "MOCK://hackatohm/zarc-soja",
+          "metodo": "ZARC soja (MOCK)"
+        }
+      ]
+    },
+    "capital_pousio": {
+      "culturas": [
+        "capital no CDI (não plantar)"
+      ],
+      "margem_centavos_por_ha": 20000,
+      "margem_reais_por_ha": 200.0,
+      "risco_por_mil": 0,
+      "janelas_viveis_decendios": {
+        "1": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ],
+        "2": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ],
+        "3": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ]
+      },
+      "grupos_viveis": [
+        1,
+        2,
+        3
+      ],
+      "hipoteses": [
+        {
+          "chave": "custo_oportunidade",
+          "valor": "Selic ~13% a.a. sobre capital de custeio (~R$ 3.500/ha) por ~5 meses ≈ R$ 200/ha",
+          "fonte_url": "MOCK://hackatohm/selic-b3",
+          "metodo": "referência de 'não plantar' (MOCK — M1 calibra com a Selic vigente)"
+        },
+        {
+          "chave": "observacao",
+          "valor": "piso de comparação: o modelo só recomenda plantar o que rende mais que o capital aplicado",
+          "fonte_url": "MOCK://hackatohm/custo-oportunidade",
+          "metodo": "custo de oportunidade explícito (MOCK)"
+        }
+      ]
+    }
+  },
+  "plano_otimo": {
+    "perfil": "Ótimo lexicográfico",
+    "descricao": "lexicográfico: 1º maximiza margem, 2º minimiza risco",
+    "margem_floor_centavos": null,
+    "margem_centavos": 263600000,
+    "margem_reais": 2636000.0,
+    "risco_por_mil_ha": 124000,
+    "ha_sob_risco": 124.0,
+    "status": "OPTIMAL",
+    "plano_por_talhao": {
+      "T1": {
+        "feijao_sorgo": 300
+      },
+      "T2": {
+        "soja_milho": 200
+      },
+      "T3": {
+        "feijao_sorgo": 100
+      }
+    },
+    "area_por_rotacao": {
+      "soja_milho": 200,
+      "feijao_sorgo": 400
+    },
+    "stage_results": [
+      {
+        "estagio": "margem",
+        "direcao": "max",
+        "valor": 263600000,
+        "status": "OPTIMAL"
+      },
+      {
+        "estagio": "risco",
+        "direcao": "min",
+        "valor": 124000,
+        "status": "OPTIMAL"
+      }
+    ]
+  },
+  "fronteira_pareto": [
+    {
+      "perfil": "Arrojado",
+      "descricao": null,
+      "margem_floor_centavos": 263600000,
+      "margem_centavos": 263600000,
+      "margem_reais": 2636000.0,
+      "risco_por_mil_ha": 124000,
+      "ha_sob_risco": 124.0,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "feijao_sorgo": 300
+        },
+        "T2": {
+          "soja_milho": 200
+        },
+        "T3": {
+          "feijao_sorgo": 100
+        }
+      },
+      "area_por_rotacao": {
+        "soja_milho": 200,
+        "feijao_sorgo": 400
+      }
+    },
+    {
+      "perfil": null,
+      "descricao": null,
+      "margem_floor_centavos": 255692000,
+      "margem_centavos": 255696000,
+      "margem_reais": 2556960.0,
+      "risco_por_mil_ha": 91890,
+      "ha_sob_risco": 91.9,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "soja_milho": 147,
+          "feijao_sorgo": 153
+        },
+        "T2": {
+          "soja_milho": 200
+        },
+        "T3": {
+          "soja_milho": 100
+        }
+      },
+      "area_por_rotacao": {
+        "soja_milho": 447,
+        "feijao_sorgo": 153
+      }
+    },
+    {
+      "perfil": "Equilibrado (knee)",
+      "descricao": null,
+      "margem_floor_centavos": 247784000,
+      "margem_centavos": 247804000,
+      "margem_reais": 2478040.0,
+      "risco_por_mil_ha": 70930,
+      "ha_sob_risco": 70.9,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "soja_milho": 193,
+          "soja_sorgo": 107
+        },
+        "T2": {
+          "soja_milho": 200
+        },
+        "T3": {
+          "soja_milho": 100
+        }
+      },
+      "area_por_rotacao": {
+        "soja_milho": 493,
+        "soja_sorgo": 107
+      }
+    },
+    {
+      "perfil": null,
+      "descricao": null,
+      "margem_floor_centavos": 239876000,
+      "margem_centavos": 239880000,
+      "margem_reais": 2398800.0,
+      "risco_por_mil_ha": 68100,
+      "ha_sob_risco": 68.1,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "soja_milho": 98,
+          "soja_sorgo": 202
+        },
+        "T2": {
+          "soja_milho": 112,
+          "soja_sorgo": 88
+        },
+        "T3": {
+          "soja_sorgo": 100
+        }
+      },
+      "area_por_rotacao": {
+        "soja_milho": 210,
+        "soja_sorgo": 390
+      }
+    },
+    {
+      "perfil": null,
+      "descricao": null,
+      "margem_floor_centavos": 231968000,
+      "margem_centavos": 231976000,
+      "margem_reais": 2319760.0,
+      "risco_por_mil_ha": 65410,
+      "ha_sob_risco": 65.4,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "soja_sorgo": 300
+        },
+        "T2": {
+          "soja_milho": 7,
+          "soja_sorgo": 187,
+          "capital_pousio": 6
+        },
+        "T3": {
+          "soja_sorgo": 100
+        }
+      },
+      "area_por_rotacao": {
+        "soja_milho": 7,
+        "soja_sorgo": 587,
+        "capital_pousio": 6
+      }
+    },
+    {
+      "perfil": null,
+      "descricao": null,
+      "margem_floor_centavos": 224060000,
+      "margem_centavos": 224066000,
+      "margem_reais": 2240660.0,
+      "risco_por_mil_ha": 63050,
+      "ha_sob_risco": 63.0,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "soja_sorgo": 273,
+          "capital_pousio": 27
+        },
+        "T2": {
+          "soja_sorgo": 200
+        },
+        "T3": {
+          "soja_milho": 2,
+          "soja_sorgo": 98
+        }
+      },
+      "area_por_rotacao": {
+        "soja_milho": 2,
+        "soja_sorgo": 571,
+        "capital_pousio": 27
+      }
+    },
+    {
+      "perfil": "Conservador",
+      "descricao": null,
+      "margem_floor_centavos": null,
+      "margem_centavos": 12000000,
+      "margem_reais": 120000.0,
+      "risco_por_mil_ha": 0,
+      "ha_sob_risco": 0.0,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "capital_pousio": 300
+        },
+        "T2": {
+          "capital_pousio": 200
+        },
+        "T3": {
+          "capital_pousio": 100
+        }
+      },
+      "area_por_rotacao": {
+        "capital_pousio": 600
+      }
+    }
+  ],
+  "knee": {
+    "perfil": "Equilibrado (knee)",
+    "descricao": "knee point — melhor trade-off margem × risco",
+    "margem_floor_centavos": 247784000,
+    "margem_centavos": 247804000,
+    "margem_reais": 2478040.0,
+    "risco_por_mil_ha": 70930,
+    "ha_sob_risco": 70.9,
+    "status": "OPTIMAL",
+    "plano_por_talhao": {
+      "T1": {
+        "soja_milho": 193,
+        "soja_sorgo": 107
+      },
+      "T2": {
+        "soja_milho": 200
+      },
+      "T3": {
+        "soja_milho": 100
+      }
+    },
+    "area_por_rotacao": {
+      "soja_milho": 493,
+      "soja_sorgo": 107
+    }
+  },
+  "planos": {
+    "arrojado": {
+      "perfil": "Arrojado",
+      "descricao": "máxima margem (topo da fronteira)",
+      "margem_floor_centavos": 263600000,
+      "margem_centavos": 263600000,
+      "margem_reais": 2636000.0,
+      "risco_por_mil_ha": 124000,
+      "ha_sob_risco": 124.0,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "feijao_sorgo": 300
+        },
+        "T2": {
+          "soja_milho": 200
+        },
+        "T3": {
+          "feijao_sorgo": 100
+        }
+      },
+      "area_por_rotacao": {
+        "soja_milho": 200,
+        "feijao_sorgo": 400
+      }
+    },
+    "equilibrado": {
+      "perfil": "Equilibrado (knee)",
+      "descricao": "knee point — melhor trade-off margem × risco",
+      "margem_floor_centavos": 247784000,
+      "margem_centavos": 247804000,
+      "margem_reais": 2478040.0,
+      "risco_por_mil_ha": 70930,
+      "ha_sob_risco": 70.9,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "soja_milho": 193,
+          "soja_sorgo": 107
+        },
+        "T2": {
+          "soja_milho": 200
+        },
+        "T3": {
+          "soja_milho": 100
+        }
+      },
+      "area_por_rotacao": {
+        "soja_milho": 493,
+        "soja_sorgo": 107
+      }
+    },
+    "conservador": {
+      "perfil": "Conservador",
+      "descricao": "mínimo risco absoluto — inclui a opção capital/pousio (custo de oportunidade)",
+      "margem_floor_centavos": null,
+      "margem_centavos": 12000000,
+      "margem_reais": 120000.0,
+      "risco_por_mil_ha": 0,
+      "ha_sob_risco": 0.0,
+      "status": "OPTIMAL",
+      "plano_por_talhao": {
+        "T1": {
+          "capital_pousio": 300
+        },
+        "T2": {
+          "capital_pousio": 200
+        },
+        "T3": {
+          "capital_pousio": 100
+        }
+      },
+      "area_por_rotacao": {
+        "capital_pousio": 600
+      }
+    }
+  },
+  "robustez": {
+    "runs": 30,
+    "jitter_percent": 10,
+    "seed": 42,
+    "successful_runs": 30,
+    "failed_runs": 0,
+    "stability_mean": 0.8667,
+    "stability_min": 0.3333,
+    "stability_max": 1.0,
+    "max_talhoes_mudados": 2,
+    "pct_runs_sem_mudanca": 70.0,
+    "distribuicao_mudancas_talhoes": {
+      "0": 21,
+      "1": 6,
+      "2": 3
+    },
+    "frase_estabilidade": "A alocação muda em no máximo 2 talhões em 100% dos cenários de ±10% em preço/custo.",
+    "retention_por_rotacao": {
+      "soja_milho": {
+        "presente_no_baseline": true,
+        "runs_presente": 24,
+        "fracao_runs": 0.8,
+        "area_media_ha": 250.0
+      },
+      "soja_sorgo": {
+        "presente_no_baseline": false,
+        "runs_presente": 6,
+        "fracao_runs": 0.2,
+        "area_media_ha": 200.0
+      },
+      "feijao_sorgo": {
+        "presente_no_baseline": true,
+        "runs_presente": 27,
+        "fracao_runs": 0.9,
+        "area_media_ha": 400.0
+      },
+      "milho_verao": {
+        "presente_no_baseline": false,
+        "runs_presente": 0,
+        "fracao_runs": 0.0,
+        "area_media_ha": 0.0
+      },
+      "soja_solteira": {
+        "presente_no_baseline": false,
+        "runs_presente": 0,
+        "fracao_runs": 0.0,
+        "area_media_ha": 0.0
+      },
+      "capital_pousio": {
+        "presente_no_baseline": false,
+        "runs_presente": 0,
+        "fracao_runs": 0.0,
+        "area_media_ha": 0.0
+      }
+    },
+    "margem_total_centavos": {
+      "media": 266437686,
+      "minimo": 242721400,
+      "maximo": 283177600,
+      "desvio_padrao": 10141434.1
+    },
+    "observacao": "Perturba as margens (custos embutidos) em ±10% e re-resolve; mede a estabilidade da RECOMENDAÇÃO — complementar ao MC do M1, que gera as margens."
+  }
+}
