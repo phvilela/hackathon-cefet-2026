@@ -10,7 +10,7 @@
   "dados": {
     "status": "PARCIAL",
     "observacao": "Janelas: REAIS (ZARC 2026/27, engine/adequacao.py). Margens: MOCK — aguardando engine/margens_mc.json (MC do M1). Atualize com engine/atualiza_config.py quando o MC do M1 entregar engine/margens_mc.json.",
-    "gerado_em": "2026-10-24T23:05:02",
+    "gerado_em": "2026-10-26T01:02:49",
     "engine": "engine/ — CP-SAT inteiro: lexicográfico margem→risco, fronteira ε-constraint com knee (Equilibrado) e Monte Carlo de robustez"
   },
   "talhoes": {
@@ -61,15 +61,21 @@
         },
         {
           "chave": "preco_soja",
-          "valor": "R$ 130/sc",
-          "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
-          "metodo": "média Conab 5 safras (MOCK)"
+          "valor": "R$ 166,49/sc",
+          "fonte_url": "https://apisidra.ibge.gov.br/values/t/5457/n6/3148004",
+          "metodo": "preço implícito PAM (valor÷quantidade), média 5 safras (2021–25) deflacionada IPCA (BCB 433) — série do M1"
         },
         {
           "chave": "produtividade_milho_safrinha",
           "valor": "80 sc/ha",
           "fonte_url": "MOCK://hackatohm/pam-media-20anos",
           "metodo": "média PAM 20 anos (MOCK)"
+        },
+        {
+          "chave": "preco_milho_safrinha",
+          "valor": "R$ 84,44/sc",
+          "fonte_url": "https://apisidra.ibge.gov.br/values/t/5457/n6/3148004",
+          "metodo": "preço implícito PAM (valor÷quantidade), média 5 safras (2021–25) deflacionada IPCA (BCB 433) — série do M1"
         },
         {
           "chave": "custo_total_soja",
@@ -150,6 +156,12 @@
           "metodo": "média PAM 20 anos (MOCK)"
         },
         {
+          "chave": "preco_soja",
+          "valor": "R$ 166,49/sc",
+          "fonte_url": "https://apisidra.ibge.gov.br/values/t/5457/n6/3148004",
+          "metodo": "preço implícito PAM (valor÷quantidade), média 5 safras (2021–25) deflacionada IPCA (BCB 433) — série do M1"
+        },
+        {
           "chave": "produtividade_sorgo",
           "valor": "4.000 kg/ha",
           "fonte_url": "MOCK://hackatohm/pam-media-20anos",
@@ -159,7 +171,7 @@
           "chave": "preco_sorgo",
           "valor": "R$ 0,55/kg",
           "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
-          "metodo": "média Conab 5 safras (MOCK)"
+          "metodo": "média Conab 5 safras (MOCK — sorgo sem série PAM no MVP)"
         },
         {
           "chave": "custo_total_soja",
@@ -254,6 +266,12 @@
           "metodo": "média PAM 20 anos (MOCK)"
         },
         {
+          "chave": "preco_sorgo",
+          "valor": "R$ 0,55/kg",
+          "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
+          "metodo": "média Conab 5 safras (MOCK — sorgo sem série PAM no MVP)"
+        },
+        {
           "chave": "custo_total_feijao",
           "valor": "R$ 9.205/ha",
           "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/feijao/feijao_1_safra_serie_historica-1998-2026.xls",
@@ -339,9 +357,9 @@
         },
         {
           "chave": "preco_milho",
-          "valor": "R$ 58/sc",
-          "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
-          "metodo": "média Conab 5 safras (MOCK)"
+          "valor": "R$ 84,44/sc",
+          "fonte_url": "https://apisidra.ibge.gov.br/values/t/5457/n6/3148004",
+          "metodo": "preço implícito PAM (valor÷quantidade), média 5 safras (2021–25) deflacionada IPCA (BCB 433) — série do M1"
         },
         {
           "chave": "custo_total",
@@ -422,9 +440,9 @@
         },
         {
           "chave": "preco_soja",
-          "valor": "R$ 130/sc",
-          "fonte_url": "MOCK://hackatohm/conab-media-5-safras",
-          "metodo": "média Conab 5 safras (MOCK)"
+          "valor": "R$ 166,49/sc",
+          "fonte_url": "https://apisidra.ibge.gov.br/values/t/5457/n6/3148004",
+          "metodo": "preço implícito PAM (valor÷quantidade), média 5 safras (2021–25) deflacionada IPCA (BCB 433) — série do M1"
         },
         {
           "chave": "custo_total",
