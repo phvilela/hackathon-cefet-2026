@@ -1,4 +1,4 @@
-# Diretrizes de Identidade Visual — "O que plantar?"
+# Diretrizes de Identidade Visual — "Safra Certa"
 
 > Base extraída da **Tela 1 (Talhões)**, que já está implementada e aprovada.
 > Serve de fonte única de verdade para construir a **Tela 2 (Comparação)** e a

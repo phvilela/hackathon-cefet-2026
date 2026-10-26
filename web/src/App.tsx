@@ -230,7 +230,7 @@ export default function App() {
             <Icon name="leaf" size={17} />
           </span>
           <div>
-            <strong>O que plantar?</strong>
+            <strong>Safra Certa</strong>
             <span>Embrapa · HackatOhm 2026</span>
           </div>
         </div>

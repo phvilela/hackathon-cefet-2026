@@ -14,7 +14,7 @@ export function Header({ tela = "talhoes", onNavigate }: HeaderProps) {
             <Icon name="leaf" size={22} />
           </span>
           <span className="brand-copy">
-            <strong>O que plantar?</strong>
+            <strong>Safra Certa</strong>
             <small>Embrapa · HackatOhm 2026</small>
           </span>
         </div>
