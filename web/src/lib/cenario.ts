@@ -1,4 +1,10 @@
-import type { CenarioState, PerfilRisco, Talhao } from "../types";
+import {
+  FAMILIAS,
+  type CenarioState,
+  type FamiliaCultura,
+  type PerfilRisco,
+  type Talhao,
+} from "../types";
 
 const STORAGE_KEY = "hackatohm.tela1.cenario.v1";
 
@@ -17,6 +23,14 @@ export interface CenarioPreset {
   perfil: PerfilRisco;
   talhoes: Talhao[];
 }
+
+export const ROTACAO_FAMILIAS: Record<string, FamiliaCultura[]> = {
+  soja_milho: ["soja", "milho"],
+  soja_sorgo: ["soja", "sorgo"],
+  feijao_sorgo: ["feijao", "sorgo"],
+  soja_solteira: ["soja"],
+  milho_verao: ["milho"],
+};
 
 export const PRESETS: CenarioPreset[] = [
   {
@@ -42,11 +56,21 @@ export const PRESETS: CenarioPreset[] = [
   },
 ];
 
+const NOME_PADRAO = /^Talhão \d+$/;
+
+export function renumerarTalhoes(talhoes: Talhao[]): Talhao[] {
+  return talhoes.map((talhao, index) => ({
+    ...talhao,
+    nome: NOME_PADRAO.test(talhao.nome) ? `Talhão ${index + 1}` : talhao.nome,
+  }));
+}
+
 export function cenarioDoPreset(id: string): CenarioState {
   const preset = PRESETS.find((item) => item.id === id) ?? PRESETS[0];
   return {
     talhoes: preset.talhoes.map((talhao) => ({ ...talhao })),
     perfil: preset.perfil,
+    culturas: [...FAMILIAS],
     preset: preset.id,
   };
 }
@@ -57,7 +81,7 @@ export function carregarCenario(): CenarioState | null {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<CenarioState>;
-    if (!Array.isArray(parsed.talhoes) || parsed.talhoes.length !== 3) return null;
+    if (!Array.isArray(parsed.talhoes) || parsed.talhoes.length < 1) return null;
     if (!parsed.perfil || !["arrojado", "equilibrado", "conservador"].includes(parsed.perfil)) {
       return null;
     }
@@ -70,9 +94,15 @@ export function carregarCenario(): CenarioState | null {
         typeof talhao.irrigacao === "boolean",
     );
     if (!validos) return null;
+    const culturas = Array.isArray(parsed.culturas)
+      ? parsed.culturas.filter(
+          (familia): familia is FamiliaCultura => FAMILIAS.includes(familia),
+        )
+      : [];
     return {
       talhoes: parsed.talhoes,
       perfil: parsed.perfil,
+      culturas: culturas.length > 0 ? culturas : [...FAMILIAS],
       preset: typeof parsed.preset === "string" ? parsed.preset : "personalizado",
     };
   } catch {
@@ -96,6 +126,7 @@ export function exportarCenario(cenario: CenarioState, perfilLabel: string) {
       area_total_ha: total,
       perfil_risco: cenario.perfil,
       perfil_label: perfilLabel,
+      culturas: cenario.culturas,
       gerado_em: new Date().toISOString(),
     },
     talhoes: Object.fromEntries(

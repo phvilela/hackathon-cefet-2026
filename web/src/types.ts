@@ -64,8 +64,37 @@ export interface Talhao {
 export interface CenarioState {
   talhoes: Talhao[];
   perfil: PerfilRisco;
+  culturas: FamiliaCultura[];
   preset: string;
 }
+
+export type FamiliaCultura = "soja" | "milho" | "feijao" | "sorgo";
+
+export const FAMILIAS: FamiliaCultura[] = ["soja", "milho", "feijao", "sorgo"];
+
+export const FAMILIA_META: Record<FamiliaCultura, { label: string; color: string }> = {
+  soja: { label: "Soja", color: "#d9b64a" },
+  milho: { label: "Milho", color: "#e4a13c" },
+  feijao: { label: "Feijão", color: "#b07a4c" },
+  sorgo: { label: "Sorgo", color: "#9a6b3f" },
+};
+
+export const FAMILIA_CULTURAS: Record<FamiliaCultura, CropKey[]> = {
+  soja: ["soja"],
+  milho: ["milho_verao", "milho_safrinha"],
+  feijao: ["feijao", "feijao_2"],
+  sorgo: ["sorgo_granifero", "sorgo_safrinha"],
+};
+
+export const FAMILIA_DA_CULTURA: Record<CropKey, FamiliaCultura> = {
+  soja: "soja",
+  milho_verao: "milho",
+  milho_safrinha: "milho",
+  feijao: "feijao",
+  feijao_2: "feijao",
+  sorgo_granifero: "sorgo",
+  sorgo_safrinha: "sorgo",
+};
 
 export interface CropMeta {
   label: string;
