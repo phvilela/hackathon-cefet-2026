@@ -66,7 +66,7 @@ export function SolutionPanel({
         </div>
         <span className="solution-badge">
           <span className="soil-swatch" data-group={grupo} />
-          Grupo {grupo} · {grupoMeta.solo}
+          solo {grupoMeta.label.toLowerCase()} · <span className="soil-code">{grupoMeta.solo}</span>
         </span>
       </div>
 

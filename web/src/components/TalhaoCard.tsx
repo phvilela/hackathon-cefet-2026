@@ -60,9 +60,9 @@ export function TalhaoCard({
           />
           <span className="talhao-sub">
             <Icon name="layers" size={13} />
-            Grupo {grupo} · {solo}
+            solo {TEXTURA_META[talhao.textura].label.toLowerCase()}
             <span className="sep-dot" />
-            {TEXTURA_META[talhao.textura].label.toLowerCase()}
+            <span className="soil-code">{solo}</span>
           </span>
         </div>
         <label className="talhao-area">

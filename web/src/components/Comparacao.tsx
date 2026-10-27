@@ -10,70 +10,91 @@ import {
   YAxis,
 } from "recharts";
 import { Icon } from "./Icon";
+import { StatusApiBadge } from "./StatusApiBadge";
 import {
   PERFIL_META,
   PERFIL_TONE_HEX,
+  areaRiscoPct,
   brl,
   ha,
+  type CenarioState,
   type PerfilRisco,
   type Plano,
   type Resultados,
 } from "../types";
+import type { StatusApi } from "../lib/api";
 
 interface Props {
   resultados: Resultados;
-  areaTotal: number;
-  perfilInicial: PerfilRisco;
+  cenario: CenarioState;
+  statusApi: StatusApi;
+  usandoFallback: boolean;
 }
 
-function perfilDoPonto(ponto: Plano, index: number, total: number): PerfilRisco | null {
+/**
+ * Identifica o perfil de um ponto da curva.
+ * Compara valores (não textos) para não depender da descrição crua do contrato.
+ */
+function perfilDoPonto(
+  ponto: Plano,
+  index: number,
+  total: number,
+  equilibrado: Plano,
+): PerfilRisco | null {
   if (index === 0) return "arrojado";
   if (index === total - 1) return "conservador";
-  return ponto.perfil === "equilibrado" || ponto.descricao?.includes("knee")
-    ? "equilibrado"
-    : null;
+  if (ponto.perfil === "equilibrado") return "equilibrado";
+  if (
+    ponto.margem_reais === equilibrado.margem_reais &&
+    ponto.ha_sob_risco === equilibrado.ha_sob_risco
+  ) {
+    return "equilibrado";
+  }
+  return null;
 }
 
-export function Comparacao({ resultados, areaTotal, perfilInicial }: Props) {
-  const [selecionado, setSelecionado] = useState<PerfilRisco>(perfilInicial);
-  useEffect(() => setSelecionado(perfilInicial), [perfilInicial]);
+function rotuloDoPonto(perfil: PerfilRisco | null) {
+  return perfil ? PERFIL_META[perfil].label : "Plano intermediário";
+}
 
-  const base = Number((resultados.cenario as { area_total_ha?: number }).area_total_ha ?? 600);
-  const nOficial = Number((resultados.cenario as { n_talhoes?: number }).n_talhoes ?? 3);
-  const areaEfetiva = areaTotal > 0 ? areaTotal : base;
-  const fator = base > 0 ? areaEfetiva / base : 1;
-  const escalaPx = (n: number) => Math.round(n * fator);
+export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: Props) {
+  const [selecionado, setSelecionado] = useState<PerfilRisco>(
+    cenario.perfil ?? "equilibrado",
+  );
 
-  const plano0 = resultados.planos[selecionado];
-  const arrojado0 = resultados.planos.arrojado;
+  // O banner de recomendação acompanha o perfil escolhido na tela 1.
+  useEffect(() => {
+    setSelecionado(cenario.perfil);
+  }, [cenario.perfil]);
+
+  const areaTotal = cenario.talhoes.reduce((acc, talhao) => acc + talhao.areaHa, 0);
   const fronteira = resultados.fronteira_pareto;
   const total = fronteira.length;
+  const plano = resultados.planos[selecionado];
   const perfil = PERFIL_META[selecionado];
   const tone = PERFIL_TONE_HEX[selecionado];
   const dados = resultados.dados;
 
-  const plano = {
-    ...plano0,
-    margem_reais: plano0.margem_reais * fator,
-    ha_sob_risco: escalaPx(plano0.ha_sob_risco),
-    area_por_rotacao: Object.fromEntries(
-      Object.entries(plano0.area_por_rotacao).map(([k, v]) => [k, v * fator]),
-    ),
-  };
-  const arrojado = {
-    ...arrojado0,
-    margem_reais: arrojado0.margem_reais * fator,
-    ha_sob_risco: escalaPx(arrojado0.ha_sob_risco),
-  };
+  const serie = fronteira.map((ponto, index) => {
+    const perfilPonto = perfilDoPonto(ponto, index, total, resultados.planos.equilibrado);
+    return {
+      margem_reais: ponto.margem_reais,
+      ha_sob_risco: ponto.ha_sob_risco,
+      index,
+      perfil: perfilPonto,
+      rotulo: rotuloDoPonto(perfilPonto),
+    };
+  });
 
+  const arrojado = resultados.planos.arrojado;
   const economiaMargem = arrojado.margem_reais - plano.margem_reais;
   const ganhoRisco = arrojado.ha_sob_risco - plano.ha_sob_risco;
 
-  const serie = fronteira.map((ponto, index) => ({
-    ...point2plot(ponto, fator),
-    index,
-    perfil: perfilDoPonto(ponto, index, total),
-  }));
+  const pctArea = areaRiscoPct(plano.ha_sob_risco, areaTotal);
+  const resumoAlocacao = Object.entries(plano.area_por_rotacao)
+    .sort((a, b) => b[1] - a[1])
+    .map(([rot, area]) => `${labelRotacao(rot)} ${ha(area)} ha`)
+    .join(" · ");
 
   return (
     <section className="painel-comparacao">
@@ -82,8 +103,9 @@ export function Comparacao({ resultados, areaTotal, perfilInicial }: Props) {
           <span className="section-kicker">Comparação</span>
           <h2>Não há uma resposta certa. Há um menu.</h2>
           <p>
-            Cada ponto é um plano ótimo para o seu nível de risco. A curva é a fronteira
-            de Pareto: abaixo dela, todo real a menos custa risco desproporcional.
+            Cada ponto é um plano possível para o seu nível de risco. A curva liga os
+            planos que não são superados: ganhar mais margem sempre exige aceitar mais
+            risco — e o contrário também vale.
           </p>
         </div>
         <div className="section-meta">
@@ -91,6 +113,28 @@ export function Comparacao({ resultados, areaTotal, perfilInicial }: Props) {
             <span className="real-dot" aria-hidden="true" />
             dados {dados.status}
           </span>
+          <StatusApiBadge status={statusApi} usandoFallback={usandoFallback} />
+        </div>
+      </div>
+
+      <div className="rotation-callout verdict-banner" style={{ borderLeftColor: tone }}>
+        <span className="callout-icon" aria-hidden="true">
+          <Icon name="trend" size={17} />
+        </span>
+        <div className="verdict-copy">
+          <p className="verdict-line">
+            <span className="verdict-kicker">Recomendação:</span> perfil{" "}
+            <strong style={{ color: tone }}>{perfil.label}</strong>
+            <span className="verdict-sep" aria-hidden="true">
+              —
+            </span>
+            <strong className="verdict-num">{brl(plano.margem_reais)}</strong> de margem
+            <span className="verdict-sep" aria-hidden="true">
+              ·
+            </span>
+            <strong className="verdict-num">{pctArea}</strong> da área sob risco
+          </p>
+          <p className="verdict-sub">Como dividir os {ha(areaTotal)} ha: {resumoAlocacao}</p>
         </div>
       </div>
 
@@ -98,15 +142,16 @@ export function Comparacao({ resultados, areaTotal, perfilInicial }: Props) {
         <div className="panel fronteira-panel">
           <div className="panel-heading">
             <div>
-              <h3>Fronteira margem × risco</h3>
+              <h3>Margem × risco</h3>
               <p className="panel-lede">
-                {total} planos não-dominados · CP-SAT com prova de otimalidade
+                {total} planos possíveis — nenhum supera o outro · algoritmo de otimização
+                com prova de melhor solução
               </p>
             </div>
           </div>
 
           <div className="fronteira-chart" role="img"
-               aria-label="Gráfico da fronteira de Pareto: margem total em reais contra hectares sob risco">
+               aria-label="Gráfico dos planos possíveis: margem total em reais contra hectares sob risco">
             <ResponsiveContainer width="100%" height={300}>
               <ComposedChart data={serie} margin={{ top: 16, right: 16, bottom: 8, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ebe6da" vertical={false} />
@@ -146,7 +191,7 @@ export function Comparacao({ resultados, areaTotal, perfilInicial }: Props) {
                 />
                 <Tooltip
                   cursor={{ stroke: "#ded9cb", strokeDasharray: "3 3" }}
-                  content={<TooltipFronteira />}
+                  content={<TooltipFronteira areaTotal={areaTotal} />}
                 />
                 <Line
                   dataKey="margem_reais"
@@ -220,14 +265,15 @@ export function Comparacao({ resultados, areaTotal, perfilInicial }: Props) {
                 <strong>{brl(plano.margem_reais)}</strong>
               </div>
               <span className="stat-hint">
-                {ha(plano.margem_reais / areaEfetiva)} por hectare da fazenda
+                {areaTotal > 0 ? ha(plano.margem_reais / areaTotal) : "—"} por hectare da
+                fazenda
               </span>
             </div>
             <div className="stat">
-              <span className="stat-label">Risco</span>
+              <span className="stat-label">% da área sob risco</span>
               <div className="stat-value">
-                <strong>{ha(plano.ha_sob_risco)}</strong>
-                <span>ha sob risco</span>
+                <strong>{pctArea}</strong>
+                <span>{ha(plano.ha_sob_risco)} ha</span>
               </div>
               <span className="stat-hint">
                 hectares com margem negativa esperada
@@ -243,19 +289,6 @@ export function Comparacao({ resultados, areaTotal, perfilInicial }: Props) {
               <p>
                 Em relação ao Arrojado, abre {brl(economiaMargem)} de margem para fugir de{" "}
                 {ha(ganhoRisco)} ha de risco.
-              </p>
-            </div>
-          )}
-
-          {Math.abs(fator - 1) > 0.001 && (
-            <div className="rotation-callout">
-              <span className="callout-icon" aria-hidden="true">
-                <Icon name="info" size={15} />
-              </span>
-              <p>
-                O motor rodou para o cenário oficial ({ha(base)} ha · {nOficial} talhões). Com os{" "}
-                {ha(areaEfetiva)} ha do seu cenário na Tela 1, os números desta tela seguem a
-                mesma proporção.
               </p>
             </div>
           )}
@@ -278,22 +311,13 @@ export function Comparacao({ resultados, areaTotal, perfilInicial }: Props) {
             ))}
           </div>
 
-          <Alocacao plano={plano} areaTotal={areaEfetiva} />
+          <Alocacao plano={plano} areaTotal={areaTotal} />
         </div>
       </div>
 
       <RobustezPanel resultados={resultados} />
     </section>
   );
-}
-
-/** Converte um ponto do contrato para o formato do gráfico, escalando pela área. */
-function point2plot(ponto: Plano, fator: number) {
-  return {
-    margem_reais: ponto.margem_reais * fator,
-    ha_sob_risco: Math.round(ponto.ha_sob_risco * fator),
-    descricao: ponto.descricao,
-  };
 }
 
 function Alocacao({ plano, areaTotal }: { plano: Plano; areaTotal: number }) {
@@ -325,7 +349,7 @@ function RobustezPanel({ resultados }: { resultados: Resultados }) {
         <div>
           <h3>A recomendação sobrevive à incerteza?</h3>
           <p className="panel-lede">
-            Perturbamos margens e custos em ±{r.jitter_percent}% e re-resolvemos{" "}
+            Variamos margens e custos em ±{r.jitter_percent}% e refazemos o cálculo{" "}
             {r.runs} vezes. Medimos se o plano continua o mesmo.
           </p>
         </div>
@@ -373,17 +397,23 @@ function RobustezPanel({ resultados }: { resultados: Resultados }) {
 function TooltipFronteira({
   active,
   payload,
+  areaTotal,
 }: {
   active?: boolean;
-  payload?: Array<{ payload: { margem_reais: number; ha_sob_risco: number; descricao: string } }>;
+  payload?: Array<{
+    payload: { margem_reais: number; ha_sob_risco: number; rotulo: string };
+  }>;
+  areaTotal?: number;
 }) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
     <div className="fronteira-tooltip">
       <strong>{brl(p.margem_reais)}</strong>
-      <span>{ha(p.ha_sob_risco)} ha sob risco</span>
-      {p.descricao && <em>{p.descricao}</em>}
+      <span>
+        {areaRiscoPct(p.ha_sob_risco, areaTotal ?? 0)} da área sob risco ({ha(p.ha_sob_risco)} ha)
+      </span>
+      {p.rotulo && <em>{p.rotulo}</em>}
     </div>
   );
 }

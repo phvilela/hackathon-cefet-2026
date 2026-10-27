@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Comparacao } from "./components/Comparacao";
+import { Guia } from "./components/Guia";
 import { Header } from "./components/Header";
 import { Icon } from "./components/Icon";
 import { FarmSummary } from "./components/FarmSummary";
-import { Guia } from "./components/Guia";
 import { Rastreabilidade } from "./components/Rastreabilidade";
 import { ScenarioBar } from "./components/ScenarioBar";
 import { SolutionPanel } from "./components/SolutionPanel";
@@ -18,6 +18,7 @@ import {
   renumerarTalhoes,
   salvarCenario,
 } from "./lib/cenario";
+import { payloadDaCenario, pingApi, resolverCenario, type StatusApi } from "./lib/api";
 import {
   FAMILIA_DA_CULTURA,
   PERFIL_META,
@@ -32,8 +33,10 @@ import {
 } from "./types";
 
 const zarc = zarcRaw as unknown as ZarcData;
-const resultados = resultadosRaw as unknown as Resultados;
+/** Fallback congelado (offline): só numéricamente correto para o cenário padrão. */
+const resultadosPadrao = resultadosRaw as unknown as Resultados;
 const AREA_REFERENCIA = 600;
+const DEBOUNCE_MS = 350;
 const numero = new Intl.NumberFormat("pt-BR");
 
 type Tela = "guia" | "talhoes" | "comparacao" | "rastreabilidade";
@@ -47,9 +50,55 @@ export default function App() {
   const [selectedId, setSelectedId] = useState("T1");
   const [tela, setTela] = useState<Tela>("guia");
 
+  // Resultado mostrado nas telas 2/3. Começa no fallback congelado (offline).
+  const [resultadosAtuais, setResultadosAtuais] = useState<Resultados>(resultadosPadrao);
+  const [statusApi, setStatusApi] = useState<StatusApi>("carregando");
+  const usandoFallback = resultadosAtuais === resultadosPadrao;
+
   useEffect(() => {
     salvarCenario(cenario);
   }, [cenario]);
+
+  // Payload do POST /api/solve derivado do cenário da tela 1.
+  const payloadTalhoes = useMemo(() => payloadDaCenario(cenario.talhoes), [cenario.talhoes]);
+  const chavePayload = useMemo(() => JSON.stringify(payloadTalhoes), [payloadTalhoes]);
+
+  // Aquecimento da API no mount (evita cold start no demo).
+  useEffect(() => {
+    void pingApi();
+  }, []);
+
+  // Debounce: recalcula no backend ~350ms após a última edição e cancela voos antigos.
+  // Dispara só quando o payload efetivo muda (área/textura/id), não em renomeações.
+  const abortRef = useRef<AbortController | null>(null);
+  const talhoesRef = useRef(cenario.talhoes);
+  talhoesRef.current = cenario.talhoes;
+
+  useEffect(() => {
+    if (chavePayload === "[]") return;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setStatusApi("carregando");
+    const timer = window.setTimeout(() => {
+      resolverCenario(talhoesRef.current, controller.signal)
+        .then((novos) => {
+          if (controller.signal.aborted) return;
+          setResultadosAtuais(novos);
+          setStatusApi("ok");
+        })
+        .catch((erro: unknown) => {
+          // Aborto é esperado ao editar de novo; mantém o último resultado bom.
+          if (controller.signal.aborted) return;
+          if (erro instanceof DOMException && erro.name === "AbortError") return;
+          setStatusApi("erro");
+        });
+    }, DEBOUNCE_MS);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [chavePayload]);
 
   const totalArea = cenario.talhoes.reduce((acc, talhao) => acc + talhao.areaHa, 0);
   const selected = cenario.talhoes.find((talhao) => talhao.id === selectedId) ?? cenario.talhoes[0];
@@ -136,15 +185,21 @@ export default function App() {
 
       <main className="page">
         {tela === "guia" ? (
-          <Guia resultados={resultados} onNavigate={setTela} />
+          <Guia resultados={resultadosAtuais} onNavigate={setTela} />
         ) : tela === "comparacao" ? (
           <Comparacao
-            resultados={resultados}
-            areaTotal={totalArea}
-            perfilInicial={cenario.perfil}
+            resultados={resultadosAtuais}
+            cenario={cenario}
+            statusApi={statusApi}
+            usandoFallback={usandoFallback}
           />
         ) : tela === "rastreabilidade" ? (
-          <Rastreabilidade resultados={resultados} culturas={cenario.culturas} />
+          <Rastreabilidade
+            resultados={resultadosAtuais}
+            cenario={cenario}
+            statusApi={statusApi}
+            usandoFallback={usandoFallback}
+          />
         ) : (
           <>
             <section className="summary-grid">
@@ -186,8 +241,8 @@ export default function App() {
                   <span className="section-kicker">Cadastro</span>
                   <h2>Seus talhões</h2>
                   <p>
-                    A textura define o grupo de solo do ZARC. A área entra no balanceamento
-                    da recomendação.
+                    A textura do solo define qual grupo o ZARC usa para abrir as
+                    janelas. A área entra no cálculo da recomendação.
                   </p>
                 </div>
                 <div className="section-meta">
@@ -233,8 +288,8 @@ export default function App() {
           </div>
         </div>
         <p className="footer-note">
-          Janelas ZARC reais da safra 2026/27 e margens do Monte Carlo. Cada número
-          tem fonte, método e URL — veja em Rastreabilidade.
+          Janelas ZARC reais da safra 2026/27 e margens por simulação com 31 anos de
+          dados reais. Cada número tem fonte, método e URL — veja em Rastreabilidade.
         </p>
         <div className="footer-sources">
           <a
