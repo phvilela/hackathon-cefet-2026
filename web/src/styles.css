@@ -1823,7 +1823,7 @@ h2 {
   gap: 9px;
 }
 
-.footer-brand strong {
+.footer-brand > div > strong {
   display: block;
   color: var(--ink);
   font-family: var(--font-display);
@@ -1832,7 +1832,7 @@ h2 {
   line-height: 1.1;
 }
 
-.footer-brand span {
+.footer-brand > div > span {
   display: block;
   margin-top: 2px;
   font-size: 8.5px;
