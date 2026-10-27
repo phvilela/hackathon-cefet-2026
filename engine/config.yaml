@@ -2,7 +2,7 @@
 # HackatOhm 2026 — desafio Embrapa | Motor de decisão "o que plantar"
 # Fazenda: 600 ha em 3 talhões — Patos de Minas (safra 2026/27)
 #
-# Regenerado por engine/atualiza_config.py em 26/10/2026 — fontes:
+# Regenerado por engine/atualiza_config.py em 27/10/2026 — fontes:
 #   · janelas_viveis → REAIS: engine/janelas_zarc.json (ZARC via adequacao.py)
 #   · margem/risco   → REAIS: engine/margens_mc.json (MC do M1)
 #
@@ -40,8 +40,8 @@ talhoes:   # gerado do formulário (tela 1); irrigacao: true habilita manejo irr
 rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada número
   soja_milho:
     culturas: ["soja", "milho safrinha"]
-    margem_esperada: 449673   # centavos de R$/ha
-    risco: 220   # P[margem<0] em por-mil (‰)
+    margem_esperada: 462195   # centavos de R$/ha
+    risco: 213   # P[margem<0] em por-mil (‰)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: []
       2: [28, 29]
@@ -55,8 +55,8 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
 
   soja_sorgo:
     culturas: ["soja", "sorgo safrinha"]
-    margem_esperada: 247364   # centavos de R$/ha
-    risco: 281   # P[margem<0] em por-mil (‰)
+    margem_esperada: 255896   # centavos de R$/ha
+    risco: 279   # P[margem<0] em por-mil (‰)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [28, 29, 30]
       2: [28, 29, 30, 31]
@@ -71,8 +71,8 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
 
   feijao_sorgo:
     culturas: ["feijão das águas", "sorgo safrinha"]
-    margem_esperada: 38041   # centavos de R$/ha
-    risco: 498   # P[margem<0] em por-mil (‰)
+    margem_esperada: 42286   # centavos de R$/ha
+    risco: 486   # P[margem<0] em por-mil (‰)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [29, 30, 31]
       2: [28, 29, 30, 31, 32]
@@ -88,7 +88,7 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
 
   milho_verao:
     culturas: ["milho 1ª safra"]
-    margem_esperada: 89679   # centavos de R$/ha
+    margem_esperada: 88044   # centavos de R$/ha
     risco: 515   # P[margem<0] em por-mil (‰)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [31, 32, 33, 34, 35]
@@ -102,8 +102,8 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
 
   soja_solteira:
     culturas: ["soja"]
-    margem_esperada: 369544   # centavos de R$/ha
-    risco: 200   # P[margem<0] em por-mil (‰)
+    margem_esperada: 378430   # centavos de R$/ha
+    risco: 192   # P[margem<0] em por-mil (‰)
     janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
       1: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
       2: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
@@ -112,6 +112,53 @@ rotacoes:  # coeficientes por rotação — hipóteses citam a fonte de cada nú
       - { chave: "referencia_preco_prod", valor: "preço SIDRA × produtividade PAM (regime 2026/27)", fonte_url: "https://apisidra.ibge.gov.br/values/t/54", metodo: "margem esperada = preço_ref × prod_ref − custo Conab" }
       - { chave: "volatilidade_historica", valor: "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência", fonte_url: "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv", metodo: "MC: desvios multiplicativos preço×prod preservando correlação" }
       - { chave: "custo_conab", valor: "custo médio R$/ha Conab 2024-2026 (Cerrado)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao", metodo: "resumo_custos_para_engine.csv" }
+      - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
+
+  soja_feijao2:
+    culturas: ["soja", "feijão 2ª safra"]
+    margem_esperada: 499914   # centavos de R$/ha
+    risco: 129   # P[margem<0] em por-mil (‰)
+    janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
+      1: []
+      2: [28, 29, 30]
+      3: [28, 29, 30, 31]
+    hipoteses:
+      - { chave: "referencia_preco_prod", valor: "preço SIDRA × produtividade PAM (regime 2026/27)", fonte_url: "https://apisidra.ibge.gov.br/values/t/54", metodo: "margem esperada = preço_ref × prod_ref − custo Conab" }
+      - { chave: "volatilidade_historica", valor: "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência", fonte_url: "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv", metodo: "MC: desvios multiplicativos preço×prod preservando correlação" }
+      - { chave: "custo_conab", valor: "custo médio R$/ha Conab 2024-2026 (Cerrado)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao", metodo: "resumo_custos_para_engine.csv" }
+      - { chave: "preco_feijao2_ref", valor: "feijão cores R$ 290,00/sc 60 kg (R$ 4,83/kg) — preço recebido do produtor, Conab, 28/09 a 02/10/2026 (Paraná)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/analises-do-mercado-agropecuario-e-extrativista/analises-de-mercado/historico-semanal/historico-semanal-resumo-executivo/desempenho-de-mercado-2026-1/desempenho_de_mercado40-2.pdf", metodo: "sem série anual em Patos — CV 25% lognormal (mesma regra do feijão de 1ª safra)" }
+      - { chave: "produtividade_feijao2_ref", valor: "2.000 kg/ha — feijão 2ª safra (cores), produtividade média da planilha de custo Conab (Francisco Beltrão-PR)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/feijao/feijao_2_e_3_safras_serie_historica_2013-2026.xls", metodo: "referência pareada com o custo da 2ª safra; a coluna 'Produtividade' da tábua ZARC do município está vazia" }
+      - { chave: "custo_feijao2_conab", valor: "custo total R$ 8.438,93/ha — feijão 2ª safra a sequeiro (Francisco Beltrão-PR), média 2024-2026", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/feijao/feijao_2_e_3_safras_serie_historica_2013-2026.xls", metodo: "CUSTO TOTAL (H+I=J) da planilha Conab — média das 2ªs safras; 3ªs safras irrigadas (Unaí-MG/Sorriso-MT) ficam fora por não refletirem o sequeiro do ZARC" }
+      - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
+      - { chave: "janela_segunda_cultura", valor: "plantio da 2ª cultura — g1: sem janela (inviável) · g2: [2-4] · g3: [2-5]", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "janelas pareadas do ZARC — engine/adequacao.py" }
+
+  arroz_solteira:
+    culturas: ["arroz de sequeiro"]
+    margem_esperada: 14675   # centavos de R$/ha
+    risco: 480   # P[margem<0] em por-mil (‰)
+    janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
+      1: [28, 29, 30, 31, 32, 33, 34, 35]
+      2: [28, 29, 30, 31, 32, 33, 34, 35, 36]
+      3: [1, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+    hipoteses:
+      - { chave: "referencia_preco_prod", valor: "arroz em casca R$ 105,75/sc 60 kg (R$ 1,76/kg) — preço recebido do produtor, Conab, set/2026; produtividade 2.584 kg/ha (arroz de sequeiro, média nacional da safra 2026/27, Conab)", fonte_url: "https://faespsenar.com.br/painel-de-dados/wp-content/uploads/2026/10/2026.10-Precos-pagos-ao-produtor-paulista_compressed.pdf", metodo: "margem esperada = preço_ref × prod_ref − custo Conab; a coluna 'Produtividade' da tábua ZARC do município está vazia — referências do boletim de safra e da planilha de custo da Conab" }
+      - { chave: "volatilidade_preco", valor: "CV 20% lognormal no preço (documentada)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/analises-do-mercado-agropecuario-e-extrativista/analises-de-mercado/historico-semanal/historico-semanal-resumo-executivo/desempenho-de-mercado-2026-1/desempenho_de_mercado40-2.pdf", metodo: "sem série anual de preços em Patos de Minas — volatilidade documentada (mesma regra usada para sorgo)" }
+      - { chave: "custo_conab", valor: "custo total R$ 4.426,71/ha — arroz de sequeiro, Balsas-MA, safra 2024 (último custo publicado da principal região de sequeiro no Cerrado)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/arroz/arroz_sequeiro_serie_historica_2001-2026.xls", metodo: "CUSTO TOTAL (operacional + renda de fatores) da planilha Conab — mesma base de custo das demais culturas" }
+      - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
+
+  algodao_solteira:
+    culturas: ["algodão herbáceo (pluma)"]
+    margem_esperada: 12050   # centavos de R$/ha
+    risco: 530   # P[margem<0] em por-mil (‰)
+    janelas_viveis:   # por grupo de solo — decêndios (ZARC real)
+      1: [1, 2, 33, 34, 35, 36]
+      2: [1, 2, 3, 33, 34, 35, 36]
+      3: [1, 2, 3, 4, 33, 34, 35, 36]
+    hipoteses:
+      - { chave: "referencia_preco_prod", valor: "algodão em pluma R$ 138,67/@ 15 kg (R$ 9,24/kg de pluma) — preço recebido do produtor, Conab, 28/09 a 02/10/2026 (Bahia); produtividade 1.863 kg/ha de pluma (≈124 @/ha — média Cerrado)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/analises-do-mercado-agropecuario-e-extrativista/analises-de-mercado/historico-semanal/historico-semanal-resumo-executivo/desempenho-de-mercado-2026-1/desempenho_de_mercado40-2.pdf", metodo: "margem esperada = preço_ref × prod_ref − custo Conab; a coluna 'Produtividade' da tábua ZARC do município está vazia — referência das planilhas de custo Conab (Barreiras-BA 1.845 / Cristalina-GO 1.890)" }
+      - { chave: "receita_caroco", valor: "a receita do caroço (semente) já vem abatida no custo Conab — a receita simulada é somente a da pluma", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-algodao-em-pluma-1998-a-2026.xlsx", metodo: "a planilha de custo Conab credita o subproduto na linha 'Receita' das despesas de custeio" }
+      - { chave: "volatilidade_preco", valor: "CV 20% lognormal no preço (documentada)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/analises-do-mercado-agropecuario-e-extrativista/analises-de-mercado/historico-semanal/historico-semanal-resumo-executivo/desempenho-de-mercado-2026-1/desempenho_de_mercado40-2.pdf", metodo: "sem série anual de preços em Patos de Minas — volatilidade documentada" }
+      - { chave: "custo_conab", valor: "custo total R$ 17.071,42/ha — algodão 1ª safra, média 2024-2026 das regiões Cerrado (Barreiras-BA e Cristalina-GO)", fonte_url: "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-algodao-em-pluma-1998-a-2026.xlsx", metodo: "CUSTO TOTAL (H+I=J) da planilha Conab — mesma base de custo das demais culturas" }
       - { chave: "janelas_zarc", valor: "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)", fonte_url: "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico", metodo: "engine/adequacao.py + portaria MAPA" }
 
   capital_pousio:
@@ -131,8 +178,8 @@ optimization:
   stages: ["margem", "risco"]
 
 pareto:
-  points: 6
-  min_margem_ratio: 0.85
+  points: 14
+  min_margem_ratio: 0.05
 
 monte_carlo:
   runs: 30

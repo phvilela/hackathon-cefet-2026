@@ -8,9 +8,10 @@ Escreve: engine/janelas_zarc.json (ou --saida) — insumo rastreável do config.
 Regras (todas documentadas no JSON de saída — rastreabilidade é requisito):
   R1. Viável: decêndio com risco ZARC > 0. A tábua só publica janelas com risco
       20/30/40% — célula 0 = fora do zoneamento. Logo "risco > 0" ≡ "risco ≤ 40%".
-  R2. Solo: Sorgo usa grupo 1/2/3 nativo (arenoso/médio/argiloso). Soja, milho e
-      feijão usam classes de água disponível AD1–AD6 (códigos 11–16); mapeamos do
-      grupo de solo do talhão: 1(arenoso)→AD1(11), 2(médio)→AD3(13), 3(argiloso)→AD5(15).
+  R2. Solo: Sorgo, amendoim, arroz e algodão herbáceo usam grupo 1/2/3 nativo
+      (arenoso/médio/argiloso). Soja, milho, feijão e girassol usam classes
+      de água disponível AD1–AD6 (códigos 11–16); mapeamos do grupo de solo
+      do talhão: 1(arenoso)→AD1(11), 2(médio)→AD3(13), 3(argiloso)→AD5(15).
   R3. Ciclo: a máscara da cultura (para plantio solteiro) usa o menor risco entre
       os grupos de ciclo I/II/III (Cod_Ciclo 20/21/22) — "melhor ciclo disponível".
   R4. Sequência (rotações com 2ª cultura): usa a máscara da 1ª cultura restrita ao
@@ -45,6 +46,10 @@ DECS = [f"dec{i}" for i in range(1, 37)]  # dec1 = 1-10 jan ... dec36 = 21-31 de
 CICLO_PRECOCE = 20                         # Cod_Ciclo 20 = Grupo I (~100 dias na soja)
 
 # Nome_cultura (literal no CSV) → (chave interna, usa_classes_AD?)
+# usa_classes_AD=True → cultura zoneada por classes de água disponível AD1–AD6
+#   (códigos de solo 11–16), como soja/milho/feijão/girassol;
+# usa_classes_AD=False → cultura zoneada por grupo de solo nativo 1/2/3,
+#   como sorgo/amendoim/arroz/algodão herbáceo.
 CULTURAS = {
     "Soja": ("soja", True),
     "Milho 1ª Safra": ("milho_verao", True),
@@ -53,17 +58,31 @@ CULTURAS = {
     "Sorgo Granífero 2ª Safra": ("sorgo_safrinha", False),
     "Feijão": ("feijao", True),        # só Sequeiro (v0) — irrigado exige talhão com irrigação
     "Feijão 2ª Safra": ("feijao_2", True),
+    "Girassol": ("girassol", True),
+    "Amendoim": ("amendoim", False),
+    "Arroz": ("arroz", False),
+    "Algodão Herbáceo": ("algodao", False),
 }
 
 GRUPO_TO_AD = {1: 11, 2: 13, 3: 15}        # R2
 CICLO_PRIMEIRA = {"soja": 10, "feijao": 9}  # R4, em decêndios (Grupo I)
 
+# Rotações que entram no motor (margem positiva nas referências Conab — ver
+# engine/monte_carlo.py). Girassol e amendoim têm janelas ZARC REAIS (as
+# máscaras ficam registradas em `culturas` do janelas_zarc.json), mas ficam
+# FORA do motor: nas referências oficiais de out/2026 o custo por saca Conab
+# supera o preço de mercado (girassol R$ 155,92–161,61/sc vs R$ 126/sc;
+# amendoim R$ 79,58–84,74/sc 25 kg vs R$ 77,01/sc) e o motor só aceita
+# rotação com margem_esperada > 0.
 ROTACOES = {
     "soja_milho": {"primeira": "soja", "segunda": "milho_safrinha"},
     "soja_sorgo": {"primeira": "soja", "segunda": "sorgo_safrinha"},
     "feijao_sorgo": {"primeira": "feijao", "segunda": "sorgo_safrinha"},
     "soja_solteira": {"primeira": "soja", "segunda": None},
     "milho_verao": {"primeira": "milho_verao", "segunda": None},
+    "arroz_solteira": {"primeira": "arroz", "segunda": None},
+    "algodao_solteira": {"primeira": "algodao", "segunda": None},
+    "soja_feijao2": {"primeira": "soja", "segunda": "feijao_2"},
 }
 
 CKAN_URL = ("https://dados.agricultura.gov.br/dataset/"
@@ -102,9 +121,11 @@ def masks_for(df: pd.DataFrame, nome_cultura: str, usa_ad: bool,
     out: dict[int, dict] = {}
     for grupo, ad in GRUPO_TO_AD.items():
         if usa_ad:
+            # soja/milho/feijão/girassol: classes AD1–AD6 (códigos de solo 11–16)
             sel = rows[rows.Cod_Solo == ad]
             solo_label = f"AD{ad - 10}"
-        else:  # sorgo: grupo 1/2/3 nativo do ZARC
+        else:
+            # sorgo/amendoim/arroz/algodão: grupo 1/2/3 nativo do ZARC
             sel = rows[rows.Cod_Solo == grupo]
             solo_label = f"grupo {grupo}"
         if sel.empty:
@@ -252,7 +273,7 @@ def main(argv: list[str] | None = None) -> None:
              "metodo": "regra R1", "fonte_url": CKAN_URL},
             {"chave": "mapeamento_grupo_solo_ad",
              "valor": "grupo 1 (arenoso)→AD1 (11); 2 (médio)→AD3 (13); 3 (argiloso)→AD5 (15); "
-                      "sorgo usa grupo 1/2/3 nativo",
+                      "sorgo, amendoim, arroz e algodão herbáceo usam grupo 1/2/3 nativo",
              "metodo": "mapeamento conservador textura→água disponível; Latossolos de Patos de "
                        "Minas tipicamente AD4–AD6 — o grupo real do talhão vem do formulário (tela 1)",
              "fonte_url": DICT_URL},
@@ -276,6 +297,13 @@ def main(argv: list[str] | None = None) -> None:
              "valor": "dec1 = 1-10 jan ... dec36 = 21-31 dez; ano circular: na safra 2026/27, "
                       "dec28-36 = out-dez/2026 e dec1-3 = jan-mar/2027",
              "metodo": "item 3.3 da Port. 200/2026", "fonte_url": CKAN_URL},
+            {"chave": "produtividade_tabela_zarc",
+             "valor": "vazia no extrato do município (células em branco; girassol com 0) — "
+                      "inspecionada na safra 2026/27",
+             "metodo": "a produtividade de referência das novas culturas vem das planilhas "
+                       "de custo e do boletim de safra da Conab (registrada nas hipóteses "
+                       "do config pelo engine/monte_carlo.py)",
+             "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao"},
             {"chave": "feijao_irrigado",
              "valor": "fora do v0: só entra quando o talhão tem irrigação (campo 'irrigacao' do config)",
              "metodo": "ZARC lista manejo irrigado à parte (risco 20% o ano todo)",

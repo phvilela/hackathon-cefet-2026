@@ -22,7 +22,6 @@ if str(REPO_ROOT) not in sys.path:
 import yaml
 
 from engine.pareto import (
-    _filter_nondominated,
     find_knee_point,
     generate_pareto_frontier,
     solve_pareto_point,
@@ -92,7 +91,7 @@ def main() -> None:
     parser.add_argument('--pareto-points', type=int, default=None,
                         help='nº de pontos da fronteira (default: config, 6)')
     parser.add_argument('--min-margem-ratio', type=float, default=None,
-                        help='piso de margem como fração do ótimo (default: config, 0.85)')
+                        help='piso de margem como fração do ótimo (default: config, 5%%)')
     parser.add_argument('--mc-runs', type=int, default=None,
                         help='nº de cenários do Monte Carlo (default: config, 30)')
     parser.add_argument('--mc-jitter', type=int, default=None,
@@ -123,7 +122,7 @@ def main() -> None:
     logger.info('Plano ótimo: margem=%d centavos | risco=%d ‰·ha',
                 solution['margem_total'], solution['risco_total'])
 
-    frontier, knee = [], None
+    frontier, knee, ponto_min_risco = [], None, None
     pareto_ativado = (
         args.pareto
         or str((config.get('optimization') or {}).get('mode', 'lexicographic')).lower() == 'pareto'
@@ -143,19 +142,18 @@ def main() -> None:
 
         # Ponto de MÍNIMO RISCO ABSOLUTO (sem piso de margem): com a rotação
         # capital_pousio no config, é o "não plantar" — o custo de oportunidade
-        # explícito. Ele é o âncora conservadora da fronteira; o knee continua
-        # calculado apenas entre os planos que plantam.
+        # explícito. Ele NÃO entra na fronteira (os 14 pisos de 5% a 100% do
+        # ótimo só deixam passar planos que plantam — o all-CDI rende R$ 120 mil
+        # e não alcança nem o piso de 5%): ele vira a referência separada
+        # `referencia_sem_plantio` no JSON de resultados.
         ponto_min_risco = solve_pareto_point(config)
         if ponto_min_risco is not None:
-            ja_existe = any(p['margem'] == ponto_min_risco['margem']
-                            and p['risco'] == ponto_min_risco['risco']
-                            for p in frontier)
-            if not ja_existe:
-                ponto_min_risco['referencia'] = 'custo_oportunidade'
-                frontier = _filter_nondominated(frontier + [ponto_min_risco])
-                logger.info('Ponto de mínimo risco absoluto (custo de oportunidade) '
-                            'adicionado à fronteira: margem R$ %.2f',
-                            ponto_min_risco['margem'] / 100)
+            ponto_min_risco['referencia'] = 'custo_oportunidade'
+            logger.info('Referência sem plantio (custo de oportunidade): margem R$ %.2f '
+                        '| risco %d ‰·ha', ponto_min_risco['margem'] / 100,
+                        ponto_min_risco['risco'])
+        else:
+            logger.warning('Ponto de mínimo risco absoluto (sem piso) indisponível')
 
     mc = None
     if args.monte_carlo:
@@ -169,8 +167,10 @@ def main() -> None:
             quiet=args.quiet,
         )
 
-    relatorio = generate_report(config, solution, frontier=frontier, knee=knee, mc=mc)
-    results = build_results(config, solution, frontier=frontier, knee=knee, mc=mc)
+    relatorio = generate_report(config, solution, frontier=frontier, knee=knee, mc=mc,
+                                referencia=ponto_min_risco)
+    results = build_results(config, solution, frontier=frontier, knee=knee, mc=mc,
+                            referencia=ponto_min_risco)
 
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -1,7 +1,7 @@
 {
   "soja_solteira": {
-    "margem_esperada": 369544,
-    "risco": 200,
+    "margem_esperada": 378430,
+    "risco": 192,
     "hipoteses": [
       {
         "chave": "referencia_preco_prod",
@@ -24,7 +24,7 @@
     ]
   },
   "milho_verao": {
-    "margem_esperada": 89679,
+    "margem_esperada": 88044,
     "risco": 515,
     "hipoteses": [
       {
@@ -48,8 +48,8 @@
     ]
   },
   "soja_milho": {
-    "margem_esperada": 449673,
-    "risco": 220,
+    "margem_esperada": 462195,
+    "risco": 213,
     "hipoteses": [
       {
         "chave": "referencia_preco_prod",
@@ -72,8 +72,8 @@
     ]
   },
   "soja_sorgo": {
-    "margem_esperada": 247364,
-    "risco": 281,
+    "margem_esperada": 255896,
+    "risco": 279,
     "hipoteses": [
       {
         "chave": "referencia_preco_prod",
@@ -102,8 +102,8 @@
     ]
   },
   "feijao_sorgo": {
-    "margem_esperada": 38041,
-    "risco": 498,
+    "margem_esperada": 42286,
+    "risco": 486,
     "hipoteses": [
       {
         "chave": "referencia_preco_prod",
@@ -134,6 +134,102 @@
         "valor": "R$ 9,00/kg (Conab) c/ CV 25% lognormal",
         "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
         "metodo": "sem série anual em Patos — volatilidade documentada"
+      }
+    ]
+  },
+  "arroz_solteira": {
+    "margem_esperada": 14675,
+    "risco": 480,
+    "hipoteses": [
+      {
+        "chave": "referencia_preco_prod",
+        "valor": "arroz em casca R$ 105,75/sc 60 kg (R$ 1,76/kg) — preço recebido do produtor, Conab, set/2026; produtividade 2.584 kg/ha (arroz de sequeiro, média nacional da safra 2026/27, Conab)",
+        "fonte_url": "https://faespsenar.com.br/painel-de-dados/wp-content/uploads/2026/10/2026.10-Precos-pagos-ao-produtor-paulista_compressed.pdf",
+        "metodo": "margem esperada = preço_ref × prod_ref − custo Conab; a coluna 'Produtividade' da tábua ZARC do município está vazia — referências do boletim de safra e da planilha de custo da Conab"
+      },
+      {
+        "chave": "volatilidade_preco",
+        "valor": "CV 20% lognormal no preço (documentada)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/analises-do-mercado-agropecuario-e-extrativista/analises-de-mercado/historico-semanal/historico-semanal-resumo-executivo/desempenho-de-mercado-2026-1/desempenho_de_mercado40-2.pdf",
+        "metodo": "sem série anual de preços em Patos de Minas — volatilidade documentada (mesma regra usada para sorgo)"
+      },
+      {
+        "chave": "custo_conab",
+        "valor": "custo total R$ 4.426,71/ha — arroz de sequeiro, Balsas-MA, safra 2024 (último custo publicado da principal região de sequeiro no Cerrado)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/arroz/arroz_sequeiro_serie_historica_2001-2026.xls",
+        "metodo": "CUSTO TOTAL (operacional + renda de fatores) da planilha Conab — mesma base de custo das demais culturas"
+      }
+    ]
+  },
+  "algodao_solteira": {
+    "margem_esperada": 12050,
+    "risco": 530,
+    "hipoteses": [
+      {
+        "chave": "referencia_preco_prod",
+        "valor": "algodão em pluma R$ 138,67/@ 15 kg (R$ 9,24/kg de pluma) — preço recebido do produtor, Conab, 28/09 a 02/10/2026 (Bahia); produtividade 1.863 kg/ha de pluma (≈124 @/ha — média Cerrado)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/analises-do-mercado-agropecuario-e-extrativista/analises-de-mercado/historico-semanal/historico-semanal-resumo-executivo/desempenho-de-mercado-2026-1/desempenho_de_mercado40-2.pdf",
+        "metodo": "margem esperada = preço_ref × prod_ref − custo Conab; a coluna 'Produtividade' da tábua ZARC do município está vazia — referência das planilhas de custo Conab (Barreiras-BA 1.845 / Cristalina-GO 1.890)"
+      },
+      {
+        "chave": "receita_caroco",
+        "valor": "a receita do caroço (semente) já vem abatida no custo Conab — a receita simulada é somente a da pluma",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-algodao-em-pluma-1998-a-2026.xlsx",
+        "metodo": "a planilha de custo Conab credita o subproduto na linha 'Receita' das despesas de custeio"
+      },
+      {
+        "chave": "volatilidade_preco",
+        "valor": "CV 20% lognormal no preço (documentada)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/analises-do-mercado-agropecuario-e-extrativista/analises-de-mercado/historico-semanal/historico-semanal-resumo-executivo/desempenho-de-mercado-2026-1/desempenho_de_mercado40-2.pdf",
+        "metodo": "sem série anual de preços em Patos de Minas — volatilidade documentada"
+      },
+      {
+        "chave": "custo_conab",
+        "valor": "custo total R$ 17.071,42/ha — algodão 1ª safra, média 2024-2026 das regiões Cerrado (Barreiras-BA e Cristalina-GO)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/serie-historica-custos-algodao-em-pluma-1998-a-2026.xlsx",
+        "metodo": "CUSTO TOTAL (H+I=J) da planilha Conab — mesma base de custo das demais culturas"
+      }
+    ]
+  },
+  "soja_feijao2": {
+    "margem_esperada": 499914,
+    "risco": 129,
+    "hipoteses": [
+      {
+        "chave": "referencia_preco_prod",
+        "valor": "preço SIDRA × produtividade PAM (regime 2026/27)",
+        "fonte_url": "https://apisidra.ibge.gov.br/values/t/54",
+        "metodo": "margem esperada = preço_ref × prod_ref − custo Conab"
+      },
+      {
+        "chave": "volatilidade_historica",
+        "valor": "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência",
+        "fonte_url": "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv",
+        "metodo": "MC: desvios multiplicativos preço×prod preservando correlação"
+      },
+      {
+        "chave": "custo_conab",
+        "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
+        "metodo": "resumo_custos_para_engine.csv"
+      },
+      {
+        "chave": "preco_feijao2_ref",
+        "valor": "feijão cores R$ 290,00/sc 60 kg (R$ 4,83/kg) — preço recebido do produtor, Conab, 28/09 a 02/10/2026 (Paraná)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/analises-do-mercado-agropecuario-e-extrativista/analises-de-mercado/historico-semanal/historico-semanal-resumo-executivo/desempenho-de-mercado-2026-1/desempenho_de_mercado40-2.pdf",
+        "metodo": "sem série anual em Patos — CV 25% lognormal (mesma regra do feijão de 1ª safra)"
+      },
+      {
+        "chave": "produtividade_feijao2_ref",
+        "valor": "2.000 kg/ha — feijão 2ª safra (cores), produtividade média da planilha de custo Conab (Francisco Beltrão-PR)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/feijao/feijao_2_e_3_safras_serie_historica_2013-2026.xls",
+        "metodo": "referência pareada com o custo da 2ª safra; a coluna 'Produtividade' da tábua ZARC do município está vazia"
+      },
+      {
+        "chave": "custo_feijao2_conab",
+        "valor": "custo total R$ 8.438,93/ha — feijão 2ª safra a sequeiro (Francisco Beltrão-PR), média 2024-2026",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao/arquivos-custo-de-producao/agricolas/feijao/feijao_2_e_3_safras_serie_historica_2013-2026.xls",
+        "metodo": "CUSTO TOTAL (H+I=J) da planilha Conab — média das 2ªs safras; 3ªs safras irrigadas (Unaí-MG/Sorriso-MT) ficam fora por não refletirem o sequeiro do ZARC"
       }
     ]
   }
