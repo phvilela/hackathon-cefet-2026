@@ -2124,9 +2124,9 @@ h2 {
 .fronteira-panel,
 .plano-panel,
 .robustez-panel {
-  padding: 22px;
+  padding: 24px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-card);
+  border-radius: 26px;
   background: rgba(251, 250, 246, 0.94);
   box-shadow: var(--shadow-sm);
 }
@@ -2177,7 +2177,7 @@ h2 {
   gap: 2px;
   padding: 9px 11px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: 13px;
   background: var(--surface);
   box-shadow: var(--shadow-sm);
   font-size: 11px;
@@ -2212,7 +2212,7 @@ h2 {
 .plano-stats .stat {
   padding: 15px 16px;
   border: 1px solid rgba(222, 217, 203, 0.82);
-  border-radius: var(--radius-stat);
+  border-radius: 21px;
   background: var(--surface-2);
 }
 
@@ -2222,7 +2222,7 @@ h2 {
   margin-top: 16px;
   padding: 3px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--surface-2);
 }
 
@@ -2333,7 +2333,7 @@ h2 {
 .robustez-stats .stat {
   padding: 15px 16px;
   border: 1px solid rgba(222, 217, 203, 0.82);
-  border-radius: var(--radius-stat);
+  border-radius: 21px;
   background: var(--surface-2);
 }
 
