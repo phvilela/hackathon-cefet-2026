@@ -58,7 +58,8 @@ export function ZarcPanel({ zarc, talhao }: ZarcPanelProps) {
         <div>
           <strong>{talhao.nome}</strong>
           <span>
-            {talhao.areaHa} ha · grupo {grupo} · {TEXTURA_META[talhao.textura].solo}
+            {talhao.areaHa} ha · solo {TEXTURA_META[talhao.textura].label.toLowerCase()} ·{" "}
+            <span className="soil-code">{TEXTURA_META[talhao.textura].solo}</span>
           </span>
         </div>
         <span className={`target-irrigation ${talhao.irrigacao ? "on" : ""}`}>
@@ -135,7 +136,7 @@ export function ZarcPanel({ zarc, talhao }: ZarcPanelProps) {
       <div className="window-summary">
         <div className="window-summary-head">
           <span>Janela viável · {meta.label}</span>
-          <em>{janela.decendios.length} decêndios</em>
+          <em>{janela.decendios.length} períodos de 10 dias (como o ZARC usa)</em>
         </div>
         <strong>{formatJanela(janela.decendios)}</strong>
         <p>{meta.descricao}</p>

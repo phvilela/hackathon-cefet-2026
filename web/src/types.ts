@@ -112,7 +112,7 @@ export const CROP_META: Record<CropKey, CropMeta> = {
     shortLabel: "Soja",
     color: "#d9b64a",
     ink: "#5b4811",
-    descricao: "Janela mais larga do zoneamento; ancora a safrinha.",
+    descricao: "Janela mais larga do zoneamento; ancora a segunda safra.",
     safra: "1ª",
     ordem: 1,
   },
@@ -157,7 +157,7 @@ export const CROP_META: Record<CropKey, CropMeta> = {
     shortLabel: "Feijão 2ª",
     color: "#8b5e3c",
     ink: "#3b2110",
-    descricao: "ZARC não zoneia feijão 2ª em solo arenoso (AD1).",
+    descricao: "O ZARC não abre janela para feijão 2ª em solo arenoso.",
     safra: "2ª",
     ordem: 6,
   },
@@ -217,7 +217,7 @@ export function formatDecendio(dec: number) {
 
 export function formatDecendioLong(dec: number) {
   const month = monthForDecendio(dec);
-  return `${month.long} de ${month.year} · ${decendioInMonth(dec)}º decêndio`;
+  return `${month.long} de ${month.year} · ${decendioInMonth(dec)}º período de 10 dias`;
 }
 
 export function sortBySafra(decs: number[]) {
@@ -296,7 +296,7 @@ export const PERFIL_META: Record<
   },
   equilibrado: {
     label: "Equilibrado",
-    hint: "O ponto de equilíbrio da fronteira.",
+    hint: "Melhor equilíbrio entre margem e risco.",
     tone: "green",
   },
   conservador: {
@@ -349,6 +349,29 @@ export function ha(valor: number) {
   return new Intl.NumberFormat("pt-BR", {
     maximumFractionDigits: 1,
   }).format(valor);
+}
+
+const pctFormatter = (casas: number) =>
+  new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: casas,
+    maximumFractionDigits: casas,
+  });
+
+/**
+ * Risco armazenado no contrato como por-mil (220 = 22,0%).
+ * Retorna o percentual formatado em pt-BR, ex.: "22,0%".
+ */
+export function riscoPct(riscoPorMil: number, casas = 1) {
+  return `${pctFormatter(casas).format(riscoPorMil / 10)}%`;
+}
+
+/**
+ * "% da área sob risco" — hectares sob risco sobre a área total.
+ * Ex.: 110,6 ha de 600 ha → "18,4%".
+ */
+export function areaRiscoPct(haSobRisco: number, areaTotal: number, casas = 1) {
+  if (areaTotal <= 0) return `${pctFormatter(casas).format(0)}%`;
+  return `${pctFormatter(casas).format((haSobRisco / areaTotal) * 100)}%`;
 }
 
 /* ── Contrato motor → frontend (contract/results.json) ────────────────── */
@@ -414,6 +437,8 @@ export interface Resultados {
   rotacoes: Record<string, RotacaoResult>;
   plano_otimo: Plano;
   fronteira_pareto: Plano[];
+  /** Chave do contrato (campo "knee" do results.json) — termo interno da API,
+   *  nunca exibido ao usuário; na interface chama-se "ponto equilibrado". */
   knee: Plano;
   planos: Record<PerfilRisco, Plano>;
   robustez: Robustez;

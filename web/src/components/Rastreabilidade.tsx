@@ -1,13 +1,21 @@
 import { useMemo, useState } from "react";
 import { Icon } from "./Icon";
+import { StatusApiBadge } from "./StatusApiBadge";
 import {
   PERFIL_TONE_HEX,
+  ha,
+  riscoPct,
+  type CenarioState,
   type Hipotese,
   type Resultados,
 } from "../types";
+import type { StatusApi } from "../lib/api";
 
 interface Props {
   resultados: Resultados;
+  cenario: CenarioState;
+  statusApi: StatusApi;
+  usandoFallback: boolean;
 }
 
 interface Fonte {
@@ -37,11 +45,11 @@ function agruparPorFonte(resultados: Resultados): Fonte[] {
 
 function orgaoDaFonte(url: string) {
   if (url.startsWith("MOCK://")) return "Pendente";
-  if (url.includes("sidra") || url.includes("apisidra")) return "IBGE · SIDRA";
-  if (url.includes("conab") || url.includes("gov.br")) return "Conab";
-  if (url.includes("dados.agricultura") || url.includes("zarc")) return "ZARC · MAPA";
-  if (url.includes("bcb") || url.includes("selic")) return "Banco Central";
-  if (url.includes("notebooks") || url.includes("data/")) return "Repositório (pipeline)";
+  if (url.startsWith("http") && (url.includes("sidra") || url.includes("apisidra"))) return "IBGE · SIDRA";
+  if (url.startsWith("http") && (url.includes("conab") || url.includes("gov.br"))) return "Conab";
+  if (url.startsWith("http") && (url.includes("dados.agricultura") || url.includes("zarc"))) return "ZARC · MAPA";
+  if (url.startsWith("http") && (url.includes("bcb") || url.includes("selic"))) return "Banco Central";
+  if (url.includes("notebooks") || url.includes("data/") || url.includes("/")) return "Base interna";
   return "Fonte interna";
 }
 
@@ -66,10 +74,31 @@ const ORDEM_ROTACAO = [
   "capital_pousio",
 ];
 
-export function Rastreabilidade({ resultados }: Props) {
+/** Frase amigável para a observação do contrato (evita expor caminhos internos). */
+function observacaoAmigavel(status: string): string {
+  if (status !== "REAL") {
+    return "Parte dos números é estimada neste cenário — confira o selo de dados e a fonte de cada hipótese abaixo.";
+  }
+  return "Janelas climáticas reais do ZARC 2026/27 e margens por simulação com 31 anos de dados reais. Toda hipótese acima tem fonte, método e URL.";
+}
+
+/** Traduz métodos técnicos do contrato para linguagem de gente (sem caminhos de arquivo). */
+function metodoAmigavel(metodo: string) {
+  const pareceCaminho = /engine\/|notebooks\/|\.py\b|\.csv\b|resumo_custos/i.test(metodo);
+  if (pareceCaminho) {
+    if (metodo.includes("portaria")) return "adequação das janelas pela portaria do MAPA";
+    if (metodo.includes("pareadas")) return "janelas pareadas do ZARC (cálculo interno)";
+    if (metodo.includes("custos")) return "consolidação interna dos custos da Conab";
+    return "cálculo interno detalhado no repositório do projeto";
+  }
+  return metodo;
+}
+
+export function Rastreabilidade({ resultados, cenario, statusApi, usandoFallback }: Props) {
   const [aba, setAba] = useState<"porRotacao" | "porFonte">("porRotacao");
   const fontes = useMemo(() => agruparPorFonte(resultados), [resultados]);
   const status = resultados.dados.status;
+  const areaTotal = cenario.talhoes.reduce((acc, talhao) => acc + talhao.areaHa, 0);
 
   const totalHip = Object.values(resultados.rotacoes).reduce(
     (acc, r) => acc + r.hipoteses.length,
@@ -83,7 +112,7 @@ export function Rastreabilidade({ resultados }: Props) {
           <span className="section-kicker">Rastreabilidade</span>
           <h2>Por que soja? Porque cada número tem dono.</h2>
           <p>
-            Nenhum número entra no pipeline sem fonte, método e URL. Clique para abrir a
+            Nenhum número entra no cálculo sem fonte, método e URL. Clique para abrir a
             fonte oficial. É o antídoto para a objeção da caixa-preta.
           </p>
         </div>
@@ -92,6 +121,7 @@ export function Rastreabilidade({ resultados }: Props) {
             <span className="real-dot" aria-hidden="true" />
             dados {status}
           </span>
+          <StatusApiBadge status={statusApi} usandoFallback={usandoFallback} />
           <span>{totalHip} hipóteses</span>
           <span>{fontes.length} fontes</span>
         </div>
@@ -138,8 +168,7 @@ export function Rastreabilidade({ resultados }: Props) {
                       {brlCurto(info.margem_reais_por_ha)}/ha
                     </span>
                     <span className="rastreio-risco">
-                      {info.risco_por_mil}‰ · P(margem negativa){" "}
-                      {(info.risco_por_mil / 10).toFixed(1)}%
+                      {riscoPct(info.risco_por_mil)} de chance de prejuízo
                     </span>
                   </div>
                 </div>
@@ -148,8 +177,7 @@ export function Rastreabilidade({ resultados }: Props) {
                   {info.hipoteses.map((h) => (
                     <HipoteseLinha key={h.chave} h={h} />
                   ))}
-                </ul>
-              </div>
+                </ul>              </div>
             );
           })}
         </div>
@@ -179,7 +207,8 @@ export function Rastreabilidade({ resultados }: Props) {
           <Icon name="info" size={15} />
         </span>
         <p>
-          {resultados.dados.observacao || "Toda hipótese acima carrega fonte, método e URL."}
+          {observacaoAmigavel(status)}{" "}
+          {areaTotal > 0 && `${ha(areaTotal)} ha sob análise.`}
         </p>
       </div>
     </section>
@@ -193,7 +222,7 @@ function HipoteseLinha({ h, esconderFonte }: { h: Hipotese; esconderFonte?: bool
     <li className={`hipotese ${pendente ? "pendente" : ""}`}>
       <span className="hipotese-chave">{chaveLabel(h.chave)}</span>
       <span className="hipotese-valor">{h.valor}</span>
-      <span className="hipotese-metodo">{h.metodo}</span>
+      <span className="hipotese-metodo">{metodoAmigavel(h.metodo)}</span>
       {!esconderFonte &&
         (externa ? (
           <a
@@ -205,7 +234,7 @@ function HipoteseLinha({ h, esconderFonte }: { h: Hipotese; esconderFonte?: bool
             <Icon name="arrow" size={12} /> fonte
           </a>
         ) : (
-          <span className="hipotese-fonte interna" title={h.fonte_url}>
+          <span className="hipotese-fonte interna" title="Fonte interna — sem link público">
             <Icon name="check" size={12} /> interno
           </span>
         ))}
@@ -241,11 +270,12 @@ function brlCurto(valor: number) {
 }
 
 function encurtar(url: string) {
-  if (url.startsWith("MOCK://")) return url.replace("MOCK://hackatohm/", "");
+  if (url.startsWith("MOCK://")) return "fonte pendente";
+  if (!url.startsWith("http")) return "base interna (arquivo de dados)";
   try {
     const u = new URL(url);
     return `${u.hostname.replace("www.", "")}${u.pathname}`.slice(0, 60);
   } catch {
-    return url.slice(0, 60);
+    return "link externo";
   }
 }

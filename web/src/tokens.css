@@ -73,6 +73,12 @@
   --shadow-sm: 0 8px 24px -18px rgba(23, 63, 42, 0.4);
   --shadow-md: 0 22px 50px -30px rgba(23, 63, 42, 0.45);
 
+  /* ── Callout / banner de recomendação (DIRETRIZES §5 "Callout") ──────── */
+  --callout-bg: #edf3dc;      /* fundo do callout */
+  --callout-line: #dde6c4;    /* borda do callout */
+  --callout-ink: #35502a;     /* texto do callout */
+  --callout-sub: #4a6341;     /* texto secundário do callout */
+
   /* ── Espaçamento (grade de 8px, com meio-passo de 4px) ───────────────── */
   --sp-1: 4px;
   --sp-2: 8px;
