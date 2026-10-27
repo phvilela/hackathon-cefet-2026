@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 40 40" role="img" aria-label="Safra Certa">
+  <defs>
+    <linearGradient id="brand-bg" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#1f5337" />
+      <stop offset="1" stop-color="#143b28" />
+    </linearGradient>
+  </defs>
+  <rect width="40" height="40" rx="13" fill="url(#brand-bg)" />
+  <rect
+    x="0.5"
+    y="0.5"
+    width="39"
+    height="39"
+    rx="12.5"
+    fill="none"
+    stroke="#ffffff"
+    stroke-opacity="0.14"
+  />
+  <g
+    transform="translate(9 9) scale(0.9166667)"
+    fill="none"
+    stroke="#c9df7b"
+    stroke-width="1.9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M5 19c0-7 5-12 14-14 0 9-5 14-12 14" />
+    <path d="M5 19c3-4 7-7 11-9" />
+  </g>
+</svg>
