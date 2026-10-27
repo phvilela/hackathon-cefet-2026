@@ -3,6 +3,7 @@ import { Comparacao } from "./components/Comparacao";
 import { Header } from "./components/Header";
 import { Icon } from "./components/Icon";
 import { FarmSummary } from "./components/FarmSummary";
+import { Guia } from "./components/Guia";
 import { Rastreabilidade } from "./components/Rastreabilidade";
 import { ScenarioBar } from "./components/ScenarioBar";
 import { SolutionPanel } from "./components/SolutionPanel";
@@ -35,7 +36,7 @@ const resultados = resultadosRaw as unknown as Resultados;
 const AREA_REFERENCIA = 600;
 const numero = new Intl.NumberFormat("pt-BR");
 
-type Tela = "talhoes" | "comparacao" | "rastreabilidade";
+type Tela = "guia" | "talhoes" | "comparacao" | "rastreabilidade";
 
 function cenarioInicial(): CenarioState {
   return carregarCenario() ?? cenarioDoPreset("desafio");
@@ -44,7 +45,7 @@ function cenarioInicial(): CenarioState {
 export default function App() {
   const [cenario, setCenario] = useState<CenarioState>(cenarioInicial);
   const [selectedId, setSelectedId] = useState("T1");
-  const [tela, setTela] = useState<Tela>("talhoes");
+  const [tela, setTela] = useState<Tela>("guia");
 
   useEffect(() => {
     salvarCenario(cenario);
@@ -134,12 +135,19 @@ export default function App() {
       <Header tela={tela} onNavigate={setTela} />
 
       <main className="page">
+<<<<<<< HEAD
         {tela === "comparacao" ? (
           <Comparacao
             resultados={resultados}
             areaTotal={totalArea}
             perfilInicial={cenario.perfil}
           />
+=======
+        {tela === "guia" ? (
+          <Guia resultados={resultados} onNavigate={setTela} />
+        ) : tela === "comparacao" ? (
+          <Comparacao resultados={resultados} />
+>>>>>>> 26522bc (Frontend: nova pagina inicial adicionada)
         ) : tela === "rastreabilidade" ? (
           <Rastreabilidade resultados={resultados} culturas={cenario.culturas} />
         ) : (

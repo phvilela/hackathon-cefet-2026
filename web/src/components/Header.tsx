@@ -1,8 +1,10 @@
 import { Icon } from "./Icon";
 
+type Tela = "guia" | "talhoes" | "comparacao" | "rastreabilidade";
+
 interface HeaderProps {
-  tela?: "talhoes" | "comparacao" | "rastreabilidade";
-  onNavigate?: (tela: "talhoes" | "comparacao" | "rastreabilidade") => void;
+  tela?: Tela;
+  onNavigate?: (tela: Tela) => void;
 }
 
 export function Header({ tela = "talhoes", onNavigate }: HeaderProps) {
@@ -20,6 +22,14 @@ export function Header({ tela = "talhoes", onNavigate }: HeaderProps) {
         </div>
 
         <nav className="main-nav" aria-label="Etapas da recomendação">
+          <button
+            type="button"
+            className={`nav-item ${tela === "guia" ? "active" : ""}`}
+            aria-current={tela === "guia" ? "page" : undefined}
+            onClick={() => onNavigate?.("guia")}
+          >
+            Guia
+          </button>
           <button
             type="button"
             className={`nav-item ${tela === "talhoes" ? "active" : ""}`}
