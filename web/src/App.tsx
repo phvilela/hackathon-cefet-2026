@@ -60,7 +60,7 @@ export default function App() {
   }, [cenario]);
 
   // Payload do POST /api/solve derivado do cenário da tela 1.
-  const payloadTalhoes = useMemo(() => payloadDaCenario(cenario.talhoes), [cenario.talhoes]);
+  const payloadTalhoes = useMemo(() => payloadDaCenario(cenario), [cenario]);
   const chavePayload = useMemo(() => JSON.stringify(payloadTalhoes), [payloadTalhoes]);
 
   // Aquecimento da API no mount (evita cold start no demo).
@@ -69,10 +69,10 @@ export default function App() {
   }, []);
 
   // Debounce: recalcula no backend ~350ms após a última edição e cancela voos antigos.
-  // Dispara só quando o payload efetivo muda (área/textura/id), não em renomeações.
+  // Dispara só quando o payload efetivo muda (área/textura/irrigação), não em renomeações.
   const abortRef = useRef<AbortController | null>(null);
-  const talhoesRef = useRef(cenario.talhoes);
-  talhoesRef.current = cenario.talhoes;
+  const cenarioRef = useRef(cenario);
+  cenarioRef.current = cenario;
 
   useEffect(() => {
     if (chavePayload === "[]") return;
@@ -81,7 +81,7 @@ export default function App() {
     abortRef.current = controller;
     setStatusApi("carregando");
     const timer = window.setTimeout(() => {
-      resolverCenario(talhoesRef.current, controller.signal)
+      resolverCenario(cenarioRef.current, controller.signal)
         .then((novos) => {
           if (controller.signal.aborted) return;
           setResultadosAtuais(novos);

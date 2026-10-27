@@ -4,10 +4,13 @@ Endpoint que recalcula o plano de plantio (CP-SAT + fronteira de Pareto + knee
 point + Monte Carlo de robustez) para cenários com talhões editados pelo usuário.
 
 - `GET  /api/health` → `{"status": "ok"}` (ping de warm-up).
-- `POST /api/solve`  → `{"talhoes": [{"id": "T1", "area_ha": 300, "grupo_solo": 2}, ...]}`
+- `POST /api/solve`  → `{"talhoes": [{"id": "T1", "area_ha": 300, "grupo_solo": 2, "irrigacao": false}, ...]}`
   devolve o MESMO JSON de `contract/results.json` (cenario, dados, talhoes,
   rotacoes, plano_otimo, fronteira_pareto, knee, planos, robustez), com
   `dados.status = "REAL"`. 422 = entrada inválida; 500 = falha do solver.
+  O campo `irrigacao` já é aceito no contrato, mas o motor v0 ainda não o usa
+  no solver (fica guardado no `config` para a próxima versão de manejo).
+  O filtro de culturas da tela 1 continua apenas visual — ele não altera o solver.
 
 Como o Vercel pegaa: no projeto, Root Directory = `web`; funções Python são
 auto-detectadas em `api/*.py` que exportam `app` (aqui: `api/solve.py`), e o

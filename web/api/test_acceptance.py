@@ -8,7 +8,8 @@ Roda o motor vendorizado IN-PROCESS (sem HTTP) para o cenário PADRÃO
       risco_por_mil_ha dentro de ±0,06;
   (b) knee == fronteira_pareto[4] (5º ponto) em margem_centavos;
   (c) planos.arrojado/equilibrado/conservador: area_por_rotacao EXATO;
-  (d) plano_otimo.margem_centavos EXATO.
+  (d) plano_otimo.margem_centavos EXATO;
+  (e) irrigacao=True não altera plano_otimo no v0.
 
 Uso: python3 web/api/test_acceptance.py   (exit 0 = PASS, exit 1 = FAIL)
 """
@@ -24,9 +25,9 @@ from solve import solve_scenario  # noqa: E402  (vendor engine roda por baixo)
 CONTRACT_PATH = API_DIR.parents[1] / 'contract' / 'results.json'
 
 TALHOES_PADRAO = {
-    'T1': {'area_ha': 300, 'grupo_solo': 2},
-    'T2': {'area_ha': 200, 'grupo_solo': 1},
-    'T3': {'area_ha': 100, 'grupo_solo': 3},
+    'T1': {'area_ha': 300, 'grupo_solo': 2, 'irrigacao': False},
+    'T2': {'area_ha': 200, 'grupo_solo': 1, 'irrigacao': False},
+    'T3': {'area_ha': 100, 'grupo_solo': 3, 'irrigacao': False},
 }
 
 TOLERANCIA = 0.06
@@ -89,6 +90,13 @@ def main() -> int:
     m_o = obtido['plano_otimo']['margem_centavos']
     check(f'(d) plano_otimo.margem_centavos EXATO ({m_e})',
           m_o == m_e, f'contrato={m_e} api={m_o}')
+
+    irrigado = solve_scenario({
+        k: {**v, 'irrigacao': True} for k, v in TALHOES_PADRAO.items()
+    })
+    check('(e) irrigacao=True não altera plano_otimo no v0',
+          irrigado['plano_otimo']['margem_centavos'] == m_e,
+          f'contrato={m_e} irrigado={irrigado["plano_otimo"]["margem_centavos"]}')
 
     check("extras) dados.status == 'REAL' e sem caminhos internos na observacao",
           obtido['dados']['status'] == 'REAL' and 'engine/' not in obtido['dados']['observacao'],

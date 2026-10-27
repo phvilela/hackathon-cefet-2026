@@ -1,4 +1,9 @@
-import { TEXTURA_META, type GrupoSolo, type Resultados, type Talhao } from "../types";
+import {
+  TEXTURA_META,
+  type CenarioState,
+  type GrupoSolo,
+  type Resultados,
+} from "../types";
 
 export type StatusApi = "ok" | "carregando" | "erro";
 
@@ -6,14 +11,16 @@ export interface TalhaoPayload {
   id: string;
   area_ha: number;
   grupo_solo: GrupoSolo;
+  irrigacao: boolean;
 }
 
-/** Monta o payload do POST /api/solve a partir do cenário da tela 1. */
-export function payloadDaCenario(talhoes: Talhao[]): TalhaoPayload[] {
-  return talhoes.map((talhao) => ({
+/** Monta o payload do POST /api/solve a partir do cenário completo da tela 1. */
+export function payloadDaCenario(cenario: CenarioState): TalhaoPayload[] {
+  return cenario.talhoes.map((talhao) => ({
     id: talhao.id,
     area_ha: talhao.areaHa,
     grupo_solo: TEXTURA_META[talhao.textura].grupo,
+    irrigacao: talhao.irrigacao,
   }));
 }
 
@@ -23,13 +30,13 @@ export function payloadDaCenario(talhoes: Talhao[]): TalhaoPayload[] {
  * Aceita um AbortController para cancelar requisições obsoletas.
  */
 export async function resolverCenario(
-  talhoes: Talhao[],
+  cenario: CenarioState,
   signal?: AbortSignal,
 ): Promise<Resultados> {
   const resposta = await fetch("/api/solve", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ talhoes: payloadDaCenario(talhoes) }),
+    body: JSON.stringify({ talhoes: payloadDaCenario(cenario) }),
     signal,
   });
   if (!resposta.ok) throw new Error(`POST /api/solve respondeu ${resposta.status}`);

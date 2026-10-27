@@ -85,14 +85,14 @@ def base_config() -> dict:
     return _load_base_config()
 
 
-def _config_com_talhoes(talhoes: Dict[str, Dict[str, int]]) -> dict:
+def _config_com_talhoes(talhoes: Dict[str, Dict[str, Any]]) -> dict:
     """Deep-cópia do config base com os talhões do usuário no lugar."""
     config = copy.deepcopy(base_config())
     config['talhoes'] = {
         nome: {
             'area_ha': int(info['area_ha']),
             'grupo_solo': int(info['grupo_solo']),
-            'irrigacao': False,
+            'irrigacao': bool(info.get('irrigacao', False)),
         }
         for nome, info in talhoes.items()
     }
@@ -100,11 +100,11 @@ def _config_com_talhoes(talhoes: Dict[str, Dict[str, int]]) -> dict:
     return config
 
 
-def solve_scenario(talhoes: Dict[str, Dict[str, int]]) -> Dict[str, Any]:
+def solve_scenario(talhoes: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     """Mesmo fluxo de engine/main.py --pareto --monte-carlo → dict results.
 
-    `talhoes`: {id: {'area_ha': int, 'grupo_solo': int}}. Levanta
-    ConfigValidationError (entrada inválida) ou RuntimeError (solver falhou).
+    `talhoes`: {id: {'area_ha': int, 'grupo_solo': int, 'irrigacao': bool}}.
+    Levanta ConfigValidationError (entrada inválida) ou RuntimeError (solver falhou).
     """
     config = _config_com_talhoes(talhoes)
     validate_config(config)
@@ -148,6 +148,7 @@ class TalhaoIn(BaseModel):
     id: str = Field(min_length=1, description='Identificador do talhão (ex.: T1)')
     area_ha: int = Field(description='Área do talhão em hectares')
     grupo_solo: int = Field(description='Grupo de solo ZARC: 1, 2 ou 3')
+    irrigacao: bool = Field(default=False, description='Manejo do talhão (v0 não altera o solver)')
 
     @field_validator('area_ha')
     @classmethod
@@ -194,7 +195,7 @@ def health() -> Dict[str, str]:
 @app.post('/api/solve')
 def solve(payload: SolveRequest = Body(...)) -> Dict[str, Any]:
     """Resolve o cenário e devolve o JSON no formato de contract/results.json."""
-    talhoes = {t.id: {'area_ha': t.area_ha, 'grupo_solo': t.grupo_solo}
+    talhoes = {t.id: {'area_ha': t.area_ha, 'grupo_solo': t.grupo_solo, 'irrigacao': t.irrigacao}
                for t in payload.talhoes}
     try:
         return solve_scenario(talhoes)
