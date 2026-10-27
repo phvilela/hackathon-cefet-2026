@@ -1,0 +1,6 @@
+# API serverless "o que plantar" (Vercel instala requirements.txt da pasta da function)
+fastapi>=0.115,<1
+ortools>=9.10
+pyyaml>=6.0
+# pareto.py/robustness.py (vendorizados) importam tqdm nos loops do solver
+tqdm>=4.66
