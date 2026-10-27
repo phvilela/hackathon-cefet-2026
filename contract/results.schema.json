@@ -169,6 +169,10 @@
       "description": "knee point — melhor trade-off margem × risco (perfil Equilibrado)",
       "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/ponto_plano" }]
     },
+    "referencia_sem_plantio": {
+      "description": "âncora sem piso — plano 'não plantar' (tudo em capital/CDI); ponto de referência FORA da fronteira, nunca um perfil",
+      "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/ponto_plano" }]
+    },
     "planos": {
       "type": "object",
       "additionalProperties": false,

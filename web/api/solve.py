@@ -18,7 +18,7 @@ import copy
 import sys
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import yaml
 from fastapi import Body, FastAPI, HTTPException
@@ -30,7 +30,6 @@ if str(API_DIR) not in sys.path:
     sys.path.insert(0, str(API_DIR))
 
 from engine.pareto import (  # noqa: E402
-    _filter_nondominated,
     find_knee_point,
     generate_pareto_frontier,
     solve_pareto_point,
@@ -116,24 +115,24 @@ def solve_scenario(talhoes: Dict[str, Dict[str, int]]) -> Dict[str, Any]:
     # fronteira de Pareto (ε-constraint) + knee, como em main.py com --pareto
     frontier: List[Dict[str, Any]] = []
     knee = None
+    ponto_min_risco: Optional[Dict[str, Any]] = None
     if str((config.get('optimization') or {}).get('mode', 'lexicographic')).lower() == 'pareto':
         frontier = generate_pareto_frontier(config, quiet=True)
         knee = find_knee_point(frontier) if frontier else None
 
-        # ponto de MÍNIMO risco absoluto (custo de oportunidade = capital_pousio)
+        # Referência "não plantar" (custo de oportunidade): MÍNIMO risco absoluto,
+        # sem piso — FORA da fronteira, como em main.py. Os 14 pisos (100%→5% do
+        # ótimo) só deixam passar planos que plantam; o all-CDI não alcança nem
+        # o piso de 5%. Vira o campo separado `referencia_sem_plantio`.
         ponto_min_risco = solve_pareto_point(config)
         if ponto_min_risco is not None:
-            ja_existe = any(p['margem'] == ponto_min_risco['margem']
-                            and p['risco'] == ponto_min_risco['risco']
-                            for p in frontier)
-            if not ja_existe:
-                ponto_min_risco['referencia'] = 'custo_oportunidade'
-                frontier = _filter_nondominated(frontier + [ponto_min_risco])
+            ponto_min_risco['referencia'] = 'custo_oportunidade'
 
     # robustez ao vivo: ±10% nas margens, 30 runs, seed 42 (do config congelado)
     mc = run_monte_carlo_robustness(config, baseline_solution=solution, quiet=True)
 
-    results = build_results(config, solution, frontier=frontier, knee=knee, mc=mc)
+    results = build_results(config, solution, frontier=frontier, knee=knee, mc=mc,
+                            referencia=ponto_min_risco)
 
     # status honesto + texto amigável p/ o usuário final (sem caminhos internos)
     results['dados']['status'] = 'REAL'

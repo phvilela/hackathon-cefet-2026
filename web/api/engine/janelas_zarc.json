@@ -31,6 +31,18 @@
       ],
       "feijao_2": [
         "Port.359_de_24-08-2026"
+      ],
+      "girassol": [
+        "Port.102_de_07-05-2026"
+      ],
+      "amendoim": [
+        "Port.78_de_17-04-2026"
+      ],
+      "arroz": [
+        "Port.55_de_16-04-2026"
+      ],
+      "algodao": [
+        "Port.174_de_03-06-2026"
       ]
     }
   },
@@ -43,7 +55,7 @@
     },
     {
       "chave": "mapeamento_grupo_solo_ad",
-      "valor": "grupo 1 (arenoso)→AD1 (11); 2 (médio)→AD3 (13); 3 (argiloso)→AD5 (15); sorgo usa grupo 1/2/3 nativo",
+      "valor": "grupo 1 (arenoso)→AD1 (11); 2 (médio)→AD3 (13); 3 (argiloso)→AD5 (15); sorgo, amendoim, arroz e algodão herbáceo usam grupo 1/2/3 nativo",
       "metodo": "mapeamento conservador textura→água disponível; Latossolos de Patos de Minas tipicamente AD4–AD6 — o grupo real do talhão vem do formulário (tela 1)",
       "fonte_url": "data/raw/zarc/dicionario-de-dados-tabua-de-risco-2026.pdf (IN SPA/MAPA nº 1/2022)"
     },
@@ -76,6 +88,12 @@
       "valor": "dec1 = 1-10 jan ... dec36 = 21-31 dez; ano circular: na safra 2026/27, dec28-36 = out-dez/2026 e dec1-3 = jan-mar/2027",
       "metodo": "item 3.3 da Port. 200/2026",
       "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico"
+    },
+    {
+      "chave": "produtividade_tabela_zarc",
+      "valor": "vazia no extrato do município (células em branco; girassol com 0) — inspecionada na safra 2026/27",
+      "metodo": "a produtividade de referência das novas culturas vem das planilhas de custo e do boletim de safra da Conab (registrada nas hipóteses do config pelo engine/monte_carlo.py)",
+      "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao"
     },
     {
       "chave": "feijao_irrigado",
@@ -605,6 +623,340 @@
           21
         ]
       }
+    },
+    "girassol": {
+      "1": {
+        "decendios": [
+          2
+        ],
+        "risco_por_decendio": {
+          "2": 40
+        },
+        "solo_usado": "AD1",
+        "ciclos_disponiveis": [
+          20,
+          21
+        ]
+      },
+      "2": {
+        "decendios": [
+          2,
+          3,
+          30
+        ],
+        "risco_por_decendio": {
+          "2": 20,
+          "3": 20,
+          "30": 30
+        },
+        "solo_usado": "AD3",
+        "ciclos_disponiveis": [
+          20,
+          21
+        ]
+      },
+      "3": {
+        "decendios": [
+          2,
+          3,
+          4,
+          5,
+          30
+        ],
+        "risco_por_decendio": {
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 30,
+          "30": 20
+        },
+        "solo_usado": "AD5",
+        "ciclos_disponiveis": [
+          20,
+          21
+        ]
+      }
+    },
+    "amendoim": {
+      "1": {
+        "decendios": [
+          1,
+          2,
+          3,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ],
+        "risco_por_decendio": {
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "28": 30,
+          "29": 20,
+          "30": 20,
+          "31": 20,
+          "32": 20,
+          "33": 20,
+          "34": 20,
+          "35": 20,
+          "36": 20
+        },
+        "solo_usado": "grupo 1",
+        "ciclos_disponiveis": [
+          20,
+          21,
+          22
+        ]
+      },
+      "2": {
+        "decendios": [
+          1,
+          2,
+          3,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ],
+        "risco_por_decendio": {
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "28": 30,
+          "29": 20,
+          "30": 20,
+          "31": 20,
+          "32": 20,
+          "33": 20,
+          "34": 20,
+          "35": 20,
+          "36": 20
+        },
+        "solo_usado": "grupo 2",
+        "ciclos_disponiveis": [
+          20,
+          21,
+          22
+        ]
+      },
+      "3": {
+        "decendios": [
+          1,
+          2,
+          3,
+          4,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ],
+        "risco_por_decendio": {
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "28": 30,
+          "29": 20,
+          "30": 20,
+          "31": 20,
+          "32": 20,
+          "33": 20,
+          "34": 20,
+          "35": 20,
+          "36": 20
+        },
+        "solo_usado": "grupo 3",
+        "ciclos_disponiveis": [
+          20,
+          21,
+          22
+        ]
+      }
+    },
+    "arroz": {
+      "1": {
+        "decendios": [
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35
+        ],
+        "risco_por_decendio": {
+          "28": 40,
+          "29": 30,
+          "30": 20,
+          "31": 20,
+          "32": 20,
+          "33": 40,
+          "34": 40,
+          "35": 40
+        },
+        "solo_usado": "grupo 1",
+        "ciclos_disponiveis": [
+          20,
+          21,
+          22
+        ]
+      },
+      "2": {
+        "decendios": [
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ],
+        "risco_por_decendio": {
+          "28": 30,
+          "29": 20,
+          "30": 20,
+          "31": 20,
+          "32": 20,
+          "33": 20,
+          "34": 20,
+          "35": 20,
+          "36": 20
+        },
+        "solo_usado": "grupo 2",
+        "ciclos_disponiveis": [
+          20,
+          21,
+          22
+        ]
+      },
+      "3": {
+        "decendios": [
+          1,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ],
+        "risco_por_decendio": {
+          "1": 20,
+          "28": 30,
+          "29": 20,
+          "30": 20,
+          "31": 20,
+          "32": 20,
+          "33": 20,
+          "34": 20,
+          "35": 20,
+          "36": 20
+        },
+        "solo_usado": "grupo 3",
+        "ciclos_disponiveis": [
+          20,
+          21,
+          22
+        ]
+      }
+    },
+    "algodao": {
+      "1": {
+        "decendios": [
+          1,
+          2,
+          33,
+          34,
+          35,
+          36
+        ],
+        "risco_por_decendio": {
+          "1": 20,
+          "2": 20,
+          "33": 20,
+          "34": 20,
+          "35": 20,
+          "36": 20
+        },
+        "solo_usado": "grupo 1",
+        "ciclos_disponiveis": [
+          21,
+          22
+        ]
+      },
+      "2": {
+        "decendios": [
+          1,
+          2,
+          3,
+          33,
+          34,
+          35,
+          36
+        ],
+        "risco_por_decendio": {
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "33": 20,
+          "34": 20,
+          "35": 20,
+          "36": 20
+        },
+        "solo_usado": "grupo 2",
+        "ciclos_disponiveis": [
+          21,
+          22
+        ]
+      },
+      "3": {
+        "decendios": [
+          1,
+          2,
+          3,
+          4,
+          33,
+          34,
+          35,
+          36
+        ],
+        "risco_por_decendio": {
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "33": 20,
+          "34": 20,
+          "35": 20,
+          "36": 20
+        },
+        "solo_usado": "grupo 3",
+        "ciclos_disponiveis": [
+          21,
+          22
+        ]
+      }
     }
   },
   "rotacoes": {
@@ -821,6 +1173,120 @@
           35,
           36
         ]
+      }
+    },
+    "arroz_solteira": {
+      "1": {
+        "primeira": [
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35
+        ]
+      },
+      "2": {
+        "primeira": [
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ]
+      },
+      "3": {
+        "primeira": [
+          1,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36
+        ]
+      }
+    },
+    "algodao_solteira": {
+      "1": {
+        "primeira": [
+          1,
+          2,
+          33,
+          34,
+          35,
+          36
+        ]
+      },
+      "2": {
+        "primeira": [
+          1,
+          2,
+          3,
+          33,
+          34,
+          35,
+          36
+        ]
+      },
+      "3": {
+        "primeira": [
+          1,
+          2,
+          3,
+          4,
+          33,
+          34,
+          35,
+          36
+        ]
+      }
+    },
+    "soja_feijao2": {
+      "1": {
+        "primeira": [],
+        "segunda": [],
+        "primeira_ciclo": "Grupo I (precoce)",
+        "premissa_ciclo_primeira_decendios": 10
+      },
+      "2": {
+        "primeira": [
+          28,
+          29,
+          30
+        ],
+        "segunda": [
+          2,
+          3,
+          4
+        ],
+        "primeira_ciclo": "Grupo I (precoce)",
+        "premissa_ciclo_primeira_decendios": 10
+      },
+      "3": {
+        "primeira": [
+          28,
+          29,
+          30,
+          31
+        ],
+        "segunda": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "primeira_ciclo": "Grupo I (precoce)",
+        "premissa_ciclo_primeira_decendios": 10
       }
     }
   },

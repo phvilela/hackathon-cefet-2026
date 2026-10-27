@@ -15,7 +15,7 @@ LARGURA = 96
 PERFIL_DESCRICOES = {
     'arrojado': 'máxima margem (topo da fronteira)',
     'equilibrado': 'knee point — melhor trade-off margem × risco',
-    'conservador': 'mínimo risco absoluto — inclui a opção capital/pousio (custo de oportunidade)',
+    'conservador': 'menor chance de prejuízo entre os planos que plantam',
 }
 
 
@@ -165,8 +165,14 @@ def build_results(config: Dict[str, Any],
                   solution: Dict[str, Any],
                   frontier: Optional[List[Dict[str, Any]]] = None,
                   knee: Optional[Dict[str, Any]] = None,
-                  mc: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """Monta o dict de resultados — rascunho do contrato com o M3 (JSON)."""
+                  mc: Optional[Dict[str, Any]] = None,
+                  referencia: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Monta o dict de resultados — rascunho do contrato com o M3 (JSON).
+
+    `referencia` = ponto de mínimo risco absoluto SEM piso de margem (com a
+    rotação capital_pousio é o "não plantar"). Ele é EMITIDO À PARTE em
+    `referencia_sem_plantio` — a `fronteira_pareto` contém só os planos com
+    piso de margem (todos plantam)."""
     frontier = frontier or []
     cenario_cfg = config.get('cenario', {}) or {}
     talhoes_cfg = config.get('talhoes', {}) or {}
@@ -263,6 +269,16 @@ def build_results(config: Dict[str, Any],
         'rotacoes': rotacoes_json,
         'plano_otimo': plano_otimo,
         'fronteira_pareto': fronteira_json,
+        'referencia_sem_plantio': (
+            _ponto_para_dict(
+                referencia,
+                perfil='Referência (não plantar)',
+                descricao='mínimo risco absoluto sem piso de margem — capital no CDI '
+                          '(custo de oportunidade); fora da fronteira, que só tem planos '
+                          'que plantam',
+            )
+            if referencia else None
+        ),
         'knee': (
             _ponto_para_dict(
                 knee, perfil='Equilibrado (knee)',
@@ -313,7 +329,8 @@ def _secao_fronteira(frontier: List[Dict[str, Any]],
 
 def _secao_perfis(frontier: List[Dict[str, Any]],
                   knee: Optional[Dict[str, Any]],
-                  talhoes_cfg: Dict[str, Any]) -> List[str]:
+                  talhoes_cfg: Dict[str, Any],
+                  referencia: Optional[Dict[str, Any]] = None) -> List[str]:
     linhas = ['PERFIS DE DECISÃO (o menu que vendemos no pitch)', '-' * LARGURA]
     if not frontier:
         linhas.append('Fronteira não gerada — rode com --pareto.')
@@ -334,6 +351,13 @@ def _secao_perfis(frontier: List[Dict[str, Any]],
             f'({_ha_sob_risco(risco)} sob risco)'
         )
         linhas.append(f'    {_plano_em_linha(ponto["plano"], talhoes_cfg)}')
+    if referencia is not None:
+        margem_r, risco_r = _norm_ponto(referencia)
+        linhas.append(
+            f'Referência (não plantar): margem {_reais(margem_r)} | risco '
+            f'{_fmt_br(risco_r)} ‰·ha — capital aplicado no CDI (custo de '
+            'oportunidade); fora da fronteira porque nenhum piso de margem o alcança'
+        )
     linhas.append('')
     return linhas
 
@@ -430,7 +454,8 @@ def generate_report(config: Dict[str, Any],
                     solution: Dict[str, Any],
                     frontier: Optional[List[Dict[str, Any]]] = None,
                     knee: Optional[Dict[str, Any]] = None,
-                    mc: Optional[Dict[str, Any]] = None) -> str:
+                    mc: Optional[Dict[str, Any]] = None,
+                    referencia: Optional[Dict[str, Any]] = None) -> str:
     """Gera o relatório texto (PT-BR) do run completo."""
     frontier = frontier or []
     cenario = config.get('cenario', {}) or {}
@@ -475,7 +500,7 @@ def generate_report(config: Dict[str, Any],
 
     if frontier:
         linhas.extend(_secao_fronteira(frontier, knee))
-        linhas.extend(_secao_perfis(frontier, knee, talhoes_cfg))
+        linhas.extend(_secao_perfis(frontier, knee, talhoes_cfg, referencia=referencia))
 
     if mc:
         linhas.extend(_secao_robustez(mc))
