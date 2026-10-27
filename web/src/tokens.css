@@ -45,6 +45,10 @@
   --crop-feijao-2a: #8b5e3c;   --crop-feijao-2a-ink: #3b2110;
   --crop-sorgo: #9a6b3f;       --crop-sorgo-ink: #3f2814;
   --crop-sorgo-2a: #7f6136;    --crop-sorgo-2a-ink: #33240e;
+  --crop-girassol: #e3c22f;    --crop-girassol-ink: #57420b;  /* dourado vivo */
+  --crop-amendoim: #cf9a62;    --crop-amendoim-ink: #4a2c10;  /* camelo claro */
+  --crop-arroz: #4f8577;      --crop-arroz-ink: #12362f;     /* verde-água (várzea) */
+  --crop-algodao: #b98d75;     --crop-algodao-ink: #42241a;   /* rosado terroso */
 
   /* ── Tipografia ──────────────────────────────────────────────────────── */
   --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "DejaVu Sans",

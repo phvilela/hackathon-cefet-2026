@@ -14,42 +14,40 @@ import { StatusApiBadge } from "./StatusApiBadge";
 import {
   PERFIL_META,
   PERFIL_TONE_HEX,
+  REFERENCIA_TONE,
   areaRiscoPct,
   brl,
+  grupoDoTalhao,
   ha,
   type CenarioState,
+  type CropKey,
+  type GrupoSolo,
   type PerfilRisco,
   type Plano,
   type Resultados,
+  type Talhao,
+  type ZarcData,
 } from "../types";
 import type { StatusApi } from "../lib/api";
 
 interface Props {
   resultados: Resultados;
   cenario: CenarioState;
+  zarc: ZarcData;
   statusApi: StatusApi;
   usandoFallback: boolean;
 }
 
 /**
- * Identifica o perfil de um ponto da curva.
- * Compara valores (não textos) para não depender da descrição crua do contrato.
+ * Identifica o perfil de um ponto da curva pelo marcador `perfil` do contrato
+ * (v2: 'Arrojado' | 'Equilibrado (knee)' | 'Conservador' | null).
+ * Sem heurística de índice — funciona com 7 ou 14 pontos.
  */
-function perfilDoPonto(
-  ponto: Plano,
-  index: number,
-  total: number,
-  equilibrado: Plano,
-): PerfilRisco | null {
-  if (index === 0) return "arrojado";
-  if (index === total - 1) return "conservador";
-  if (ponto.perfil === "equilibrado") return "equilibrado";
-  if (
-    ponto.margem_reais === equilibrado.margem_reais &&
-    ponto.ha_sob_risco === equilibrado.ha_sob_risco
-  ) {
-    return "equilibrado";
-  }
+function perfilDoPonto(ponto: Plano): PerfilRisco | null {
+  const tag = (ponto.perfil ?? "").toLowerCase();
+  if (tag.includes("arrojado")) return "arrojado";
+  if (tag.includes("conservador")) return "conservador";
+  if (tag.includes("knee") || tag.includes("equilibrado")) return "equilibrado";
   return null;
 }
 
@@ -57,7 +55,66 @@ function rotuloDoPonto(perfil: PerfilRisco | null) {
   return perfil ? PERFIL_META[perfil].label : "Plano intermediário";
 }
 
-export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: Props) {
+/** Primeira cultura de cada rotação — base para ler o risco ZARC da janela
+ *  de plantio recomendada. Rotações sem cultura (ex.: capital no CDI) ficam
+ *  de fora do mapa e são ignoradas no chip. */
+const PRIMEIRA_CULTURA: Record<string, CropKey> = {
+  soja_milho: "soja",
+  soja_solteira: "soja",
+  soja_sorgo: "soja",
+  feijao_sorgo: "feijao",
+  milho_verao: "milho_verao",
+  soja_feijao2: "soja",
+  girassol_solteira: "girassol",
+  amendoim_solteira: "amendoim",
+  arroz_solteira: "arroz",
+  algodao_solteira: "algodao",
+};
+
+/**
+ * Faixa do risco climático (ZARC) das janelas de plantio do plano selecionado,
+ * no estilo do ZARC: para cada rotação alocada, considera os grupos de solo dos
+ * talhões do cenário, lê os decêndios viáveis da 1ª cultura
+ * (zarc.rotacoes[rot][grupo].primeira) e guarda o MENOR risco decendial
+ * (zarc.culturas[crop][grupo].risco_por_decendio) — o risco da "melhor janela".
+ * Devolve a faixa [mín, máx] entre as rotações; null se faltar dado
+ * (zarc.json antigo sem as rotações/culturas novas) → o chip não renderiza.
+ */
+function faixaRiscoZarcJanelas(
+  zarc: ZarcData,
+  plano: Plano,
+  talhoes: Talhao[],
+): [number, number] | null {
+  const grupos = [...new Set(talhoes.map(grupoDoTalhao))];
+  const melhores: number[] = [];
+  for (const [rot, area] of Object.entries(plano.area_por_rotacao)) {
+    if (!area || area <= 0) continue;
+    const cultura = zarc.culturas[PRIMEIRA_CULTURA[rot]];
+    const rotacao = zarc.rotacoes[rot];
+    if (!cultura || !rotacao) continue;
+    const riscos: number[] = [];
+    for (const grupo of grupos) {
+      const janela = cultura[String(grupo) as `${GrupoSolo}`];
+      const decendios = rotacao[String(grupo) as `${GrupoSolo}`]?.primeira ?? [];
+      if (!janela) continue;
+      for (const dec of decendios) {
+        const risco = janela.risco_por_decendio?.[String(dec)];
+        if (typeof risco === "number") riscos.push(risco);
+      }
+    }
+    if (riscos.length > 0) melhores.push(Math.min(...riscos));
+  }
+  if (melhores.length === 0) return null;
+  return [Math.min(...melhores), Math.max(...melhores)];
+}
+
+export function Comparacao({
+  resultados,
+  cenario,
+  zarc,
+  statusApi,
+  usandoFallback,
+}: Props) {
   const [selecionado, setSelecionado] = useState<PerfilRisco>(
     cenario.perfil ?? "equilibrado",
   );
@@ -75,16 +132,36 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
   const tone = PERFIL_TONE_HEX[selecionado];
   const dados = resultados.dados;
 
-  const serie = fronteira.map((ponto, index) => {
-    const perfilPonto = perfilDoPonto(ponto, index, total, resultados.planos.equilibrado);
+  // Âncora "não plantar" (contrato v2, opcional) — ponto destacado, fora da
+  // fronteira e não selecionável como perfil.
+  const referencia = resultados.referencia_sem_plantio ?? null;
+
+  const serie = fronteira.map((ponto) => {
+    const perfilPonto = perfilDoPonto(ponto);
     return {
       margem_reais: ponto.margem_reais,
       ha_sob_risco: ponto.ha_sob_risco,
-      index,
       perfil: perfilPonto,
       rotulo: rotuloDoPonto(perfilPonto),
     };
   });
+
+  // Domínio numérico explícito: inclui a âncora "não plantar" (se existir) e
+  // continua correto com 7 ou 14 pontos na fronteira.
+  const margens = serie.map((ponto) => ponto.margem_reais);
+  const hectares = serie.map((ponto) => ponto.ha_sob_risco);
+  if (referencia) {
+    margens.push(referencia.margem_reais);
+    hectares.push(referencia.ha_sob_risco);
+  }
+  const dominioX: [number, number] = [
+    Math.max(0, (hectares.length ? Math.min(...hectares) : 0) - 8),
+    (hectares.length ? Math.max(...hectares) : 8) + 8,
+  ];
+  const dominioY: [number, number] = [
+    (margens.length ? Math.min(...margens) : 0) - 120000,
+    (margens.length ? Math.max(...margens) : 120000) + 120000,
+  ];
 
   const arrojado = resultados.planos.arrojado;
   const economiaMargem = arrojado.margem_reais - plano.margem_reais;
@@ -96,6 +173,14 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
     .map(([rot, area]) => `${labelRotacao(rot)} ${ha(area)} ha`)
     .join(" · ");
 
+  // Chip ZARC: faixa do risco de perda por seca nas janelas recomendadas.
+  const faixaZarc = faixaRiscoZarcJanelas(zarc, plano, cenario.talhoes);
+  const riscoZarcJanelas = faixaZarc
+    ? faixaZarc[0] === faixaZarc[1]
+      ? `${faixaZarc[0]}%`
+      : `${faixaZarc[0]}–${faixaZarc[1]}%`
+    : null;
+
   return (
     <section className="painel-comparacao">
       <div className="section-heading">
@@ -103,9 +188,9 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
           <span className="section-kicker">Comparação</span>
           <h2>Não há uma resposta certa. Há um menu.</h2>
           <p>
-            Cada ponto é um plano possível para o seu nível de risco. A curva liga os
-            planos que não são superados: ganhar mais margem sempre exige aceitar mais
-            risco — e o contrário também vale.
+            Cada ponto é um plano possível para o seu perfil. A curva liga os
+            planos que não são superados: ganhar mais margem sempre exige aceitar
+            mais chance de prejuízo — e o contrário também vale.
           </p>
         </div>
         <div className="section-meta">
@@ -132,7 +217,8 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
             <span className="verdict-sep" aria-hidden="true">
               ·
             </span>
-            <strong className="verdict-num">{pctArea}</strong> da área sob risco
+            <strong className="verdict-num">{pctArea}</strong> da área com chance
+            de prejuízo
           </p>
           <p className="verdict-sub">Como dividir os {ha(areaTotal)} ha: {resumoAlocacao}</p>
         </div>
@@ -142,7 +228,7 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
         <div className="panel fronteira-panel">
           <div className="panel-heading">
             <div>
-              <h3>Margem × risco</h3>
+              <h3>Margem × chance de prejuízo</h3>
               <p className="panel-lede">
                 {total} planos possíveis — nenhum supera o outro · algoritmo de otimização
                 com prova de melhor solução
@@ -151,20 +237,20 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
           </div>
 
           <div className="fronteira-chart" role="img"
-               aria-label="Gráfico dos planos possíveis: margem total em reais contra hectares sob risco">
+               aria-label="Gráfico dos planos possíveis: margem total em reais contra hectares com chance de prejuízo">
             <ResponsiveContainer width="100%" height={300}>
               <ComposedChart data={serie} margin={{ top: 16, right: 16, bottom: 8, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ebe6da" vertical={false} />
                 <XAxis
                   dataKey="ha_sob_risco"
                   type="number"
-                  domain={["dataMin - 8", "dataMax + 8"]}
+                  domain={dominioX}
                   tickFormatter={(v: number) => `${ha(v)} ha`}
                   tick={{ fontSize: 10, fill: "#5c6659" }}
                   axisLine={{ stroke: "#ded9cb" }}
                   tickLine={false}
                   label={{
-                    value: "hectares sob risco  →",
+                    value: "hectares com chance de prejuízo  →",
                     position: "insideBottomRight",
                     fontSize: 9.5,
                     fill: "#5c6659",
@@ -174,7 +260,7 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
                 <YAxis
                   dataKey="margem_reais"
                   type="number"
-                  domain={["dataMin - 120000", "dataMax + 120000"]}
+                  domain={dominioY}
                   tickFormatter={(v: number) => brl(v).replace(/\s/g, " ")}
                   tick={{ fontSize: 10, fill: "#5c6659" }}
                   axisLine={false}
@@ -219,6 +305,24 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
                     );
                   }}
                 />
+                {referencia && (
+                  <ReferenceDot
+                    x={referencia.ha_sob_risco}
+                    y={referencia.margem_reais}
+                    r={6}
+                    fill={REFERENCIA_TONE.fill}
+                    stroke={REFERENCIA_TONE.stroke}
+                    strokeWidth={1.5}
+                    strokeDasharray="4 3"
+                    ifOverflow="extendDomain"
+                    label={{
+                      value: "não plantar (capital no CDI)",
+                      position: "insideTopRight",
+                      fontSize: 9.5,
+                      fill: REFERENCIA_TONE.stroke,
+                    }}
+                  />
+                )}
                 {plano && (
                   <ReferenceDot
                     x={plano.ha_sob_risco}
@@ -245,6 +349,12 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
               <i className="legend-swatch" style={{ background: "#2f6b46" }} />
               plano intermediário
             </span>
+            {referencia && (
+              <span>
+                <i className="legend-swatch ref" />
+                não plantar (capital no CDI)
+              </span>
+            )}
           </div>
         </div>
 
@@ -270,7 +380,7 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
               </span>
             </div>
             <div className="stat">
-              <span className="stat-label">% da área sob risco</span>
+              <span className="stat-label">% da área com chance de prejuízo</span>
               <div className="stat-value">
                 <strong>{pctArea}</strong>
                 <span>{ha(plano.ha_sob_risco)} ha</span>
@@ -279,6 +389,18 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
                 hectares com margem negativa esperada
               </span>
             </div>
+            {riscoZarcJanelas && (
+              <div className="stat">
+                <span className="stat-label">Risco ZARC das janelas</span>
+                <div className="stat-value">
+                  <strong>{riscoZarcJanelas}</strong>
+                </div>
+                <span className="stat-hint">
+                  janelas de plantio do plano — risco de perda por seca (ZARC) por
+                  período de 10 dias
+                </span>
+              </div>
+            )}
           </div>
 
           {selecionado !== "arrojado" && (
@@ -288,7 +410,7 @@ export function Comparacao({ resultados, cenario, statusApi, usandoFallback }: P
               </span>
               <p>
                 Em relação ao Arrojado, abre {brl(economiaMargem)} de margem para fugir de{" "}
-                {ha(ganhoRisco)} ha de risco.
+                {ha(ganhoRisco)} ha com chance de prejuízo.
               </p>
             </div>
           )}
@@ -411,7 +533,7 @@ function TooltipFronteira({
     <div className="fronteira-tooltip">
       <strong>{brl(p.margem_reais)}</strong>
       <span>
-        {areaRiscoPct(p.ha_sob_risco, areaTotal ?? 0)} da área sob risco ({ha(p.ha_sob_risco)} ha)
+        {`chance de prejuízo: ${areaRiscoPct(p.ha_sob_risco, areaTotal ?? 0)} da área (${ha(p.ha_sob_risco)} ha)`}
       </span>
       {p.rotulo && <em>{p.rotulo}</em>}
     </div>
@@ -426,6 +548,11 @@ function labelRotacao(rot: string) {
     feijao_sorgo: "Feijão → sorgo",
     milho_verao: "Milho 1ª safra",
     capital_pousio: "Capital no CDI (não plantar)",
+    girassol_solteira: "Girassol (solteiro)",
+    amendoim_solteira: "Amendoim (solteiro)",
+    arroz_solteira: "Arroz (solteiro)",
+    algodao_solteira: "Algodão (solteiro)",
+    soja_feijao2: "Soja → feijão 2ª safra",
   };
   return mapa[rot] ?? rot;
 }

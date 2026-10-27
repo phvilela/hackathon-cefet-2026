@@ -109,12 +109,12 @@ export function ZarcPanel({ zarc, talhao }: ZarcPanelProps) {
                     title={
                       risk === null
                         ? `${formatDecendioLong(dec)} · fora da janela`
-                        : `${formatDecendioLong(dec)} · risco ${risk}%`
+                        : `${formatDecendioLong(dec)} · risco de perda por seca (ZARC) ${risk}%`
                     }
                     aria-label={
                       risk === null
                         ? `${formatDecendioLong(dec)}: fora da janela`
-                        : `${formatDecendioLong(dec)}: risco ${risk}%`
+                        : `${formatDecendioLong(dec)}: risco de perda por seca (ZARC) ${risk}%`
                     }
                   >
                     {risk ?? ""}
@@ -126,6 +126,9 @@ export function ZarcPanel({ zarc, talhao }: ZarcPanelProps) {
         </div>
 
         <div className="risk-legend" role="group" aria-label="Legenda de risco ZARC">
+          <span className="risk-legend-title">
+            risco de perda por seca (ZARC) por período de 10 dias
+          </span>
           <span><i className="legend-dot low" /> 20%</span>
           <span><i className="legend-dot mid" /> 30%</span>
           <span><i className="legend-dot high" /> 40%</span>
@@ -154,7 +157,7 @@ export function ZarcPanel({ zarc, talhao }: ZarcPanelProps) {
       <div className="zarc-foot">
         <span>
           <Icon name="info" size={13} />
-          Corte risco ≤ 40% · melhor ciclo · {janela.solo_usado}
+          Corte de risco de perda por seca (ZARC) ≤ 40% · melhor ciclo · {janela.solo_usado}
         </span>
         <a href={zarc.fonte.portal} target="_blank" rel="noreferrer">
           ZARC/MAPA

@@ -4,9 +4,10 @@
 Roda o motor vendorizado IN-PROCESS (sem HTTP) para o cenário PADRÃO
 (T1 300ha/g2, T2 200ha/g1, T3 100ha/g3) e compara com contract/results.json:
 
-  (a) os 7 pontos da fronteira: margem_centavos EXATO; ha_sob_risco e
+  (a) todos os pontos da fronteira: margem_centavos EXATO; ha_sob_risco e
       risco_por_mil_ha dentro de ±0,06;
-  (b) knee == fronteira_pareto[4] (5º ponto) em margem_centavos;
+  (b) knee == knee do contrato em margem_centavos (dinâmico — o índice
+      do knee varia com o número de pontos da fronteira);
   (c) planos.arrojado/equilibrado/conservador: area_por_rotacao EXATO;
   (d) plano_otimo.margem_centavos EXATO.
 
@@ -71,11 +72,14 @@ def main() -> int:
 
     # --------------------------------------------------------------------- (b) knee
     k = obtido['knee']
-    p4 = fo[4]
-    check('(b) knee == fronteira_pareto[4] em margem_centavos '
-          f'({p4["margem_centavos"]})',
-          k is not None and k['margem_centavos'] == p4['margem_centavos'],
-          f'knee={k and k["margem_centavos"]} fronteira[4]={p4["margem_centavos"]}')
+    k_e = esperado['knee']
+    # dinâmico: o knee é o ponto marcado no contrato (índice varia com nº de pontos)
+    idx_knee = next((i for i, p in enumerate(fe)
+                     if p['margem_centavos'] == k_e['margem_centavos']), None)
+    check('(b) knee == knee do contrato em margem_centavos '
+          f'({k_e["margem_centavos"]}, índice {idx_knee})',
+          k is not None and k['margem_centavos'] == k_e['margem_centavos'],
+          f'knee={k and k["margem_centavos"]} contrato={k_e["margem_centavos"]}')
 
     # ------------------------------------------------------------------- (c) planos
     for perfil in ('arrojado', 'equilibrado', 'conservador'):

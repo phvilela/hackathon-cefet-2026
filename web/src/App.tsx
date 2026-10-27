@@ -190,6 +190,7 @@ export default function App() {
           <Comparacao
             resultados={resultadosAtuais}
             cenario={cenario}
+            zarc={zarc}
             statusApi={statusApi}
             usandoFallback={usandoFallback}
           />

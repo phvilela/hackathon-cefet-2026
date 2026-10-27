@@ -6,6 +6,10 @@ export const CROP_KEYS = [
   "milho_safrinha",
   "feijao_2",
   "sorgo_safrinha",
+  "girassol",
+  "amendoim",
+  "arroz",
+  "algodao",
 ] as const;
 
 export type CropKey = (typeof CROP_KEYS)[number];
@@ -15,9 +19,13 @@ export type PerfilRisco = "arrojado" | "equilibrado" | "conservador";
 
 export interface ZarcGrupo {
   decendios: number[];
-  risco_por_decendio: Record<string, number>;
+  /** Omitido quando o grupo não tem janela para a cultura (decendios vazio). */
+  risco_por_decendio?: Record<string, number>;
   solo_usado: string;
-  ciclos_disponiveis: number[];
+  /** Omitido quando o grupo não tem janela para a cultura (decendios vazio). */
+  ciclos_disponiveis?: number[];
+  /** Nota do motor para grupos sem janela (ex.: feijão 2ª em solo arenoso). */
+  aviso?: string;
 }
 
 export interface ZarcCenario {
@@ -68,15 +76,36 @@ export interface CenarioState {
   preset: string;
 }
 
-export type FamiliaCultura = "soja" | "milho" | "feijao" | "sorgo";
+export type FamiliaCultura =
+  | "soja"
+  | "milho"
+  | "feijao"
+  | "sorgo"
+  | "girassol"
+  | "amendoim"
+  | "arroz"
+  | "algodao";
 
-export const FAMILIAS: FamiliaCultura[] = ["soja", "milho", "feijao", "sorgo"];
+export const FAMILIAS: FamiliaCultura[] = [
+  "soja",
+  "milho",
+  "feijao",
+  "sorgo",
+  "girassol",
+  "amendoim",
+  "arroz",
+  "algodao",
+];
 
 export const FAMILIA_META: Record<FamiliaCultura, { label: string; color: string }> = {
   soja: { label: "Soja", color: "#d9b64a" },
   milho: { label: "Milho", color: "#e4a13c" },
   feijao: { label: "Feijão", color: "#b07a4c" },
   sorgo: { label: "Sorgo", color: "#9a6b3f" },
+  girassol: { label: "Girassol", color: "var(--crop-girassol)" },
+  amendoim: { label: "Amendoim", color: "var(--crop-amendoim)" },
+  arroz: { label: "Arroz", color: "var(--crop-arroz)" },
+  algodao: { label: "Algodão", color: "var(--crop-algodao)" },
 };
 
 export const FAMILIA_CULTURAS: Record<FamiliaCultura, CropKey[]> = {
@@ -84,6 +113,10 @@ export const FAMILIA_CULTURAS: Record<FamiliaCultura, CropKey[]> = {
   milho: ["milho_verao", "milho_safrinha"],
   feijao: ["feijao", "feijao_2"],
   sorgo: ["sorgo_granifero", "sorgo_safrinha"],
+  girassol: ["girassol"],
+  amendoim: ["amendoim"],
+  arroz: ["arroz"],
+  algodao: ["algodao"],
 };
 
 export const FAMILIA_DA_CULTURA: Record<CropKey, FamiliaCultura> = {
@@ -94,6 +127,10 @@ export const FAMILIA_DA_CULTURA: Record<CropKey, FamiliaCultura> = {
   feijao_2: "feijao",
   sorgo_granifero: "sorgo",
   sorgo_safrinha: "sorgo",
+  girassol: "girassol",
+  amendoim: "amendoim",
+  arroz: "arroz",
+  algodao: "algodao",
 };
 
 export interface CropMeta {
@@ -169,6 +206,42 @@ export const CROP_META: Record<CropKey, CropMeta> = {
     descricao: "Alternativa de segunda safra em todos os grupos de solo.",
     safra: "2ª",
     ordem: 7,
+  },
+  girassol: {
+    label: "Girassol",
+    shortLabel: "Girassol",
+    color: "var(--crop-girassol)",
+    ink: "var(--crop-girassol-ink)",
+    descricao: "Cultura de entressafra que diversifica a rotação e cobre o solo.",
+    safra: "1ª",
+    ordem: 8,
+  },
+  amendoim: {
+    label: "Amendoim",
+    shortLabel: "Amendoim",
+    color: "var(--crop-amendoim)",
+    ink: "var(--crop-amendoim-ink)",
+    descricao: "Leguminosa de grão, que ainda devolve nitrogênio ao solo.",
+    safra: "1ª",
+    ordem: 9,
+  },
+  arroz: {
+    label: "Arroz",
+    shortLabel: "Arroz",
+    color: "var(--crop-arroz)",
+    ink: "var(--crop-arroz-ink)",
+    descricao: "Grão básico com mercado de consumo garantido.",
+    safra: "1ª",
+    ordem: 10,
+  },
+  algodao: {
+    label: "Algodão",
+    shortLabel: "Algodão",
+    color: "var(--crop-algodao)",
+    ink: "var(--crop-algodao-ink)",
+    descricao: "Cultura fibrosa de alto valor por hectare quando bem manejada.",
+    safra: "1ª",
+    ordem: 11,
   },
 };
 
@@ -291,17 +364,17 @@ export const PERFIL_META: Record<
 > = {
   arrojado: {
     label: "Arrojado",
-    hint: "Prioriza margem, aceita mais risco.",
+    hint: "Prioriza margem, aceita mais chance de prejuízo.",
     tone: "clay",
   },
   equilibrado: {
     label: "Equilibrado",
-    hint: "Melhor equilíbrio entre margem e risco.",
+    hint: "Melhor equilíbrio entre margem e chance de prejuízo.",
     tone: "green",
   },
   conservador: {
     label: "Conservador",
-    hint: "Prioriza previsibilidade e menor risco.",
+    hint: "Prioriza previsibilidade e menor chance de prejuízo.",
     tone: "blue",
   },
 };
@@ -311,9 +384,12 @@ export function grupoDoTalhao(talhao: Talhao) {
 }
 
 export function culturasViaveis(zarc: ZarcData, grupo: GrupoSolo) {
-  return CROP_KEYS.map((key) => {
-    const janela = zarc.culturas[key][String(grupo) as `${GrupoSolo}`];
-    return { key, meta: CROP_META[key], janela };
+  // Defensivo: culturas novas (girassol, amendoim, arroz, algodão) podem não
+  // existir ainda num zarc.json antigo — ausentes do arquivo são puladas.
+  return CROP_KEYS.flatMap((key) => {
+    const janela = zarc.culturas[key]?.[String(grupo) as `${GrupoSolo}`];
+    if (!janela) return [];
+    return [{ key, meta: CROP_META[key], janela }];
   })
     .filter(({ janela }) => janela.decendios.length > 0)
     .sort((a, b) => a.meta.ordem - b.meta.ordem);
@@ -325,9 +401,9 @@ export function riscoNoDecendio(
   grupo: GrupoSolo,
   dec: number,
 ) {
-  const janela = zarc.culturas[crop][String(grupo) as `${GrupoSolo}`];
-  if (!janela.decendios.includes(dec)) return null;
-  return janela.risco_por_decendio[String(dec)] ?? null;
+  const janela = zarc.culturas[crop]?.[String(grupo) as `${GrupoSolo}`];
+  if (!janela || !janela.decendios.includes(dec)) return null;
+  return janela.risco_por_decendio?.[String(dec)] ?? null;
 }
 
 export function riskTone(risk: number | null) {
@@ -366,8 +442,8 @@ export function riscoPct(riscoPorMil: number, casas = 1) {
 }
 
 /**
- * "% da área sob risco" — hectares sob risco sobre a área total.
- * Ex.: 110,6 ha de 600 ha → "18,4%".
+ * "% da área com chance de prejuízo" — hectares com margem negativa esperada
+ * sobre a área total. Ex.: 110,6 ha de 600 ha → "18,4%".
  */
 export function areaRiscoPct(haSobRisco: number, areaTotal: number, casas = 1) {
   if (areaTotal <= 0) return `${pctFormatter(casas).format(0)}%`;
@@ -386,7 +462,10 @@ export interface Hipotese {
 }
 
 export interface Plano {
-  perfil: PerfilRisco;
+  /** Marcador do contrato v2: 'Arrojado' | 'Equilibrado (knee)' | 'Conservador'
+   *  | 'Referência (não plantar)' | null. Não confundir com PerfilRisco
+   *  (chaves internas dos planos nomeados). */
+  perfil: string | null;
   descricao: string;
   margem_floor_centavos: number;
   margem_centavos: number;
@@ -441,6 +520,9 @@ export interface Resultados {
    *  nunca exibido ao usuário; na interface chama-se "ponto equilibrado". */
   knee: Plano;
   planos: Record<PerfilRisco, Plano>;
+  /** Contrato v2 (opcional): âncora "não plantar" com todo o capital no CDI.
+   *  Ausente em contratos antigos — o ponto só é desenhado quando existe. */
+  referencia_sem_plantio?: Plano | null;
   robustez: Robustez;
 }
 
@@ -449,4 +531,13 @@ export const PERFIL_TONE_HEX: Record<PerfilRisco, string> = {
   arrojado: "#b8643a",
   equilibrado: "#2f6b46",
   conservador: "#426c75",
+};
+
+/** Cores do ponto "não plantar (capital no CDI)" no gráfico da fronteira —
+ *  espelham os tokens --sand (preenchimento) e --muted (traço/texto). O SVG do
+ *  Recharts não resolve var() em atributos de apresentação, então o valor é
+ *  espelhado aqui, no mesmo padrão de PERFIL_TONE_HEX. */
+export const REFERENCIA_TONE = {
+  fill: "#e9e1d0",
+  stroke: "#5c6659",
 };

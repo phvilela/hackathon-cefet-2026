@@ -24,6 +24,11 @@ const ROTATIONS = [
   { key: "feijao_sorgo", label: "Feijão → sorgo 2ª", short: "Feijão / sorgo" },
   { key: "soja_solteira", label: "Soja solteira", short: "Soja" },
   { key: "milho_verao", label: "Milho verão", short: "Milho" },
+  { key: "girassol_solteira", label: "Girassol (solteiro)", short: "Girassol" },
+  { key: "amendoim_solteira", label: "Amendoim (solteiro)", short: "Amendoim" },
+  { key: "arroz_solteira", label: "Arroz (solteiro)", short: "Arroz" },
+  { key: "algodao_solteira", label: "Algodão (solteiro)", short: "Algodão" },
+  { key: "soja_feijao2", label: "Soja → feijão 2ª", short: "Soja / feijão" },
 ] as const;
 
 export function SolutionPanel({
@@ -36,9 +41,13 @@ export function SolutionPanel({
   const grupo = grupoDoTalhao(talhao);
   const grupoMeta = GRUPO_META[grupo];
   const familias = new Set<FamiliaCultura>(culturas.length > 0 ? culturas : FAMILIAS);
+  // Rotações novas (girassol, amendoim, arroz, algodão, soja_feijao2) só entram
+  // na lista quando existem no zarc.json — com o arquivo antigo elas somem e o
+  // painel continua com as 5 sequências de sempre.
   const visiveis = ROTATIONS.filter(
     (rotation) =>
-      ROTACAO_FAMILIAS[rotation.key]?.every((familia) => familias.has(familia)) ?? true,
+      zarc.rotacoes[rotation.key] &&
+      (ROTACAO_FAMILIAS[rotation.key]?.every((familia) => familias.has(familia)) ?? true),
   );
   const rows = visiveis.map((rotation) => {
     const data = zarc.rotacoes[rotation.key]?.[String(grupo) as "1" | "2" | "3"];

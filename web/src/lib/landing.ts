@@ -3,5 +3,5 @@ export const LANDING_COPY = {
   title: "Cada talhão tem uma janela.",
   highlight: "O ZARC mostra quando.",
   description:
-    "Comece pela textura e pela área de cada pedaço da fazenda. A recomendação cruza a adequação real do ZARC com margem e risco, sem esconder nenhuma premissa.",
+    "Comece pela textura e pela área de cada pedaço da fazenda. A recomendação cruza a adequação real do ZARC com margem e chance de prejuízo de cada opção, sem esconder nenhuma premissa.",
 };

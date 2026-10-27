@@ -30,6 +30,11 @@ export const ROTACAO_FAMILIAS: Record<string, FamiliaCultura[]> = {
   feijao_sorgo: ["feijao", "sorgo"],
   soja_solteira: ["soja"],
   milho_verao: ["milho"],
+  girassol_solteira: ["girassol"],
+  amendoim_solteira: ["amendoim"],
+  arroz_solteira: ["arroz"],
+  algodao_solteira: ["algodao"],
+  soja_feijao2: ["soja", "feijao"],
 };
 
 export const PRESETS: CenarioPreset[] = [
@@ -43,7 +48,7 @@ export const PRESETS: CenarioPreset[] = [
   {
     id: "conservador",
     label: "Conservador",
-    hint: "Mesma área · prioriza menor risco",
+    hint: "Mesma área · prioriza menor chance de prejuízo",
     perfil: "conservador",
     talhoes: talhoes([300, 200, 100], ["medio", "arenoso", "argiloso"]),
   },

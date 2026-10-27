@@ -1685,6 +1685,14 @@ h2 {
   gap: 4px;
 }
 
+/* Título da escala: deixa explícito que o risco é o climático do ZARC. */
+.risk-legend-title {
+  width: 100%;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
 .legend-dot {
   width: 6px;
   height: 6px;
@@ -2179,6 +2187,12 @@ h2 {
   width: 9px;
   height: 9px;
   border-radius: 50%;
+}
+
+/* Âncora "não plantar (capital no CDI)" — ponto oco, neutro, não selecionável. */
+.legend-swatch.ref {
+  background: var(--sand);
+  border: 1.5px dashed var(--muted);
 }
 
 .fronteira-tooltip {

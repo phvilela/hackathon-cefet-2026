@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Icon } from "./Icon";
 import { StatusApiBadge } from "./StatusApiBadge";
 import {
-  PERFIL_TONE_HEX,
   ha,
   riscoPct,
   type CenarioState,
@@ -61,6 +60,11 @@ function rotLabel(rot: string) {
     feijao_sorgo: "feijão→sorgo",
     milho_verao: "milho 1ª safra",
     capital_pousio: "capital pousio",
+    girassol_solteira: "girassol (solteiro)",
+    amendoim_solteira: "amendoim (solteiro)",
+    arroz_solteira: "arroz (solteiro)",
+    algodao_solteira: "algodão (solteiro)",
+    soja_feijao2: "soja→feijão 2ª",
   };
   return mapa[rot] ?? rot;
 }
@@ -72,6 +76,11 @@ const ORDEM_ROTACAO = [
   "feijao_sorgo",
   "milho_verao",
   "capital_pousio",
+  "girassol_solteira",
+  "amendoim_solteira",
+  "arroz_solteira",
+  "algodao_solteira",
+  "soja_feijao2",
 ];
 
 /** Frase amigável para a observação do contrato (evita expor caminhos internos). */
@@ -252,13 +261,19 @@ function chaveLabel(chave: string) {
 
 function corCultura(nome: string) {
   const n = nome.toLowerCase();
-  if (n.includes("soja") && !n.includes("milho")) return "#d9b64a";
-  if (n.includes("milho") && n.includes("safrinha")) return "#c97a2b";
-  if (n.includes("milho")) return "#e4a13c";
-  if (n.includes("feij")) return "#b07a4c";
-  if (n.includes("sorgo")) return "#9a6b3f";
-  if (n.includes("capital")) return PERFIL_TONE_HEX.conservador;
-  return "#9a6b3f";
+  if (n.includes("soja") && !n.includes("milho")) return "var(--crop-soja)";
+  if (n.includes("milho") && n.includes("safrinha")) return "var(--crop-milho-2a)";
+  if (n.includes("milho")) return "var(--crop-milho-1a)";
+  if (n.includes("feij") && (n.includes("2") || n.includes("safrinha")))
+    return "var(--crop-feijao-2a)";
+  if (n.includes("feij")) return "var(--crop-feijao)";
+  if (n.includes("sorgo")) return "var(--crop-sorgo)";
+  if (n.includes("girassol")) return "var(--crop-girassol)";
+  if (n.includes("amendoim")) return "var(--crop-amendoim)";
+  if (n.includes("arroz")) return "var(--crop-arroz)";
+  if (n.includes("algod")) return "var(--crop-algodao)";
+  if (n.includes("capital")) return "var(--blue)";
+  return "var(--crop-sorgo)";
 }
 
 function brlCurto(valor: number) {

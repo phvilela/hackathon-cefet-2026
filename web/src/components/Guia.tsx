@@ -23,21 +23,21 @@ const CAMADAS = [
     titulo: "Adequação",
     pergunta: "O que pode ser plantado aqui, e quando?",
     detalhe:
-      "Lê a tábua de risco do ZARC 2026/27 e, para o solo de cada talhão, mostra as janelas de plantio e quais rotações fecham.",
+      "Lê a tábua de risco climático do ZARC 2026/27 e, para o solo de cada talhão, mostra as janelas de plantio e quais rotações fecham.",
     saida: "Janelas por decêndio",
   },
   {
-    titulo: "Margem sob risco",
-    pergunta: "Quanto rende cada opção, e com que risco?",
+    titulo: "Margem × chance de prejuízo",
+    pergunta: "Quanto rende cada opção, e com que chance de prejuízo?",
     detalhe:
       "Combina preço e produtividade históricos com o custo de produção da Conab. Uma simulação de Monte Carlo estima a margem e a chance de ela ficar negativa.",
-    saida: "Margem R$/ha e risco em ‰",
+    saida: "Margem R$/ha e chance de prejuízo em ‰",
   },
   {
     titulo: "Alocação",
     pergunta: "Quantos hectares em cada opção?",
     detalhe:
-      "Um otimizador divide a área entre as rotações viáveis, primeiro pela maior margem e depois pelo menor risco, e devolve um menu de planos.",
+      "Um otimizador divide a área entre as rotações viáveis, primeiro pela maior margem e depois pela menor chance de prejuízo, e devolve um menu de planos.",
     saida: "Arrojado · Equilibrado · Conservador",
   },
 ] as const;
@@ -48,6 +48,11 @@ const ROTACOES = [
   "Soja → sorgo 2ª safra",
   "Feijão → sorgo 2ª safra",
   "Milho 1ª safra",
+  "Girassol (solteiro)",
+  "Amendoim (solteiro)",
+  "Arroz (solteiro)",
+  "Algodão (solteiro)",
+  "Soja → feijão 2ª safra",
   "Capital em pousio (não plantar)",
 ];
 
@@ -85,7 +90,7 @@ const PASSOS = [
     icone: "trend",
     titulo: "Comparação",
     texto:
-      "Compare os planos na fronteira de margem × risco e escolha o perfil que combina com a sua safra.",
+      "Compare os planos na fronteira de margem × chance de prejuízo e escolha o perfil que combina com a sua safra.",
   },
   {
     tela: "rastreabilidade",
@@ -124,9 +129,9 @@ export function Guia({ resultados, onNavigate }: GuiaProps) {
           Plante na janela certa. <em>Decida com números.</em>
         </h1>
         <p className="guia-lede">
-          O Safra Certa cruza as janelas oficiais do ZARC com margem e risco de cada
-          rotação e devolve um menu de planos para a sua fazenda, com a fonte de cada
-          número à vista.
+          O Safra Certa cruza as janelas oficiais do ZARC com margem e chance de prejuízo
+          de cada rotação e devolve um menu de planos para a sua fazenda, com a fonte de
+          cada número à vista.
         </p>
         <div className="guia-acoes">
           <button type="button" className="guia-btn primario" onClick={() => ir("talhoes")}>
@@ -244,8 +249,8 @@ export function Guia({ resultados, onNavigate }: GuiaProps) {
             <h3>ZARC 2026/27</h3>
             <p>
               Zoneamento Agrícola de Risco Climático. Define os decêndios de plantio com
-              risco de 20%, 30% ou 40% para cada cultura e grupo de solo (arenoso, médio
-              ou argiloso).
+              risco de perda por seca (ZARC) de 20%, 30% ou 40% para cada cultura e
+              grupo de solo (arenoso, médio ou argiloso).
             </p>
           </article>
           <article className="panel guia-metodo">
@@ -257,12 +262,13 @@ export function Guia({ resultados, onNavigate }: GuiaProps) {
             </p>
           </article>
           <article className="panel guia-metodo">
-            <span className="guia-metodo-rotulo">Risco</span>
+            <span className="guia-metodo-rotulo">Chance de prejuízo</span>
             <h3>Monte Carlo com histórico real</h3>
             <p>
               Reaproveita 31 anos de produtividade (PAM) e preço (SIDRA) do IBGE,
               pareados, com desvios multiplicativos que preservam a correlação entre
-              preço e produtividade. O risco é a chance de a margem ficar negativa.
+              preço e produtividade. O indicador é a chance de a margem ficar negativa
+              (prejuízo).
             </p>
           </article>
           <article className="panel guia-metodo">
@@ -270,15 +276,16 @@ export function Guia({ resultados, onNavigate }: GuiaProps) {
             <h3>Otimização CP-SAT lexicográfica</h3>
             <p>
               Programação por restrições com variáveis inteiras: primeiro maximiza a
-              margem total, depois, mantendo essa margem, minimiza os hectares sob risco.
-              Respeita a área de cada talhão e as janelas viáveis.
+              margem total, depois, mantendo essa margem, minimiza os hectares com
+              chance de prejuízo. Respeita a área de cada talhão e as janelas viáveis.
             </p>
           </article>
           <article className="panel guia-metodo">
             <span className="guia-metodo-rotulo">Menu de planos</span>
             <h3>Fronteira de Pareto</h3>
             <p>
-              Restringe o risco aos poucos (método ε-constraint) e resolve de novo. Os{" "}
+              Restringe os hectares com chance de prejuízo aos poucos (método
+              ε-constraint) e resolve de novo. Os{" "}
               {fronteira.length} planos resultantes são não dominados. O ponto de melhor
               equilíbrio, o knee, vira o perfil Equilibrado.
             </p>
@@ -312,7 +319,7 @@ export function Guia({ resultados, onNavigate }: GuiaProps) {
             <h2 id="guia-resultado">Um menu em vez de uma resposta única</h2>
             <p>
               Para a fazenda de {ha(area)} ha em {nTalhoes} talhões, o motor devolve três
-              perfis. Quanto mais margem, mais hectares sob risco.
+              perfis. Quanto mais margem, mais hectares com chance de prejuízo.
             </p>
           </div>
         </div>
@@ -338,7 +345,7 @@ export function Guia({ resultados, onNavigate }: GuiaProps) {
                 </div>
                 <div className="guia-perfil-numero secundario">
                   <strong>{ha(plano.ha_sob_risco)} ha</strong>
-                  <span>sob risco</span>
+                  <span>com chance de prejuízo</span>
                 </div>
               </article>
             );
