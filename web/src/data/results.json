@@ -69,19 +69,19 @@
           "chave": "custo_conab",
           "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
           "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
-          "metodo": "resumo_custos_para_engine.csv"
+          "metodo": "Tabela de custos de produção da Conab"
         },
         {
           "chave": "janelas_zarc",
           "valor": "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)",
           "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
-          "metodo": "engine/adequacao.py + portaria MAPA"
+          "metodo": "Portaria MAPA (janelas oficiais do zoneamento)"
         },
         {
           "chave": "janela_segunda_cultura",
           "valor": "plantio da 2ª cultura — g1: sem janela (inviável) · g2: [2-3] · g3: [2-4]",
           "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
-          "metodo": "janelas pareadas do ZARC — engine/adequacao.py"
+          "metodo": "Janelas pareadas do ZARC (portaria MAPA)"
         }
       ]
     },
@@ -135,7 +135,7 @@
           "chave": "custo_conab",
           "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
           "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
-          "metodo": "resumo_custos_para_engine.csv"
+          "metodo": "Tabela de custos de produção da Conab"
         },
         {
           "chave": "preco_sorgo_ref",
@@ -147,13 +147,13 @@
           "chave": "janelas_zarc",
           "valor": "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)",
           "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
-          "metodo": "engine/adequacao.py + portaria MAPA"
+          "metodo": "Portaria MAPA (janelas oficiais do zoneamento)"
         },
         {
           "chave": "janela_segunda_cultura",
           "valor": "plantio da 2ª cultura — g1: [2-4] · g2: [2-5] · g3: [2-6]",
           "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
-          "metodo": "janelas pareadas do ZARC — engine/adequacao.py"
+          "metodo": "Janelas pareadas do ZARC (portaria MAPA)"
         }
       ]
     },
@@ -209,7 +209,7 @@
           "chave": "custo_conab",
           "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
           "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
-          "metodo": "resumo_custos_para_engine.csv"
+          "metodo": "Tabela de custos de produção da Conab"
         },
         {
           "chave": "preco_sorgo_ref",
@@ -227,13 +227,13 @@
           "chave": "janelas_zarc",
           "valor": "ZARC 2026/27 — janelas pareadas (ciclo Grupo I)",
           "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
-          "metodo": "engine/adequacao.py + portaria MAPA"
+          "metodo": "Portaria MAPA (janelas oficiais do zoneamento)"
         },
         {
           "chave": "janela_segunda_cultura",
           "valor": "plantio da 2ª cultura — g1: [2-4] · g2: [1-5] · g3: [1-6]",
           "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
-          "metodo": "janelas pareadas do ZARC — engine/adequacao.py"
+          "metodo": "Janelas pareadas do ZARC (portaria MAPA)"
         }
       ]
     },
@@ -293,13 +293,13 @@
           "chave": "custo_conab",
           "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
           "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
-          "metodo": "resumo_custos_para_engine.csv"
+          "metodo": "Tabela de custos de produção da Conab"
         },
         {
           "chave": "janelas_zarc",
           "valor": "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)",
           "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
-          "metodo": "engine/adequacao.py + portaria MAPA"
+          "metodo": "Portaria MAPA (janelas oficiais do zoneamento)"
         }
       ]
     },
@@ -370,13 +370,13 @@
           "chave": "custo_conab",
           "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
           "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
-          "metodo": "resumo_custos_para_engine.csv"
+          "metodo": "Tabela de custos de produção da Conab"
         },
         {
           "chave": "janelas_zarc",
           "valor": "ZARC 2026/27 — janela de plantio (solteira, melhor ciclo)",
           "fonte_url": "https://dados.agricultura.gov.br/dataset/tabua-de-risco-zoneamento-agricola-de-risco-climatico",
-          "metodo": "engine/adequacao.py + portaria MAPA"
+          "metodo": "Portaria MAPA (janelas oficiais do zoneamento)"
         }
       ]
     },

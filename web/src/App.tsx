@@ -135,9 +135,13 @@ export default function App() {
 
       <main className="page">
         {tela === "comparacao" ? (
-          <Comparacao resultados={resultados} />
+          <Comparacao
+            resultados={resultados}
+            areaTotal={totalArea}
+            perfilInicial={cenario.perfil}
+          />
         ) : tela === "rastreabilidade" ? (
-          <Rastreabilidade resultados={resultados} />
+          <Rastreabilidade resultados={resultados} culturas={cenario.culturas} />
         ) : (
           <>
             <section className="summary-grid">

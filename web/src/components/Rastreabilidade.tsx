@@ -1,13 +1,17 @@
 import { useMemo, useState } from "react";
 import { Icon } from "./Icon";
+import { ROTACAO_FAMILIAS } from "../lib/cenario";
 import {
+  FAMILIAS,
   PERFIL_TONE_HEX,
+  type FamiliaCultura,
   type Hipotese,
   type Resultados,
 } from "../types";
 
 interface Props {
   resultados: Resultados;
+  culturas: FamiliaCultura[];
 }
 
 interface Fonte {
@@ -18,9 +22,10 @@ interface Fonte {
 }
 
 /** Agrupa as hipóteses pela fonte, para mostrar de onde vem cada número. */
-function agruparPorFonte(resultados: Resultados): Fonte[] {
+function agruparPorFonte(resultados: Resultados, visiveis: Set<string>): Fonte[] {
   const mapa = new Map<string, Fonte>();
   for (const [rot, info] of Object.entries(resultados.rotacoes)) {
+    if (!visiveis.has(rot)) continue;
     for (const h of info.hipoteses) {
       const id = h.fonte_url;
       const existente = mapa.get(id);
@@ -41,8 +46,7 @@ function orgaoDaFonte(url: string) {
   if (url.includes("conab") || url.includes("gov.br")) return "Conab";
   if (url.includes("dados.agricultura") || url.includes("zarc")) return "ZARC · MAPA";
   if (url.includes("bcb") || url.includes("selic")) return "Banco Central";
-  if (url.includes("notebooks") || url.includes("data/")) return "Repositório (pipeline)";
-  return "Fonte interna";
+  return "Fonte interna do time";
 }
 
 function rotLabel(rot: string) {
@@ -66,13 +70,31 @@ const ORDEM_ROTACAO = [
   "capital_pousio",
 ];
 
-export function Rastreabilidade({ resultados }: Props) {
+export function Rastreabilidade({ resultados, culturas }: Props) {
   const [aba, setAba] = useState<"porRotacao" | "porFonte">("porRotacao");
-  const fontes = useMemo(() => agruparPorFonte(resultados), [resultados]);
-  const status = resultados.dados.status;
 
-  const totalHip = Object.values(resultados.rotacoes).reduce(
-    (acc, r) => acc + r.hipoteses.length,
+  const familiaSet = useMemo(
+    () => new Set<FamiliaCultura>(culturas.length > 0 ? culturas : FAMILIAS),
+    [culturas],
+  );
+  const rotVisiveis = useMemo(
+    () =>
+      ORDEM_ROTACAO.filter((rot) => {
+        if (!resultados.rotacoes[rot]) return false;
+        const fam = ROTACAO_FAMILIAS[rot];
+        return fam ? fam.every((j) => familiaSet.has(j)) : true;
+      }),
+    [resultados, familiaSet],
+  );
+  const fontes = useMemo(
+    () => agruparPorFonte(resultados, new Set(rotVisiveis)),
+    [resultados, rotVisiveis],
+  );
+  const status = resultados.dados.status;
+  const vazio = rotVisiveis.length === 0;
+
+  const totalHip = rotVisiveis.reduce(
+    (acc, r) => acc + (resultados.rotacoes[r]?.hipoteses.length ?? 0),
     0,
   );
 
@@ -120,9 +142,16 @@ export function Rastreabilidade({ resultados }: Props) {
 
       {aba === "porRotacao" ? (
         <div className="rastreio-lista">
-          {ORDEM_ROTACAO.filter((r) => resultados.rotacoes[r]).map((rot) => {
-            const info = resultados.rotacoes[rot];
-            return (
+          {vazio ? (
+            <div className="panel rastreio-card">
+              <p className="solution-empty">
+                Nenhuma rotação com as culturas selecionadas na Tela 1.
+              </p>
+            </div>
+          ) : (
+            rotVisiveis.map((rot) => {
+              const info = resultados.rotacoes[rot];
+              return (
               <div className="panel rastreio-card" key={rot}>
                 <div className="rastreio-cabecalho">
                   <div>
@@ -150,27 +179,38 @@ export function Rastreabilidade({ resultados }: Props) {
                   ))}
                 </ul>
               </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       ) : (
         <div className="rastreio-lista">
-          {fontes.map((f) => (
-            <div className="panel fonte-card" key={f.id}>
-              <div className="rastreio-cabecalho">
-                <div>
-                  <span className="fonte-orgao">{f.orgao}</span>
-                  <h3 className="fonte-url">{encurtar(f.url)}</h3>
-                </div>
-                <span className="fonte-usos">{f.usos.length} números</span>
-              </div>
-              <ul className="hipotese-lista">
-                {f.usos.map((h, i) => (
-                  <HipoteseLinha key={`${h.chave}-${i}`} h={h} esconderFonte />
-                ))}
-              </ul>
+          {fontes.length === 0 ? (
+            <div className="panel fonte-card">
+              <p className="solution-empty">
+                Nenhuma fonte com as culturas selecionadas na Tela 1.
+              </p>
             </div>
-          ))}
+          ) : (
+            fontes.map((f) => (
+              <div className="panel fonte-card" key={f.id}>
+                <div className="rastreio-cabecalho">
+                  <div>
+                    <span className="fonte-orgao">{f.orgao}</span>
+                    <h3 className="fonte-url">
+                      {f.id.startsWith("http") ? encurtar(f.id) : "Preços históricos 1995-2025"}
+                    </h3>
+                  </div>
+                  <span className="fonte-usos">{f.usos.length} números</span>
+                </div>
+                <ul className="hipotese-lista">
+                  {f.usos.map((h, i) => (
+                    <HipoteseLinha key={`${h.chave}-${i}`} h={h} esconderFonte />
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
         </div>
       )}
 
@@ -179,7 +219,8 @@ export function Rastreabilidade({ resultados }: Props) {
           <Icon name="info" size={15} />
         </span>
         <p>
-          {resultados.dados.observacao || "Toda hipótese acima carrega fonte, método e URL."}
+          Toda hipótese acima carrega fonte, método e URL comparáveis com a origem oficial. O
+          selo no topo indica a procedência (REAL) dos dados.
         </p>
       </div>
     </section>
@@ -193,7 +234,7 @@ function HipoteseLinha({ h, esconderFonte }: { h: Hipotese; esconderFonte?: bool
     <li className={`hipotese ${pendente ? "pendente" : ""}`}>
       <span className="hipotese-chave">{chaveLabel(h.chave)}</span>
       <span className="hipotese-valor">{h.valor}</span>
-      <span className="hipotese-metodo">{h.metodo}</span>
+      <span className="hipotese-metodo">{limparMetodo(h.metodo)}</span>
       {!esconderFonte &&
         (externa ? (
           <a
@@ -205,7 +246,7 @@ function HipoteseLinha({ h, esconderFonte }: { h: Hipotese; esconderFonte?: bool
             <Icon name="arrow" size={12} /> fonte
           </a>
         ) : (
-          <span className="hipotese-fonte interna" title={h.fonte_url}>
+          <span className="hipotese-fonte interna">
             <Icon name="check" size={12} /> interno
           </span>
         ))}
@@ -219,6 +260,17 @@ function chaveLabel(chave: string) {
     .replace("preco", "preço")
     .replace("prod", "prod")
     .replace(/^./, (c) => c.toUpperCase());
+}
+
+/** Remove caminhos/scripts internos (csv, py, json) que não pertencem à UI final. */
+function limparMetodo(metodo: string) {
+  const semCaminho = metodo
+    .replace(/(?:engine|notebooks|data|web|docs)[/\\][\w./\\-]+\.(?:py|csv|json|yaml|md|xlsx?)/g, "")
+    .replace(/[\w./\\-]+\.(?:csv|py)/g, "")
+    .replace(/\s*[—·+]\s*$/, "")
+    .replace(/^[—·+]\s*/, "")
+    .trim();
+  return semCaminho || "dados internos do time";
 }
 
 function corCultura(nome: string) {

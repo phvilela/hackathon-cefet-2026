@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CartesianGrid,
   ComposedChart,
@@ -22,6 +22,8 @@ import {
 
 interface Props {
   resultados: Resultados;
+  areaTotal: number;
+  perfilInicial: PerfilRisco;
 }
 
 function perfilDoPonto(ponto: Plano, index: number, total: number): PerfilRisco | null {
@@ -32,25 +34,46 @@ function perfilDoPonto(ponto: Plano, index: number, total: number): PerfilRisco 
     : null;
 }
 
-export function Comparacao({ resultados }: Props) {
-  const [selecionado, setSelecionado] = useState<PerfilRisco>("equilibrado");
+export function Comparacao({ resultados, areaTotal, perfilInicial }: Props) {
+  const [selecionado, setSelecionado] = useState<PerfilRisco>(perfilInicial);
+  useEffect(() => setSelecionado(perfilInicial), [perfilInicial]);
 
+  const base = Number((resultados.cenario as { area_total_ha?: number }).area_total_ha ?? 600);
+  const nOficial = Number((resultados.cenario as { n_talhoes?: number }).n_talhoes ?? 3);
+  const areaEfetiva = areaTotal > 0 ? areaTotal : base;
+  const fator = base > 0 ? areaEfetiva / base : 1;
+  const escalaPx = (n: number) => Math.round(n * fator);
+
+  const plano0 = resultados.planos[selecionado];
+  const arrojado0 = resultados.planos.arrojado;
   const fronteira = resultados.fronteira_pareto;
   const total = fronteira.length;
-  const plano = resultados.planos[selecionado];
   const perfil = PERFIL_META[selecionado];
   const tone = PERFIL_TONE_HEX[selecionado];
   const dados = resultados.dados;
 
+  const plano = {
+    ...plano0,
+    margem_reais: plano0.margem_reais * fator,
+    ha_sob_risco: escalaPx(plano0.ha_sob_risco),
+    area_por_rotacao: Object.fromEntries(
+      Object.entries(plano0.area_por_rotacao).map(([k, v]) => [k, v * fator]),
+    ),
+  };
+  const arrojado = {
+    ...arrojado0,
+    margem_reais: arrojado0.margem_reais * fator,
+    ha_sob_risco: escalaPx(arrojado0.ha_sob_risco),
+  };
+
+  const economiaMargem = arrojado.margem_reais - plano.margem_reais;
+  const ganhoRisco = arrojado.ha_sob_risco - plano.ha_sob_risco;
+
   const serie = fronteira.map((ponto, index) => ({
-    ...point2plot(ponto),
+    ...point2plot(ponto, fator),
     index,
     perfil: perfilDoPonto(ponto, index, total),
   }));
-
-  const arrojado = resultados.planos.arrojado;
-  const economiaMargem = arrojado.margem_reais - plano.margem_reais;
-  const ganhoRisco = arrojado.ha_sob_risco - plano.ha_sob_risco;
 
   return (
     <section className="painel-comparacao">
@@ -197,7 +220,7 @@ export function Comparacao({ resultados }: Props) {
                 <strong>{brl(plano.margem_reais)}</strong>
               </div>
               <span className="stat-hint">
-                {ha(plano.margem_reais / 600)} por hectare da fazenda
+                {ha(plano.margem_reais / areaEfetiva)} por hectare da fazenda
               </span>
             </div>
             <div className="stat">
@@ -224,6 +247,19 @@ export function Comparacao({ resultados }: Props) {
             </div>
           )}
 
+          {Math.abs(fator - 1) > 0.001 && (
+            <div className="rotation-callout">
+              <span className="callout-icon" aria-hidden="true">
+                <Icon name="info" size={15} />
+              </span>
+              <p>
+                O motor rodou para o cenário oficial ({ha(base)} ha · {nOficial} talhões). Com os{" "}
+                {ha(areaEfetiva)} ha do seu cenário na Tela 1, os números desta tela seguem a
+                mesma proporção.
+              </p>
+            </div>
+          )}
+
           <div className="perfil-opcoes" role="group" aria-label="Escolher perfil de risco">
             {(Object.keys(PERFIL_META) as PerfilRisco[]).map((p) => (
               <button
@@ -242,7 +278,7 @@ export function Comparacao({ resultados }: Props) {
             ))}
           </div>
 
-          <Alocacao plano={plano} />
+          <Alocacao plano={plano} areaTotal={areaEfetiva} />
         </div>
       </div>
 
@@ -251,21 +287,21 @@ export function Comparacao({ resultados }: Props) {
   );
 }
 
-/** Converte um ponto do contrato para o formato do gráfico. */
-function point2plot(ponto: Plano) {
+/** Converte um ponto do contrato para o formato do gráfico, escalando pela área. */
+function point2plot(ponto: Plano, fator: number) {
   return {
-    margem_reais: ponto.margem_reais,
-    ha_sob_risco: ponto.ha_sob_risco,
+    margem_reais: ponto.margem_reais * fator,
+    ha_sob_risco: Math.round(ponto.ha_sob_risco * fator),
     descricao: ponto.descricao,
   };
 }
 
-function Alocacao({ plano }: { plano: Plano }) {
+function Alocacao({ plano, areaTotal }: { plano: Plano; areaTotal: number }) {
   const entradas = Object.entries(plano.area_por_rotacao).sort((a, b) => b[1] - a[1]);
   const total = entradas.reduce((acc, [, v]) => acc + v, 0) || 1;
   return (
     <div className="alocacao">
-      <span className="stat-label">Como dividir os 600 ha</span>
+      <span className="stat-label">Como dividir os {ha(areaTotal)} ha</span>
       <ul className="alocacao-list">
         {entradas.map(([rot, area]) => (
           <li key={rot}>
