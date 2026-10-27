@@ -135,19 +135,14 @@ export default function App() {
       <Header tela={tela} onNavigate={setTela} />
 
       <main className="page">
-<<<<<<< HEAD
-        {tela === "comparacao" ? (
+        {tela === "guia" ? (
+          <Guia resultados={resultados} onNavigate={setTela} />
+        ) : tela === "comparacao" ? (
           <Comparacao
             resultados={resultados}
             areaTotal={totalArea}
             perfilInicial={cenario.perfil}
           />
-=======
-        {tela === "guia" ? (
-          <Guia resultados={resultados} onNavigate={setTela} />
-        ) : tela === "comparacao" ? (
-          <Comparacao resultados={resultados} />
->>>>>>> 26522bc (Frontend: nova pagina inicial adicionada)
         ) : tela === "rastreabilidade" ? (
           <Rastreabilidade resultados={resultados} culturas={cenario.culturas} />
         ) : (
