@@ -1,0 +1,140 @@
+{
+  "soja_solteira": {
+    "margem_esperada": 369544,
+    "risco": 200,
+    "hipoteses": [
+      {
+        "chave": "referencia_preco_prod",
+        "valor": "preço SIDRA × produtividade PAM (regime 2026/27)",
+        "fonte_url": "https://apisidra.ibge.gov.br/values/t/54",
+        "metodo": "margem esperada = preço_ref × prod_ref − custo Conab"
+      },
+      {
+        "chave": "volatilidade_historica",
+        "valor": "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência",
+        "fonte_url": "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv",
+        "metodo": "MC: desvios multiplicativos preço×prod preservando correlação"
+      },
+      {
+        "chave": "custo_conab",
+        "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
+        "metodo": "resumo_custos_para_engine.csv"
+      }
+    ]
+  },
+  "milho_verao": {
+    "margem_esperada": 89679,
+    "risco": 515,
+    "hipoteses": [
+      {
+        "chave": "referencia_preco_prod",
+        "valor": "preço SIDRA × produtividade PAM (regime 2026/27)",
+        "fonte_url": "https://apisidra.ibge.gov.br/values/t/54",
+        "metodo": "margem esperada = preço_ref × prod_ref − custo Conab"
+      },
+      {
+        "chave": "volatilidade_historica",
+        "valor": "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência",
+        "fonte_url": "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv",
+        "metodo": "MC: desvios multiplicativos preço×prod preservando correlação"
+      },
+      {
+        "chave": "custo_conab",
+        "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
+        "metodo": "resumo_custos_para_engine.csv"
+      }
+    ]
+  },
+  "soja_milho": {
+    "margem_esperada": 449673,
+    "risco": 220,
+    "hipoteses": [
+      {
+        "chave": "referencia_preco_prod",
+        "valor": "preço SIDRA × produtividade PAM (regime 2026/27)",
+        "fonte_url": "https://apisidra.ibge.gov.br/values/t/54",
+        "metodo": "margem esperada = preço_ref × prod_ref − custo Conab"
+      },
+      {
+        "chave": "volatilidade_historica",
+        "valor": "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência",
+        "fonte_url": "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv",
+        "metodo": "MC: desvios multiplicativos preço×prod preservando correlação"
+      },
+      {
+        "chave": "custo_conab",
+        "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
+        "metodo": "resumo_custos_para_engine.csv"
+      }
+    ]
+  },
+  "soja_sorgo": {
+    "margem_esperada": 247364,
+    "risco": 281,
+    "hipoteses": [
+      {
+        "chave": "referencia_preco_prod",
+        "valor": "preço SIDRA × produtividade PAM (regime 2026/27)",
+        "fonte_url": "https://apisidra.ibge.gov.br/values/t/54",
+        "metodo": "margem esperada = preço_ref × prod_ref − custo Conab"
+      },
+      {
+        "chave": "volatilidade_historica",
+        "valor": "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência",
+        "fonte_url": "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv",
+        "metodo": "MC: desvios multiplicativos preço×prod preservando correlação"
+      },
+      {
+        "chave": "custo_conab",
+        "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
+        "metodo": "resumo_custos_para_engine.csv"
+      },
+      {
+        "chave": "preco_sorgo_ref",
+        "valor": "R$ 0,55/kg (Conab) c/ CV 20% lognormal",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
+        "metodo": "sem série anual em Patos — volatilidade documentada"
+      }
+    ]
+  },
+  "feijao_sorgo": {
+    "margem_esperada": 38041,
+    "risco": 498,
+    "hipoteses": [
+      {
+        "chave": "referencia_preco_prod",
+        "valor": "preço SIDRA × produtividade PAM (regime 2026/27)",
+        "fonte_url": "https://apisidra.ibge.gov.br/values/t/54",
+        "metodo": "margem esperada = preço_ref × prod_ref − custo Conab"
+      },
+      {
+        "chave": "volatilidade_historica",
+        "valor": "31 anos PAM×SIDRA pareados (1995-2025), rebased na referência",
+        "fonte_url": "notebooks/saida_preco/dados_anuais_Patos_de_Minas.csv",
+        "metodo": "MC: desvios multiplicativos preço×prod preservando correlação"
+      },
+      {
+        "chave": "custo_conab",
+        "valor": "custo médio R$/ha Conab 2024-2026 (Cerrado)",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
+        "metodo": "resumo_custos_para_engine.csv"
+      },
+      {
+        "chave": "preco_sorgo_ref",
+        "valor": "R$ 0,55/kg (Conab) c/ CV 20% lognormal",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
+        "metodo": "sem série anual em Patos — volatilidade documentada"
+      },
+      {
+        "chave": "preco_feijao_ref",
+        "valor": "R$ 9,00/kg (Conab) c/ CV 25% lognormal",
+        "fonte_url": "https://www.gov.br/conab/pt-br/atuacao/informacoes-agropecuarias/custos-de-producao",
+        "metodo": "sem série anual em Patos — volatilidade documentada"
+      }
+    ]
+  }
+}
