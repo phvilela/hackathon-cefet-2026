@@ -1,0 +1,4 @@
+faster-whisper>=1.1
+# PyAV 19 removeu av.open(metadata_errors=...) que o faster-whisper 1.2.1 usa
+# (issue SYSTRAN/faster-whisper#1589). Fix já merged, mas sem release.
+av>=11,<19
