@@ -1,7 +1,9 @@
 """Gráficos do motor.
 
 `generate_pareto_frontier_scatter` — scatter margem × risco da fronteira,
-com knee destacado, perfis rotulados e a nota de "dados MOCK".
+com knee destacado, perfis rotulados e nota de rodapé opcional (o chamador
+informa o status dos dados; nada de nota fixa — o gráfico já exibiu
+"Dados MOCK" com dados reais por muito tempo).
 Unidades (documentadas no próprio gráfico):
     x = "área sob risco" = Σ (risco‰ × ha) ÷ 1000  → ha com margem negativa esperada
     y = margem total em R$ (centavos do modelo ÷ 100)
@@ -44,12 +46,14 @@ def generate_pareto_frontier_scatter(
     frontier: Sequence[Dict[str, Any]],
     knee: Optional[Dict[str, Any]] = None,
     path: str | Path = 'engine/out/pareto_frontier.png',
+    nota_rodape: Optional[str] = None,
 ) -> Optional[Path]:
     """Scatter da fronteira margem × risco com knee e perfis destacados.
 
     Eixo x em "ha sob risco" (Σ risco‰ × ha ÷ 1000) e eixo y em R$ milhões
     (centavos ÷ 100). Rótulos: Arrojado (maior margem), Equilibrado (knee) e
-    Conservador (menor risco). Nota de "dados MOCK" no canto inferior direito.
+    Conservador (menor risco). `nota_rodape` (ex.: status dos dados) é
+    opcional; quando omitida, nenhuma nota é estampada no gráfico.
     """
     if not frontier:
         return None
@@ -105,10 +109,11 @@ def generate_pareto_frontier_scatter(
     ax.set_ylabel('Margem total (R$ milhões)', fontsize=11)
     ax.grid(True, alpha=0.3, linestyle=':')
 
-    fig.text(
-        0.99, 0.005,
-        'Dados MOCK — margens/risco provisórios (substituídos pelo MC do M1 + ZARC)',
-        ha='right', va='bottom', fontsize=8, style='italic', color='#777777',
-    )
+    if nota_rodape:
+        fig.text(
+            0.99, 0.005,
+            nota_rodape,
+            ha='right', va='bottom', fontsize=8, style='italic', color='#777777',
+        )
 
     return _finalize(fig, path)

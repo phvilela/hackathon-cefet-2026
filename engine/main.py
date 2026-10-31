@@ -188,8 +188,14 @@ def main() -> None:
 
     png_path = None
     if frontier:
+        # Nota de rodapé reflete o status REAL dos dados — nunca fixa.
+        status = str(results.get('dados', {}).get('status', 'DESCONHECIDO'))
+        nota = ('Dados congelados (REAL) — contract/results.json'
+                if status == 'REAL'
+                else f'Dados {status} — designação do contrato vigente')
         png_path = generate_pareto_frontier_scatter(
-            frontier, knee, path=str(out_dir / 'pareto_frontier.png'))
+            frontier, knee, path=str(out_dir / 'pareto_frontier.png'),
+            nota_rodape=nota)
 
     print(relatorio)
     artefatos = [str(relatorio_path), str(results_path)]
