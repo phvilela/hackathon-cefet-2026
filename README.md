@@ -84,7 +84,9 @@ hackatohm/
 │                            os CSVs de notebooks/saida*/ alimentam o pipeline
 │
 │  📝 DOCUMENTAÇÃO
-├── docs/adequacao_regras.md   → as regras de plantio em linguagem clara, com fontes e insights
+├── docs/
+│   ├── adequacao_regras.md    → as regras de plantio em linguagem clara, com fontes e insights
+│   └── relatorio/metodo.md    → o método em detalhe (seção do relatório final)
 │
 │  📦 O CONTRATO — contract/ (o motor escreve, o site lê)
 ├── contract/
@@ -211,4 +213,5 @@ npm run build   # build de produção
 
 - **A pesquisa por trás das escolhas** (12 métodos avaliados, trade-offs, referências): [`relatorio_pesquisa_metodos.md`](relatorio_pesquisa_metodos.md)
 - **As regras de plantio com os dados reais de 2026/27**: [`docs/adequacao_regras.md`](docs/adequacao_regras.md)
+- **O método em detalhe** (coeficientes congelados, camadas, robustez): [`docs/relatorio/metodo.md`](docs/relatorio/metodo.md)
 - **Como o motor funciona por dentro**: [`engine/README.md`](engine/README.md)
