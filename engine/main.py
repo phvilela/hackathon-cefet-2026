@@ -179,7 +179,7 @@ def main() -> None:
     relatorio_path.write_text(relatorio, encoding='utf-8')
     logger.info('Relatório salvo em %s', relatorio_path)
 
-    results_path = out_dir / 'results_mock.json'
+    results_path = out_dir / 'results.json'
     results_path.write_text(
         json.dumps(results, ensure_ascii=False, indent=2, default=str) + '\n',
         encoding='utf-8',
