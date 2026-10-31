@@ -1,7 +1,7 @@
 # engine/ — motor de decisão "o que plantar" (HackatOhm 2026, desafio Embrapa)
 
 - **Rodar** (na raiz do repo): `python3 engine/main.py --pareto --monte-carlo` — saída em `engine/out/`:
-  `relatorio_engine.txt` (relatório PT-BR), `results_mock.json` (contrato com o M3) e `pareto_frontier.png` (fronteira com knee e perfis).
+  `relatorio_engine.txt` (relatório PT-BR), `results.json` (contrato com o M3) e `pareto_frontier.png` (fronteira com knee e perfis).
 - **Tudo é MOCK**: margens (centavos/ha), riscos (‰) e janelas (decêndios 1–36) no `config.yaml` são provisórios (`fonte_url: "MOCK://…"`).
 - **Números reais**: quando o MC do M1 sair, substitua `margem_esperada`/`risco` (e as `janelas_viveis` vindas do ZARC/`adequacao.py`) em `engine/config.yaml` e rode de novo — o motor não muda.
 - **Adequação**: `python3 engine/adequacao.py` regenera as janelas REAIS do ZARC em `engine/janelas_zarc.json`; `--municipio <geocódigo>` gera para outro município de MG (tábua estadual já baixada em `data/raw/zarc/`); `--csv`/`--saida` para fonte/saída alternativas. Nas rotações, as janelas da 1ª cultura são **pareadas** com a 2ª (só entram decêndios que deixam a safrinha caber, via ciclo precoce Grupo I).

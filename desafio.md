@@ -1,5 +1,0 @@
-É algo mais conceitual, teórico, sem necessariamente implementar. Precisamos fazer 1 video pitch de 5 minutos, e um “relatorio” de 3 paginas da ideia  
-Produtor rural, antes de iniciar o plantio, precisa imaginar como será a produtividade da colheita, chuvas, preço dos produtos no futuro,  se vai ter doenças, etc. Com base nisso, e em outros fatores, ele decide o que plantar. Sobre o quando plantar, a embrapa já tem uma ferramenta (ZARC) que faz isso, uma ferramenta de gestao de risco que demonstra ao produtor que já sabe o que plantar, que está em um determinado local (ex: patos de minas, vai plantar soja), o ZARC recomenda quando ele deve plantar. O como plantar não é parte do desafio.  
-   
-O foco do desafio é: O que plantar?  
- Para facilitar, é recomendado pensar em uma fazenda, de 600 hectares, na regiao de patos de minas, e essa fazenda precisa saber o que plantar. Soja, depois milho? Feijao, depois sorgo? Unir bases de dados para ajudar a tomar essas decisoes. BMF, mercado futuro, clima, tipo de solo, parametros do solo, custo, preço de venda, custo de oportunidade, custo alternativo.  

@@ -10,7 +10,7 @@ Duas camadas de verificação:
 
 Uso (na raiz do repo):
     python3 contract/validate.py                                 # valida contract/results.json
-    python3 contract/validate.py engine/out/results_mock.json    # valida um arquivo qualquer
+    python3 contract/validate.py engine/out/results.json    # valida um arquivo qualquer
     python3 contract/validate.py --publish                       # valida o output do motor e
                                                                   # PUBLICA em contract/results.json
 
@@ -30,7 +30,7 @@ from jsonschema import Draft202012Validator
 REPO = Path(__file__).resolve().parents[1]
 SCHEMA_DEFAULT = REPO / 'contract/results.schema.json'
 CONTRATO_DEFAULT = REPO / 'contract/results.json'
-MOTOR_DEFAULT = REPO / 'engine/out/results_mock.json'
+MOTOR_DEFAULT = REPO / 'engine/out/results.json'
 
 TOL_REAIS = 0.011
 TOL_HA_RISCO = 0.06
@@ -227,7 +227,7 @@ def main() -> None:
         description='Validador do contrato results.json (M3 — HackatOhm 2026)',
         epilog=(
             'Exemplos:\n'
-            '  python3 contract/validate.py engine/out/results_mock.json\n'
+            '  python3 contract/validate.py engine/out/results.json\n'
             '  python3 contract/validate.py --publish'
         ),
     )
@@ -237,7 +237,7 @@ def main() -> None:
     )
     parser.add_argument(
         '--publish', action='store_true',
-        help='valida engine/out/results_mock.json e publica em contract/results.json',
+        help='valida engine/out/results.json e publica em contract/results.json',
     )
     parser.add_argument(
         '--schema', default=str(SCHEMA_DEFAULT),

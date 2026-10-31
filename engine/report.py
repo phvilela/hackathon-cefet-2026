@@ -1,7 +1,7 @@
 """Relatório texto + dicionário de resultados (rascunho do contrato com o M3).
 
 `generate_report(...)`  → texto legível (PT-BR), gravado em `engine/out/relatorio_engine.txt`
-`build_results(...)`    → dict JSON-serializável, gravado em `engine/out/results_mock.json`
+`build_results(...)`    → dict JSON-serializável, gravado em `engine/out/results.json`
 Unidades: margem em centavos (exibida em R$); risco em ‰·ha
 ("ha sob risco" = Σ risco‰ × ha ÷ 1000 = hectares com margem negativa esperada).
 """
