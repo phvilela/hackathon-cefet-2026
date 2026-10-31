@@ -1,0 +1,126 @@
+================================================================================================
+HACKATOHM 2026 — DESAFIO EMBRAPA | MOTOR DE DECISÃO "O QUE PLANTAR"
+================================================================================================
+Cenário: Patos de Minas (IBGE 3148004) — safra 2026/27
+Área: 600 ha em 3 talhões — 9 rotações candidatas | Status: OPTIMAL
+
+PLANO ÓTIMO — lexicográfico (1º maximiza margem, 2º minimiza risco)
+------------------------------------------------------------------------------------------------
+  estágio margem (maximizar): R$ 2.756.516,00  [OPTIMAL]
+  estágio risco (minimizar): 90.000 ‰·ha  [OPTIMAL]
+
+T1 (300 ha, solo grupo 2):
+    - soja_feijao2        300 ha   (100,0% da área)
+T2 (200 ha, solo grupo 1):
+    - soja_solteira       200 ha   (100,0% da área)
+T3 (100 ha, solo grupo 3):
+    - soja_feijao2        100 ha   (100,0% da área)
+
+Margem total: R$ 2.756.516,00 (R$ 4.594,19/ha)
+Risco total: 90.000 ‰·ha ≈ 90,0 ha com margem negativa esperada
+
+FRONTEIRA DE PARETO — ε-constraint (mínimo risco sujeito a margem ≥ piso)
+------------------------------------------------------------------------------------------------
+ #      piso margem (R$)         margem (R$)    risco (‰·ha)  ha sob risco  perfil
+ 1.       R$ 2.756.516,00     R$ 2.756.516,00          90.000       90,0 ha  Arrojado
+ 2.       R$ 2.555.078,29     R$ 2.555.795,20          79.248       79,2 ha
+ 3.       R$ 2.353.640,58     R$ 2.355.074,40          68.496       68,5 ha
+ 4.       R$ 2.152.202,88     R$ 2.154.353,60          57.744       57,7 ha
+ 5.       R$ 1.950.765,17     R$ 1.953.271,48          49.278       49,3 ha  Equilibrado (knee)
+ 6.       R$ 1.749.327,46     R$ 1.751.707,60          43.860       43,9 ha
+ 7.       R$ 1.547.889,75     R$ 1.550.143,72          38.442       38,4 ha
+ 8.       R$ 1.346.452,05     R$ 1.348.579,84          33.024       33,0 ha
+ 9.       R$ 1.145.014,34     R$ 1.147.015,96          27.606       27,6 ha
+10.         R$ 943.576,63       R$ 945.452,08          22.188       22,2 ha
+11.         R$ 742.138,92       R$ 743.888,20          16.770       16,8 ha
+12.         R$ 540.701,22       R$ 542.324,32          11.352       11,4 ha
+13.         R$ 339.263,51       R$ 340.760,44           5.934        5,9 ha
+14.         R$ 137.825,80       R$ 139.196,56             516        0,5 ha  Conservador
+
+Knee point (perfil Equilibrado): margem R$ 1.953.271,48 | risco 49.278 ‰·ha (49,3 ha sob risco)
+
+PERFIS DE DECISÃO (o menu que vendemos no pitch)
+------------------------------------------------------------------------------------------------
+Arrojado: margem R$ 2.756.516,00 | risco 90.000 ‰·ha (90,0 ha sob risco)
+    T1 (300 ha): soja_feijao2 300 ha | T2 (200 ha): soja_solteira 200 ha | T3 (100 ha): soja_feijao2 100 ha
+Equilibrado (knee): margem R$ 1.953.271,48 | risco 49.278 ‰·ha (49,3 ha sob risco)
+    T1 (300 ha): soja_feijao2 300 ha | T2 (200 ha): capital_pousio 200 ha | T3 (100 ha): soja_feijao2 82 ha + capital_pousio 18 ha
+Conservador: margem R$ 139.196,56 | risco 516 ‰·ha (0,5 ha sob risco)
+    T1 (300 ha): capital_pousio 296 ha + soja_feijao2 4 ha | T2 (200 ha): capital_pousio 200 ha | T3 (100 ha): capital_pousio 100 ha
+Referência (não plantar): margem R$ 120.000,00 | risco 0 ‰·ha — capital aplicado no CDI (custo de oportunidade); fora da fronteira porque nenhum piso de margem o alcança
+
+ROBUSTEZ — MONTE CARLO (±10% nas margens; 30 cenários; seed 42)
+------------------------------------------------------------------------------------------------
+"A alocação muda em no máximo 2 talhões em 100% dos cenários de ±10% em preço/custo."
+
+Cenários resolvidos: 30/30 (falhas: 0)
+Estabilidade média: 88.9% | melhor 100.0% | pior 33.3%
+Cenários sem nenhuma mudança: 83.3%
+Mudanças por cenário (nº de talhões com alocação diferente):
+    0 talhão(ões) mudou/mudaram: 25 cenários (83.3%)
+    2 talhão(ões) mudou/mudaram: 5 cenários (16.7%)
+Margem total nos cenários: média R$ 2.749.999,66 | mín R$ 2.562.198,00 | máx R$ 2.937.994,00
+
+Retenção por rotação (em quantos cenários a rotação aparece):
+    soja_milho         5/30 (16.7%)  [fora do baseline]
+    soja_sorgo         0/30 (0.0%)  [fora do baseline]
+    feijao_sorgo       0/30 (0.0%)  [fora do baseline]
+    milho_verao        0/30 (0.0%)  [fora do baseline]
+    soja_solteira     30/30 (100.0%)  [baseline]
+    soja_feijao2      25/30 (83.3%)  [baseline]
+    arroz_solteira     0/30 (0.0%)  [fora do baseline]
+    algodao_solteira   0/30 (0.0%)  [fora do baseline]
+    capital_pousio     0/30 (0.0%)  [fora do baseline]
+
+CONFIGURAÇÃO E DADOS — janelas: REAIS (ZARC 2026/27, engine/adequacao.py) · margens: REAIS (MC do M1)
+------------------------------------------------------------------------------------------------
+Talhões: T1 300 ha (solo grupo 2), T2 200 ha (solo grupo 1), T3 100 ha (solo grupo 3)
+Rotações (margem | risco | janelas viáveis por grupo de solo):
+  soja_milho — soja + milho safrinha
+      margem R$ 4.621,95/ha | risco 213‰ (P[margem<0] ≈ 21,3%)
+      janelas: g1: (inviável) | g2: [28-29] | g3: [28-30]
+      hipóteses rastreáveis: referencia_preco_prod, volatilidade_historica, custo_conab, janelas_zarc, janela_segunda_cultura
+  soja_sorgo — soja + sorgo safrinha
+      margem R$ 2.558,96/ha | risco 279‰ (P[margem<0] ≈ 27,9%)
+      janelas: g1: [28-30] | g2: [28-31] | g3: [28-32]
+      hipóteses rastreáveis: referencia_preco_prod, volatilidade_historica, custo_conab, preco_sorgo_ref, janelas_zarc, janela_segunda_cultura
+  feijao_sorgo — feijão das águas + sorgo safrinha
+      margem R$ 422,86/ha | risco 486‰ (P[margem<0] ≈ 48,6%)
+      janelas: g1: [29-31] | g2: [28-32] | g3: [28-33]
+      hipóteses rastreáveis: referencia_preco_prod, volatilidade_historica, custo_conab, preco_sorgo_ref, preco_feijao_ref, janelas_zarc, janela_segunda_cultura
+  milho_verao — milho 1ª safra
+      margem R$ 880,44/ha | risco 515‰ (P[margem<0] ≈ 51,5%)
+      janelas: g1: [31-35] | g2: [30-36] | g3: [30-36]
+      hipóteses rastreáveis: referencia_preco_prod, volatilidade_historica, custo_conab, janelas_zarc
+  soja_solteira — soja
+      margem R$ 3.784,30/ha | risco 192‰ (P[margem<0] ≈ 19,2%)
+      janelas: g1: [1, 28-36] | g2: [1, 28-36] | g3: [1, 28-36]
+      hipóteses rastreáveis: referencia_preco_prod, volatilidade_historica, custo_conab, janelas_zarc
+  soja_feijao2 — soja + feijão 2ª safra
+      margem R$ 4.999,14/ha | risco 129‰ (P[margem<0] ≈ 12,9%)
+      janelas: g1: (inviável) | g2: [28-30] | g3: [28-31]
+      hipóteses rastreáveis: referencia_preco_prod, volatilidade_historica, custo_conab, preco_feijao2_ref, produtividade_feijao2_ref, custo_feijao2_conab, janelas_zarc, janela_segunda_cultura
+  arroz_solteira — arroz de sequeiro
+      margem R$ 146,75/ha | risco 480‰ (P[margem<0] ≈ 48,0%)
+      janelas: g1: [28-35] | g2: [28-36] | g3: [1, 28-36]
+      hipóteses rastreáveis: referencia_preco_prod, volatilidade_preco, custo_conab, janelas_zarc
+  algodao_solteira — algodão herbáceo (pluma)
+      margem R$ 120,50/ha | risco 530‰ (P[margem<0] ≈ 53,0%)
+      janelas: g1: [1-2, 33-36] | g2: [1-3, 33-36] | g3: [1-4, 33-36]
+      hipóteses rastreáveis: referencia_preco_prod, receita_caroco, volatilidade_preco, custo_conab, janelas_zarc
+  capital_pousio — capital no CDI (não plantar)
+      margem R$ 200,00/ha | risco 0‰ (P[margem<0] ≈ 0,0%)
+      janelas: g1: [1-36] | g2: [1-36] | g3: [1-36]
+      hipóteses rastreáveis: custo_oportunidade, observacao
+
+Settings: 36 decêndios | corte de risco ZARC ≤ 40% | margem_em_centavos: True
+Pareto: 14 pontos, piso de margem ≥ 0.05× ótimo | Monte Carlo: 30 runs, ±10%, seed 42
+
+UNIDADES E LEGENDA
+------------------------------------------------------------------------------------------------
+margem: centavos de R$/ha (CP-SAT inteiro); exibida em R$.
+risco: por-mil (‰) = P[margem < 0]×10 por ha; risco_total = Σ risco‰ × ha (‰·ha);
+       "ha sob risco" = risco_total ÷ 1000 = hectares com margem negativa esperada.
+janelas: decêndios 1–36 (3/mês; 25–27 = setembro, 28–30 = outubro, 31–33 = novembro).
+STATUS: janelas REAIS (ZARC 2026/27, engine/adequacao.py) · margens REAIS (MC do M1) — congelado em contract/results.json (freeze REAL — apenas o engine/atualiza_config.py re-sincroniza).
+================================================================================================

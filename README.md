@@ -1,12 +1,12 @@
-# Desafio Embrapa
+# Safra Certa — Plante na janela certa. Decida com números.
 ### "O que plantar?" — integração de dados climáticos, agronômicos e de mercado para a escolha de cultivos no Cerrado
 
 > **HackatOhm 2026** · desafio proposto pela **Embrapa Milho e Sorgo** · CEFET-MG
-> Equipe de 5 estudantes de Engenharia de Computação · entrega: 26/10/2026
+> Equipe **Os BITous** — 5 estudantes de Engenharia de Computação · entrega: 26/10/2026
 
 ![Fronteira margem × risco](engine/out/pareto_frontier.png)
 
-*O "menu de planos" gerado pelo projeto: cada ponto é uma forma de dividir os 600 ha entre as rotações — dos mais ousados (mais margem, mais risco) aos mais seguros. Os valores econômicos deste gráfico ainda são fictícios (mock); as janelas de plantio já são reais (veja "Status do projeto").*
+*O "menu de planos" gerado pelo projeto: cada ponto é uma forma de dividir os 600 ha entre as rotações — dos mais ousados (mais margem, mais risco) aos mais seguros. Valores do **congelamento REAL** (26–27/10): 14 planos, margens do Monte Carlo sobre 31 anos de PAM/SIDRA e custos Conab; janelas de plantio reais da tábua ZARC 2026/27. O motor recomenda um **ponto equilibrado** (Equilibrado) e ainda mostra a referência "não plantar" (capital no CDI).*
 
 ---
 
@@ -90,7 +90,7 @@ hackatohm/
 │   ├── validate.py         → o "porteiro": valida forma + semântica e publica (`--publish`)
 │   └── results.json        → o arquivo oficial — é este que o site de demonstração vai ler
 │
-│  🚧 EM CONSTRUÇÃO (cronograma até 26/10)
+│  🔄 PIPELINE DE DADOS — pipeline/ (D1: clima/produtividade · D2: mercado)
 ├── pipeline/
 │   ├── sanity.py          → ✔ pronto: QA de ordem de grandeza — margens vs literatura,
 │   │                        unidades (R$/sc × sc/ha), recomposição da margem, chuva, nulos
@@ -100,7 +100,15 @@ hackatohm/
 │   │                        linha (rastreabilidade); gates de qualidade no script
 │   ├── clima.py · pam.py · zarc.py  → importadores D1 (data/raw → data/processed)
 │   └── mercado.py         → importador D2 (custos Conab + B3)
-└── (domingo) o site de demonstração será criado na pasta web/ — ainda não existe
+│
+│  🌐 O SITE — web/ (publicado no Vercel, build da branch `frontend`)
+├── web/
+│   ├── src/App.tsx                → 4 telas: Guia · Talhões (ZARC) · Comparação · Rastreabilidade
+│   ├── src/components/            → uma tela por arquivo (Comparacao, Rastreabilidade, ZarcPanel…)
+│   ├── src/data/results.json      → espelho do contrato congelado (offline fallback)
+│   ├── src/data/zarc.json         → janelas ZARC no navegador
+│   └── api/solve.py               → API FastAPI (/api/solve): recalcula o motor no servidor a
+│                                    partir dos talhões editados na Tela 1 (CP-SAT no Vercel)
 │
 │  🛠️ FERRAMENTAS DO TIME
 ├── plaky.py, api-1.yaml  → script que mantém nosso quadro de tarefas (Plaky) atualizado
@@ -141,17 +149,24 @@ python3 pipeline/sanity.py
 
 # 5. Validar o contrato e publicar o arquivo oficial
 python3 contract/validate.py --publish
+
+# 6. (se o motor mudou) conferir o engine vendorizado da API contra a fonte
+bash scripts/sync_web_api_engine.sh --check
 ```
 
 **Se deu certo**, você verá no terminal o resumo das janelas de plantio e do menu de planos — e três arquivos em `engine/out/`:
 
 - `relatorio_engine.txt` — relatório em português, feito para ser lido;
 - `pareto_frontier.png` — o gráfico do menu (mesmo desta página);
-- `results_mock.json` — os resultados em formato de dados.
+- `results_mock.json` — os resultados em formato de dados (nome histórico; o conteúdo é o mesmo do contrato oficial).
 
 O passo 5 valida esse JSON (contra `contract/results.schema.json` + checagens de consistência) e **publica a cópia oficial em `contract/results.json`** — é este arquivo, e não o de `engine/out/`, que o site de demonstração vai ler. O passo 4, antes dele, é o **QA de credibilidade**: margens plausíveis contra a literatura, unidades certas (o clássico "R$/t virou R$/sc" explode aí), a margem declarada reconstituída a partir das próprias hipóteses da rotação, chuva plausível para o Cerrado. Assim o motor pode continuar sendo rodado sem surpreender o site: só entra no ar o que passar nos dois porteiros.
 
-> ⚠️ **Aviso honesto:** as **janelas de plantio são REAIS** (tábua de risco oficial do ZARC, safra 2026/27, com as portarias citadas em `data/raw/zarc/`). Os números de **dinheiro ainda são fictícios (mock)** até a simulação com dados históricos de IBGE/Conab/B3 entrar — tudo que é mock está marcado como tal no código e nos relatórios.
+### Validação retrospectiva (bônus)
+
+Além do porteiro do contrato, o projeto conta com um **backtest contra o realizado**: `python3 scripts/backtest.py --preparar` (baixa IPCA/Selic/PAM e calibra a deflação) e `python3 scripts/backtest.py --todos` comparam, para cada ano de 2005 a 2024, a cultura que o motor escolheria em outubro com a que realmente rendeu mais na colheita seguinte (PAM/SIDRA). Resultado: acerto de **85%** — a seção de validação está em `docs/relatorio/validacao-retrospectiva.md`.
+
+> ✅ **Aviso honesto — status REAL:** janelas de plantio **REAIS** (tábua oficial do ZARC, safra 2026/27, com as portarias em `data/raw/zarc/`) e números de dinheiro **REAIS** (Monte Carlo sobre 31 anos de PAM/SIDRA pareados × custos Conab). O congelamento de 26–27/10 substituiu todas as hipóteses provisórias: o contrato tem status `REAL` com **0 hipóteses MOCK** — cada número carrega valor, fonte (URL), método e premissa. O motor foi ainda **validado retrospectivamente** contra o realizado de 2005-2024: a escolha ex-ante foi a melhor cultura realizada em 85% dos anos (`scripts/backtest.py`).
 >
 > ℹ️ Se aparecer uma mensagem de erro de "segmentation fault" **depois** de o programa terminar, ignore: é um defeito conhecido de uma biblioteca no Python 3.14 ao encerrar — os arquivos já foram salvos normalmente.
 
@@ -159,22 +174,24 @@ O passo 5 valida esse JSON (contra `contract/results.schema.json` + checagens de
 
 | Fonte | O que dá ao projeto | Situação |
 |---|---|---|
-| **ZARC** — MAPA ([dados.agricultura.gov.br](https://dados.agricultura.gov.br)) | janelas de plantio e risco por município, cultura, ciclo e tipo de solo | ✅ baixado (`data/raw/zarc/`, safra 2026/27 + portarias) |
-| **IBGE — SIDRA/PAM** ([sidra.ibge.gov.br](https://sidra.ibge.gov.br)) | produtividade histórica municipal (20+ anos) | 🚧 importação na sexta (`pipeline/`) |
-| **Conab** ([portaldeinformacoes.conab.gov.br](https://portaldeinformacoes.conab.gov.br)) | preços (praça Patrocínio) e custos de produção | 🚧 sexta |
-| **B3** ([b3.com.br](https://www.b3.com.br)) | preços futuros de soja e milho ("preço travável" antes do plantio) | 🚧 sexta |
-| **INMET** e **NASA POWER** | chuva e temperatura da região | 🚧 sexta (exploração já iniciada em `notebooks/`) |
+| **ZARC** — MAPA ([dados.agricultura.gov.br](https://dados.agricultura.gov.br)) | janelas de plantio e risco por município, cultura, ciclo e tipo de solo | ✅ concluído (`data/raw/zarc/`, safra 2026/27 + portarias) |
+| **IBGE — SIDRA/PAM** ([sidra.ibge.gov.br](https://sidra.ibge.gov.br)) | produtividade histórica municipal (31 anos pareados com preço) | ✅ concluído (`pipeline/fato.py`, série do M1) |
+| **Conab** ([portaldeinformacoes.conab.gov.br](https://portaldeinformacoes.conab.gov.br)) | preços (praça Patrocínio) e custos de produção | ✅ concluído (`pipeline/mercado.py`) |
+| **B3** ([b3.com.br](https://www.b3.com.br)) | preços futuros de soja e milho ("preço travável" antes do plantio) | ✅ concluído (dados em `data/processed/mercado/b3/`) |
+| **INMET** e **NASA POWER** | chuva e temperatura da região (estação A523 Patrocínio, proxy) | ✅ concluído (`data/raw/inmet/` + fill NASA POWER no `pipeline/clima.py`) |
 
 ## 6. Status do projeto (transparência)
 
 | Peça | Estado |
 |---|---|
 | Regras de plantio (adequação, ZARC real) | ✅ **pronto** — dados oficiais, 5/5 verificações |
-| Motor de decisão (otimização + menu + estresse) | ✅ **funciona** — com margens **mock** |
-| Dados econômicos + simulação de margem | 🚧 sexta-feira |
-| Resultados reais + congelamento | 🚧 sábado |
-| Site de demonstração (3 telas) | 🚧 domingo |
-| Vídeo pitch (5 min) + relatório (3 págs) | 🚨 segunda-feira (26/10) — entrega |
+| Motor de decisão (otimização + menu + estresse) | ✅ **pronto** — margens REAIS (MC do M1), solve ~14 ms com prova de otimalidade |
+| Dados econômicos + simulação de margem | ✅ **pronto** — 31 anos PAM/SIDRA pareados × custos Conab 2024-26 |
+| Resultados reais + congelamento | ✅ **pronto** — freeze v2 em 27/10: 14 planos, 9 rotações, 0 hipóteses MOCK |
+| Site de demonstração (4 telas) | ✅ **no ar** (Vercel, build da branch `frontend`) |
+| API do motor no servidor | ✅ **pronta** — `web/api/solve.py` (FastAPI/CP-SAT) recalcula ao vivo |
+| Validação retrospectiva (backtest 2005-2024) | ✅ **pronta** — hit-rate 85%; ver `docs/relatorio/validacao-retrospectiva.md` |
+| Vídeo pitch (5 min) + relatório (3 págs) | 🚨 entrega 26/10 — fechamento final |
 
 ## 7. 📖 Glossário para não-especialistas
 
@@ -186,7 +203,7 @@ O passo 5 valida esse JSON (contra `contract/results.schema.json` + checagens de
 - **Monte Carlo** — "rolar o dado" milhares de vezes usando o histórico real, para medir não só o lucro médio, mas o risco de dar prejuízo.
 - **CP-SAT** — ferramenta gratuita do Google que resolve um "quebra-cabeça" com regras e **prova** que achou a melhor solução possível (não é um palpite).
 - **Fronteira de Pareto / knee point** — o menu de opções margem × risco; o "joelho" da curva é o ponto de melhor equilíbrio (nosso plano **Equilibrado**).
-- **Mock** — número fictício usado enquanto o dado real não chegou. Neste projeto, todo mock é marcado como tal.
+- **Mock** — número fictício usado enquanto o dado real não chegou. Neste projeto, os mocks foram todos substituídos no congelamento de 26/10: hoje o contrato tem status REAL e zero hipóteses MOCK.
 
 ## 8. O time
 
@@ -206,4 +223,5 @@ O passo 5 valida esse JSON (contra `contract/results.schema.json` + checagens de
 - **O plano de execução e as decisões de escopo**: [`PLANO_DESENVOLVIMENTO.md`](PLANO_DESENVOLVIMENTO.md)
 - **As regras de plantio com os dados reais de 2026/27**: [`docs/adequacao_regras.md`](docs/adequacao_regras.md)
 - **O método, em rascunho para o relatório final**: [`docs/relatorio/metodo.md`](docs/relatorio/metodo.md)
+- **A validação retrospectiva (2005-2024, 85% de acerto)**: [`docs/relatorio/validacao-retrospectiva.md`](docs/relatorio/validacao-retrospectiva.md)
 - **Como o motor funciona por dentro**: [`engine/README.md`](engine/README.md)

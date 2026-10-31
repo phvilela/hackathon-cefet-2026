@@ -10,3 +10,7 @@ __pycache__/
 /saida
 data/raw/inmet/zips/
 engine/out
+
+# Backtest (regenerado por scripts/backtest.py --preparar)
+data/raw/mercado/backtest/
+data/processed/mercado/backtest/

@@ -517,9 +517,13 @@ def generate_report(config: Dict[str, Any],
     )
     linhas.append('janelas: decêndios 1–36 (3/mês; 25–27 = setembro, 28–30 = outubro, 31–33 = novembro).')
     status = _status_dados(config.get('rotacoes') or {})
-    linhas.append(f"STATUS: janelas {status['janelas']} · margens {status['margens']} — "
-                  'atualize com engine/atualiza_config.py quando o MC do M1 entregar '
-                  'engine/margens_mc.json.')
+    if status['status'] == 'REAL':
+        complemento = ('congelado em contract/results.json (freeze REAL — apenas o '
+                       'engine/atualiza_config.py re-sincroniza).')
+    else:
+        complemento = ('atualize com engine/atualiza_config.py quando o MC do M1 '
+                       'entregar engine/margens_mc.json.')
+    linhas.append(f"STATUS: janelas {status['janelas']} · margens {status['margens']} — {complemento}")
     linhas.append('=' * LARGURA)
 
     return '\n'.join(linhas)
